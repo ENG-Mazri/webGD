@@ -156,7 +156,7 @@ export default defineComponent({
 .d3Panel{
   position: absolute;
   left: 300px;
-  top: 50px;
+  top: 35px;
   width: 700px;
   height: 650px;
   margin: 3px;
@@ -181,7 +181,7 @@ export default defineComponent({
   /*background-color: #efefef;*/
   height: 100px;
   text-align: left;
-  border-top: 2px dotted #9cabb4;
+  border-top: 2px dashed #9cabb4;
 
 }
 

@@ -27,7 +27,7 @@
                 </n-icon>
             </template>
 
-            <n-collapse-item title="Generation function" name="1">
+            <n-collapse-item title="Generation functions" name="1">
                 <n-select id='input_type' :options="generationFunctions" default-value="Box generation" placeholder='Input types'/>
             </n-collapse-item>
         </n-collapse>
@@ -52,6 +52,20 @@
             <n-collapse-item title="Design options" name="1">
                 <n-input-number clearable :precision="0" placeholder='Number of generations'/>
                 <n-input-number clearable :precision="0" placeholder='Seed'/>
+            </n-collapse-item>
+        </n-collapse>
+        <n-collapse class='panel-collapse settings'>
+            <template #arrow>
+                <n-icon>
+                    <settingsIcon/>
+                </n-icon>
+            </template>
+            <n-collapse-item title="Project settings" name="1" >
+                <div class='project_settings'>
+                    <n-button text>Export result .xlsx</n-button>
+                    <n-button text>Export result .zip</n-button>
+                    <n-button text>Export result images</n-button>
+                </div>
             </n-collapse-item>
         </n-collapse>
         <div class='outputPanel'>
@@ -92,7 +106,7 @@
 
 <script lang="ts">
 import { defineComponent, ref } from 'vue';
-import { OptionsOutline as optionsIcon , EnterOutline as inputIcon, Flash as testIcon, LogoTableau as resultIcon, BarChartSharp as statsIcon, ConstructOutline as functionsIcon, TrophyOutline as objectivesIcon} from '@vicons/ionicons5';
+import { OptionsOutline as optionsIcon , EnterOutline as inputIcon, Flash as testIcon, LogoTableau as resultIcon, BarChartSharp as statsIcon, ConstructOutline as functionsIcon, TrophyOutline as objectivesIcon, SettingsOutline as settingsIcon} from '@vicons/ionicons5';
 import InputVue from './Input.vue';
 import {useDesign} from '../store/design';
 import {TestAlgorithm} from '../logic/testAlgorithm';
@@ -111,7 +125,7 @@ interface ModelType {
 
 export default defineComponent({
     components: {
-        optionsIcon, inputIcon, InputVue, testIcon, resultIcon, statsIcon, functionsIcon, objectivesIcon
+        optionsIcon, inputIcon, InputVue, testIcon, resultIcon, statsIcon, functionsIcon, objectivesIcon, settingsIcon
     },
     // emits: { showResultEvent(payload: { msg: string }) {return msg}
     // },
@@ -252,14 +266,15 @@ export default defineComponent({
 
 h3{
   margin: 40px 0 0;
-  font-family: Avenir, Helvetica, Arial, sans-serif;
+  /* font-family: Avenir, Helvetica, Arial, sans-serif; */
   color: #a2588f;
 
 }
+
 .panel{
     position: absolute;
     left: 5px;
-    top: 5px;
+    top: 35px;
     width: 230px;
     background-color: #efefef;
     margin: 3px;
@@ -279,13 +294,14 @@ h3{
 
 .n-collapse-item__header-main{
     color: #a2588f !important;
-    font-size: 15px !important;
+    font-size: 16px !important;
     font-weight: bold !important;
-    font-family: Helvetica, sans-serif !important;
+    font-family: 'Chakra Petch', sans-serif !important;
 }
 
 .n-collapse-item__content-inner{
     color: #a2588f !important;
+    font-family: 'Chakra Petch', sans-serif !important;
 }
 
 .n-button{
@@ -305,6 +321,17 @@ h3{
     margin: 10px 0px;
 }
 
+.settings > *{
+    text-align: left !important;
+    /* margin: 0px 10px !important; */
+}
 
+.project_settings{
+    /* text-align: left !important; */
+    justify-content:left !important;
+    display: flex;
+    flex-direction: column;
+    /* flex-wrap: wrap; */
+}
 
 </style>

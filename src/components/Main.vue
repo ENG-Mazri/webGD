@@ -5,12 +5,15 @@
   </div>
     <div class="outputPanel_gallery">
     <n-scrollbar style="max-height: 650px">
-      <h3> Output gallery </h3>
+      <h3> Output 3D gallery </h3>
       <n-space vertical>
-        <n-skeleton height="150px" width="40%" />
-        <n-skeleton height="150px" width="40%" />
-      </n-space>
-     
+        <n-skeleton height="200px" width="100%" />
+        <n-skeleton height="200px" width="100%" />
+        <n-skeleton height="200px" width="100%" />
+        <n-skeleton height="200px" width="100%" />
+        <n-skeleton height="200px" width="100%" />
+        <n-skeleton height="200px" width="100%" />
+      </n-space>    
     </n-scrollbar>
     </div>
   <D3Panel/>
@@ -132,12 +135,13 @@ export default defineComponent({
 </script>
 
 <style >
+@import url('https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@600&display=swap');
 .canvas{
   display: none
 }
-h3{
+/* h3{
   margin: 40px 0 0;
-}
+} */
 .bar:hover{
   fill: yellow;
 }
@@ -150,7 +154,7 @@ h3{
 .outputPanel_gallery{
   position: absolute;
   left: 1070px;
-  top: 50px;
+  top: 35px;
   width: 400px;
   min-height:100px;
   max-height: 650px;
@@ -166,5 +170,11 @@ h3{
 /* .outputPanel_gallery > * {
   margin: 5px 10px;
 } */
+
+h3{
+  font-family: 'Chakra Petch', sans-serif;
+  font-size: 20px;
+  margin: 5px 10px;
+}
 
 </style>
