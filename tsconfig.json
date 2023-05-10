@@ -12,6 +12,8 @@
     "typeRoots": ["./node_modules/@types", "./src/types"],
     // "allowSyntheticDefaultImports": true,
     // "forceConsistentCasingInFileNames": true,
+    "strictNullChecks":false,
+
     "useDefineForClassFields": true,
     "strictPropertyInitialization": false,
     "sourceMap": true,

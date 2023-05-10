@@ -10,6 +10,7 @@ export class Viewer {
     private camera: Camera;
 
     constructor( canvas: HTMLElement, data: any ) {
+        
         this.init(canvas, data)
     }
 
@@ -21,6 +22,7 @@ export class Viewer {
             height: window.innerHeight,
         };
 
+        // console.log(size)
         const fov = 45;
         const aspect = 2; 
         const near = 0.1;
@@ -42,7 +44,7 @@ export class Viewer {
         scene.add(directionalLight);
         scene.add(directionalLight.target);
 
-        // const threeCanvas = document.getElementById("three-canvas") as HTMLElement;
+        // // const threeCanvas = document.getElementById("three-canvas") as HTMLElement;
         const renderer = new THREE.WebGLRenderer({
             canvas,
             alpha: true,
@@ -53,17 +55,24 @@ export class Viewer {
         renderer.setSize(size.width, size.height);
         renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
         renderer.outputEncoding = THREE.sRGBEncoding;
-        const grid = new THREE.GridHelper(50, 30);
+        // const grid = new THREE.GridHelper(50, 30);
         // scene.add(grid);
 
         const controls = new OrbitControls(camera, canvas);
 
         //* shape
         const inputs = data.inputs;
+        // console.log(inputs)0x9ca884 0xa2588f
         const geometry = new THREE.BoxGeometry( inputs.width, inputs.length, inputs.height ); 
-        const material = new THREE.MeshPhongMaterial( {color: 0xffb3b3, transparent: true, opacity: 0.7} ); 
-        const cube = new THREE.Mesh( geometry, material ); 
-        scene.add( cube );
+        const material = new THREE.MeshPhongMaterial( {color: 0x9ca884, transparent: true, opacity: 0.5} ); 
+        const mesh = new THREE.Mesh( geometry, material ); 
+        scene.add( mesh );
+
+        geometry.computeBoundingSphere()
+
+        const radius = geometry.boundingSphere.radius;
+        const cog = mesh.localToWorld(geometry.boundingSphere.center.clone());
+        camera.position.set( cog.x, cog.y * 3, cog.z + 1.1*radius/Math.tan(fov*Math.PI/360));
 
         //* rendering
         const animate = () => {

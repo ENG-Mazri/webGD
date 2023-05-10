@@ -72,7 +72,7 @@
             </template>
 
             <n-collapse-item title="Design options" name="1">
-                <n-input-number clearable :precision="0" min="1" max="10" placeholder='Number of generations'/>
+                <n-input-number clearable :precision="0" min="1" max="10"  v-model:value="generations" @update:value="handleGen" placeholder='Number of generations' />
                 <n-input-number clearable :precision="0" placeholder='Seed'/>
             </n-collapse-item>
         </n-collapse>
@@ -196,6 +196,7 @@ export default defineComponent({
                     value: 'Cross product'
                 }
             ],
+            generations: 1,
             store: '' as any,
             showModal: false
             // svg: 
@@ -207,11 +208,13 @@ export default defineComponent({
     },
     created (){},
     mounted() {
-        // const emit = defineEmits(['showResultEvent'])
         this.store = useDesign();
-        // this.message = useMessage();
     },
     methods: {
+        genData($event) {
+            this.generations = $event;
+            console.log($event)
+        },
         addInput(){
             console.log('Add input')
         },
@@ -232,30 +235,37 @@ export default defineComponent({
         runTest() {
 
             const inputs: InputParameters = {inputs: this.store.design,
-              generations: 10}
-            const GD_test = new TestAlgorithm(inputs).process();
+              generations: this.store.design.generations}
 
-            if (GD_test.length == 0) {
-                window?.$message.error('Test failed: make sure you provide inputs correctly')
-                return;
-            }
-            window.dispatchEvent(event);
+            try {
+                const GD_test = new TestAlgorithm(inputs).process();
+                window.dispatchEvent(event);
             
-            window?.$message.success('Test completed successfully!');
-            this.store.result = [...GD_test];
+                window?.$message.success('Test completed successfully!');
+                this.store.result = [...GD_test];
 
-            localStorage.setItem('gd_result', JSON.stringify(GD_test))
-            console.log("RUNNING TEST", this.store.design)
-            console.log("TEST RESULT", GD_test)
+                localStorage.setItem('gd_result', JSON.stringify(GD_test))
+                console.log("RUNNING TEST", this.store.design)
+                console.log("TEST RESULT", GD_test)
+            } catch (error) {
+                window?.$message.error('Test failed: make sure you provide inputs correctly')
+                console.warn(error)
+            }
+            
+
+            // if (GD_test.length == 0) {
+            //     window?.$message.error('Test failed: make sure you provide inputs correctly')
+            //     return;
+            // }
 
         },
-        visualizeResult(){
+        visualizeResult() {
             const w = 500;
             const h = 500;
             const svg = d3.select("#d3Svg").attr("width", w).attr("height", h);
             const g = svg.append("g");
      
-            const GD_test = this.store.result;
+            const GD_test = JSON.parse(localStorage.getItem('gd_result') as any);;
             if( GD_test.length == 0) return;
             console.log("D3 result", GD_test)
         
@@ -279,16 +289,21 @@ export default defineComponent({
                .attr("cy",(d) => yScale(d.volume))
                .attr("r", (d) => 5)
                .attr("id", "scatter")
-               .attr('fill', 'rgb(112, 112, 219)')
-               .on("click", () => console.log("CLICKED"));
+               .attr('fill', '#a2588f')
+               .on("click", () => console.log("CLICKED"))
+               .append("title")
+               .attr('class', 'svg_tooltip')
+               .text((d) =>d.surface_area)
 
-            // // // svg.selectAll("text")
-            // // //    .data(dataset)
-            // // //    .enter()
-            // // //    .append("text")
-            // // //    .text((d) =>  `(${d[0]}, ${d[1]})`)
-            // // //    .attr("x", (d) => xScale(d[0] + 10))
-            // // //    .attr("y", (d) => yScale(d[1]))
+            // svg.selectAll("text")
+            //    .data([...GD_test])
+            //    .enter()
+            //    .append("text")
+            //    .text((d) =>  `(${d.inputs.width}, ${d.inputs.length})`)
+            //    .attr("x", (d) => xScale(d.surface_area + 20))
+            //    .attr("y", (d) => yScale(d.volume))
+
+            
 
             const xAxis = d3.axisBottom(xScale);
             const yAxis = d3.axisLeft(yScale);
@@ -302,6 +317,9 @@ export default defineComponent({
                .attr("transform", `translate(${(padding)}, 0)`)
                .call(yAxis); 
 
+        },
+        handleGen(){
+            this.store.design.generations = this.generations
         }
     }
 })
@@ -379,6 +397,10 @@ h3{
     flex-direction: column;
     /* margin-left: 0px; */
     /* flex-wrap: wrap; */
+}
+
+.svg_tooltip{
+    background-color: #a2588f !important;
 }
 
 </style>

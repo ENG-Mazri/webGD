@@ -8,7 +8,8 @@
       <div class="panel_header">
         <h3> Output 3D gallery </h3>
       </div>
-      <div class="outputPanel_gallery_main" id="gallery_container"></div>
+      <div class="outputPanel_gallery_main" id="gallery_container">
+      </div>
     </n-scrollbar>
     </div>
   <D3Panel/>
@@ -48,7 +49,6 @@ export default defineComponent({
     //   },
     //   false
     // );
-    // let resultsData = localStorage.getItem('gd_result') as any;
     this.buildViewer();
 
 
@@ -64,12 +64,13 @@ export default defineComponent({
       while (threeContainer.firstChild) {
         threeContainer.removeChild(threeContainer.lastChild as ChildNode);
       }
-      console.log()
+      
+      // const data = {inputs: {width: 20, height: 30, length: 80}};
+      // const canvas = document.getElementById("three-canvas") as HTMLElement;
+      // const viewer = new Viewer(canvas, data);
       for ( let i=0; i < gens; i++) {
         let canvas = document.createElement("canvas");
-        threeContainer.appendChild(canvas)
-        const data = {}
-        // console.log(resultsData[i])
+        threeContainer.appendChild(canvas);
         const viewer = new Viewer(canvas,resultsData[i]);
       }
     }
@@ -109,6 +110,7 @@ export default defineComponent({
   flex-direction: column; 
   text-align: left;
   /* overflow:scroll; */
+  /* background-color: #efefef; */
   box-shadow: 0px 0px 25px 10px rgba(170, 170, 170, 0.2);
 }
 
@@ -145,9 +147,11 @@ h3{
 
 canvas{
   position: relative;
-  background-color: rgba(127, 255, 212, 0.225);
-  width: 95% !important;
+  background-color: white;
+  width: 100% !important;
   height: 100% !important;
+  /* padding: 0px 10x !important; */
+  border-bottom: 2px dashed #9cabb4;
 
 }
 </style>
