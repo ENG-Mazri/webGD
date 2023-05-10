@@ -137,9 +137,14 @@ export default defineComponent({
                     value: 'Box generation'
                 },
                 {
-                    label: 'Form finding',
-                    value: 'Form finding'
+                    label: 'Building mass generator',
+                    value: 'Building mass generator'
+                },
+                {
+                    label: 'Floor plan layout generator',
+                    value: 'Floor plan layout generator'
                 }
+
             ],
             objectives: [
                 {
@@ -321,8 +326,9 @@ h3{
     margin: 10px 0px;
 }
 
-.settings > *{
+.settings{
     text-align: left !important;
+    justify-content:left !important;
     /* margin: 0px 10px !important; */
 }
 
@@ -331,6 +337,7 @@ h3{
     justify-content:left !important;
     display: flex;
     flex-direction: column;
+    /* margin-left: 0px; */
     /* flex-wrap: wrap; */
 }
 

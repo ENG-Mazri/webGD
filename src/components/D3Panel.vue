@@ -1,8 +1,15 @@
 <template>
   <div class="d3Panel" ref="$wrapper" @showResultEvent="visualizeResult">
-    <svg id="d3Svg"></svg>
+    <div class="d3Panel_main">
+      <svg id="d3Svg"></svg>
+    </div>
     <div class="d3Panel_footer">
-      <h3> Output chart </h3>
+      <h3> Output chart data</h3>
+      <h5 id="xAxis_tag">X - axis: </h5>
+      <h5 id="yAxis_tag">Y - axis: </h5>
+      <h5 id="size_tag">Size: </h5>
+      <h5 id="color_tag">Color: </h5>
+
     </div>
   </div>
     
@@ -179,7 +186,7 @@ export default defineComponent({
 
 .d3Panel_footer{
   /*background-color: #efefef;*/
-  height: 100px;
+  height: 25%;
   text-align: left;
   border-top: 2px dashed #9cabb4;
 
@@ -187,6 +194,10 @@ export default defineComponent({
 
 .d3Panel_footer > * {
   margin: 5px 10px;
+}
+
+.d3Panel_main{
+  height: 75%;
 }
 
 #scatter:hover{
