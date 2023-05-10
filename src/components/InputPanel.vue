@@ -145,10 +145,10 @@ import InputVue from './Input.vue';
 import {useDesign} from '../store/design';
 import {TestAlgorithm} from '../logic/testAlgorithm';
 import {InputParameters} from '../types/inputsParameters';
-import { defineEmits } from 'vue'
 import * as d3 from "d3";
 import { useMessage } from 'naive-ui'
 import {event} from '../events/index'
+import { Viewer } from '../logic/Viewer'
 
 
 interface ModelType {
@@ -163,8 +163,6 @@ export default defineComponent({
         testIcon, resultIcon, statsIcon,
         functionsIcon, objectivesIcon, settingsIcon, helpIcon
     },
-    // emits: { showResultEvent(payload: { msg: string }) {return msg}
-    // },
     data(){
         return {
             generationFunctions: [
@@ -219,44 +217,48 @@ export default defineComponent({
             console.log('Add input')
         },
         onCreate () {
-            // this.store.design[Math.random()] = 'iwuehfiw';
-            // console.log("Store.....", this.store.design);
             return {
-            isCheck: false,
-            num: 1,
-            string: 'A String'
+                isCheck: false,
+                num: 1,
+                string: 'A String'
             }
         },
         test(){
-            // this.$event('showResultEvent', {msg: 'HEOLO POLO'})
-            window?.$message.error('Test failed')
-            console.log('Store....', this.store.design)
+            let resultsData = JSON.parse(localStorage.getItem('gd_result') as any);
+
+            const gens = resultsData.length;
+            const threeContainer = document.getElementById('gallery_container') as HTMLElement;
+            
+            //* Clear all children
+            while (threeContainer.firstChild) {
+                threeContainer.removeChild(threeContainer.lastChild as ChildNode);
+            }
+            
+            for ( let i=0; i < gens; i++) {
+                let canvas = document.createElement("canvas");
+                threeContainer.appendChild(canvas);
+                const viewer = new Viewer(canvas,resultsData[i]);
+            }
+            console.log(this.store.design)
         },
         runTest() {
-
-            const inputs: InputParameters = {inputs: this.store.design,
-              generations: this.store.design.generations}
+            this.store.design.generations = this.generations;
+            const {width, length, height} =  this.store.design;
+            const _inputs: InputParameters = {inputs:{width, length, height},
+              generations: this.generations}
 
             try {
-                const GD_test = new TestAlgorithm(inputs).process();
+                const GD_test = new TestAlgorithm(_inputs).process();
                 window.dispatchEvent(event);
             
                 window?.$message.success('Test completed successfully!');
                 this.store.result = [...GD_test];
 
                 localStorage.setItem('gd_result', JSON.stringify(GD_test))
-                console.log("RUNNING TEST", this.store.design)
-                console.log("TEST RESULT", GD_test)
             } catch (error) {
                 window?.$message.error('Test failed: make sure you provide inputs correctly')
                 console.warn(error)
             }
-            
-
-            // if (GD_test.length == 0) {
-            //     window?.$message.error('Test failed: make sure you provide inputs correctly')
-            //     return;
-            // }
 
         },
         visualizeResult() {
@@ -302,12 +304,8 @@ export default defineComponent({
             //    .text((d) =>  `(${d.inputs.width}, ${d.inputs.length})`)
             //    .attr("x", (d) => xScale(d.surface_area + 20))
             //    .attr("y", (d) => yScale(d.volume))
-
-            
-
             const xAxis = d3.axisBottom(xScale);
             const yAxis = d3.axisLeft(yScale);
-
 
             svg.append("g")
                .attr("transform", `translate(0, ${(h - padding)})`)
@@ -317,9 +315,15 @@ export default defineComponent({
                .attr("transform", `translate(${(padding)}, 0)`)
                .call(yAxis); 
 
+            //TODO: output data inserting
+            document.getElementById('xAxis_tag').innerHTML += 'Surface_area';
+            document.getElementById('yAxis_tag').innerHTML += 'Volume';
+            document.getElementById('size_tag').innerHTML += 'Base_area';
+            document.getElementById('color_tag').innerHTML += 'Perimeter';
+
         },
         handleGen(){
-            this.store.design.generations = this.generations
+            // this.store.design.generations = this.generations
         }
     }
 })

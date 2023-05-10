@@ -1,4 +1,5 @@
-import {InputParameters} from '../types/inputsParameters.js'
+import {InputParameters} from '../types/inputsParameters.js';
+import { v4 as uuidv4 } from 'uuid';
 
 export class TestAlgorithm {
 
@@ -19,10 +20,12 @@ export class TestAlgorithm {
         for ( let i = 0; i < this.generations; i++ ) {
             const inputs = this.generateBox(this.inputs);
             const {surface_area,volume} = this.evaluate( inputs );
-            this.outputs.push({surface_area,volume, inputs});
+            const id = uuidv4();
+            this.outputs.push({ id, surface_area, volume, inputs});
+            console.log('Output: ', { id, surface_area, volume, inputs});
         }
 
-        // console.log('Output: ', this.outputs);
+        console.log('Output: ', this.outputs);
         return this.outputs;
 
     }
@@ -32,6 +35,7 @@ export class TestAlgorithm {
         let randomValues: any = {}; 
 
         for (let input in inputs) {
+            console.log('GENERATOR: inputs - ', inputs[input]);
             const min = inputs[input].range[0];
             const max = inputs[input].range[1];
             let difference = max - min;
@@ -41,7 +45,7 @@ export class TestAlgorithm {
             randomValues[input] = rand;
 
         }
-        console.log('Random values: ', randomValues);
+        
 
         return randomValues;
     }

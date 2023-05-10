@@ -49,7 +49,7 @@ export default defineComponent({
     //   },
     //   false
     // );
-    this.buildViewer();
+    // this.buildViewer();
 
 
   },
