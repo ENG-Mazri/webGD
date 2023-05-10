@@ -8,22 +8,11 @@
       <div class="panel_header">
         <h3> Output 3D gallery </h3>
       </div>
-      <n-space vertical class="outputPanel_gallery_main">
-        <div class="canvas" >
-          <canvas id="three-canvas"></canvas>
-        </div>
-        <n-skeleton height="200px" width="100%" />
-        <n-skeleton height="200px" width="100%" />
-        <n-skeleton height="200px" width="100%" />
-        <n-skeleton height="200px" width="100%" />
-        <n-skeleton height="200px" width="100%" />
-        <n-skeleton height="200px" width="100%" />
-      </n-space>    
+      <div class="outputPanel_gallery_main" id="gallery_container"></div>
     </n-scrollbar>
     </div>
   <D3Panel/>
   <p id="app_stamp">Generative design application &copy; - 2023</p>
-    
 </template>
 
 <script lang="ts">
@@ -54,23 +43,35 @@ export default defineComponent({
   },
   mounted() {
     this.store = useDesign();
-    // this.$on('showResultEvent', ()=>{ console.log('HELLOOOOOOOOOOO')})
-    window.addEventListener("build", (e) => {
-        this.buildViewer()
-        console.log("Fired event...")
-      },
-      false
-    );
+    // window.addEventListener("generation_completed", (e) => {
+    //     this.buildViewer();
+    //   },
+    //   false
+    // );
+    // let resultsData = localStorage.getItem('gd_result') as any;
+    this.buildViewer();
 
-
-    
 
   },
   methods:{
-    buildViewer(){
-      const data = {}
-      const threeCanvas = document.getElementById("three-canvas") as HTMLElement;
-      const viewer = new Viewer(threeCanvas, data);
+    buildViewer() {
+      let resultsData = JSON.parse(localStorage.getItem('gd_result') as any);
+
+      const gens = resultsData.length;
+      const threeContainer = document.getElementById('gallery_container') as HTMLElement;
+      
+      //* Clear all children
+      while (threeContainer.firstChild) {
+        threeContainer.removeChild(threeContainer.lastChild as ChildNode);
+      }
+      console.log()
+      for ( let i=0; i < gens; i++) {
+        let canvas = document.createElement("canvas");
+        threeContainer.appendChild(canvas)
+        const data = {}
+        // console.log(resultsData[i])
+        const viewer = new Viewer(canvas,resultsData[i]);
+      }
     }
    
   }
@@ -145,7 +146,7 @@ h3{
 canvas{
   position: relative;
   background-color: rgba(127, 255, 212, 0.225);
-  width: 100% !important;
+  width: 95% !important;
   height: 100% !important;
 
 }

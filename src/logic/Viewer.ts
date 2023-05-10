@@ -10,10 +10,10 @@ export class Viewer {
     private camera: Camera;
 
     constructor( canvas: HTMLElement, data: any ) {
-        this.init(canvas)
+        this.init(canvas, data)
     }
 
-    init(canvas: HTMLElement) {
+    init(canvas: HTMLElement, data: any) {
         const scene = new THREE.Scene();
 
         const size = {
@@ -59,7 +59,8 @@ export class Viewer {
         const controls = new OrbitControls(camera, canvas);
 
         //* shape
-        const geometry = new THREE.BoxGeometry( 12, 19, 33 ); 
+        const inputs = data.inputs;
+        const geometry = new THREE.BoxGeometry( inputs.width, inputs.length, inputs.height ); 
         const material = new THREE.MeshPhongMaterial( {color: 0xffb3b3, transparent: true, opacity: 0.7} ); 
         const cube = new THREE.Mesh( geometry, material ); 
         scene.add( cube );

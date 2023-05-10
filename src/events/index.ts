@@ -16,4 +16,4 @@
 //     }
 // }
 
-export const event = new Event("build");
+export const event = new Event("generation_completed");

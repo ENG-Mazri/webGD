@@ -18,8 +18,8 @@ export class TestAlgorithm {
 
         for ( let i = 0; i < this.generations; i++ ) {
             const inputs = this.generateBox(this.inputs);
-            const outputs = this.evaluate( inputs );
-            this.outputs.push(outputs);
+            const {surface_area,volume} = this.evaluate( inputs );
+            this.outputs.push({surface_area,volume, inputs});
         }
 
         // console.log('Output: ', this.outputs);

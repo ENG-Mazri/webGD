@@ -29,6 +29,28 @@
 
             <n-collapse-item title="Generation functions" name="1">
                 <n-select id='input_type' :options="generationFunctions" default-value="Box generation" placeholder='Input types'/>
+                <n-button text color="#9cabb4" @click="showModal = true">
+                    <template #icon>
+                        <n-icon>
+                        <helpIcon />
+                        </n-icon>
+                    </template>
+                    Function's information
+                </n-button>
+                <n-modal v-model:show="showModal">
+                    <n-card
+                    style="width: 600px"
+                    title="Informations"
+                    :bordered="false"
+                    size="huge"
+                    role="dialog"
+                    aria-modal="true"
+                    >
+                        <template #header-extra>
+                            Function's usage
+                        </template>
+                    </n-card>
+                </n-modal>
             </n-collapse-item>
         </n-collapse>
         <n-collapse class='panel-collapse'>
@@ -50,7 +72,7 @@
             </template>
 
             <n-collapse-item title="Design options" name="1">
-                <n-input-number clearable :precision="0" placeholder='Number of generations'/>
+                <n-input-number clearable :precision="0" min="1" max="10" placeholder='Number of generations'/>
                 <n-input-number clearable :precision="0" placeholder='Seed'/>
             </n-collapse-item>
         </n-collapse>
@@ -68,6 +90,18 @@
                 </div>
             </n-collapse-item>
         </n-collapse>
+        <!-- <n-collapse class='panel-collapse settings'>
+            <template #arrow>
+                <n-icon>
+                    <helpIcon/>
+                </n-icon>
+            </template>
+            <n-collapse-item title="Informations" name="1" >
+                <div class='informations'>
+                    <n-button text>Export result .xlsx</n-button>
+                </div>
+            </n-collapse-item>
+        </n-collapse> -->
         <div class='outputPanel'>
             <n-tooltip trigger="hover" placement="bottom">
                 <template #trigger>
@@ -77,7 +111,7 @@
                         </n-icon>
                     </n-button>
                 </template>
-                Run test
+                Generate
             </n-tooltip>
             <n-tooltip trigger="hover" placement="bottom">
                 <template #trigger>
@@ -106,7 +140,7 @@
 
 <script lang="ts">
 import { defineComponent, ref } from 'vue';
-import { OptionsOutline as optionsIcon , EnterOutline as inputIcon, Flash as testIcon, LogoTableau as resultIcon, BarChartSharp as statsIcon, ConstructOutline as functionsIcon, TrophyOutline as objectivesIcon, SettingsOutline as settingsIcon} from '@vicons/ionicons5';
+import { OptionsOutline as optionsIcon , EnterOutline as inputIcon, Flash as testIcon, LogoTableau as resultIcon, BarChartSharp as statsIcon, ConstructOutline as functionsIcon, TrophyOutline as objectivesIcon, SettingsOutline as settingsIcon, HelpCircleOutline as helpIcon} from '@vicons/ionicons5';
 import InputVue from './Input.vue';
 import {useDesign} from '../store/design';
 import {TestAlgorithm} from '../logic/testAlgorithm';
@@ -125,7 +159,9 @@ interface ModelType {
 
 export default defineComponent({
     components: {
-        optionsIcon, inputIcon, InputVue, testIcon, resultIcon, statsIcon, functionsIcon, objectivesIcon, settingsIcon
+        optionsIcon, inputIcon, InputVue,
+        testIcon, resultIcon, statsIcon,
+        functionsIcon, objectivesIcon, settingsIcon, helpIcon
     },
     // emits: { showResultEvent(payload: { msg: string }) {return msg}
     // },
@@ -161,6 +197,7 @@ export default defineComponent({
                 }
             ],
             store: '' as any,
+            showModal: false
             // svg: 
             // message: '' as any,
         }
@@ -190,7 +227,6 @@ export default defineComponent({
         test(){
             // this.$event('showResultEvent', {msg: 'HEOLO POLO'})
             window?.$message.error('Test failed')
-            window.dispatchEvent(event);
             console.log('Store....', this.store.design)
         },
         runTest() {
@@ -203,8 +239,12 @@ export default defineComponent({
                 window?.$message.error('Test failed: make sure you provide inputs correctly')
                 return;
             }
+            window.dispatchEvent(event);
+            
             window?.$message.success('Test completed successfully!');
             this.store.result = [...GD_test];
+
+            localStorage.setItem('gd_result', JSON.stringify(GD_test))
             console.log("RUNNING TEST", this.store.design)
             console.log("TEST RESULT", GD_test)
 
