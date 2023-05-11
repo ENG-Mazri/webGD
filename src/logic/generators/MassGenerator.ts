@@ -78,4 +78,79 @@ export class MassGenerator extends Generator {
   
 // }
 
+//* OFFSET
+
+// function offsetContour(offset, contour) {
+
+//     let result = [];
+  
+//     offset = new THREE.BufferAttribute(new Float32Array([offset, 0, 0]), 3);
+//     console.log("offset", offset);
+  
+//     for (let i = 0; i < contour.length; i++) {
+//       let v1 = new THREE.Vector2().subVectors(contour[i - 1 < 0 ? contour.length - 1 : i - 1], contour[i]);
+//       let v2 = new THREE.Vector2().subVectors(contour[i + 1 == contour.length ? 0 : i + 1], contour[i]);
+//       let angle = v2.angle() - v1.angle();
+//       let halfAngle = angle * 0.5;
+  
+//       let hA = halfAngle;
+//       let tA = v2.angle() + Math.PI * 0.5;
+  
+//       let shift = Math.tan(hA - Math.PI * 0.5);
+//       let shiftMatrix = new THREE.Matrix4().set(
+//              1, 0, 0, 0, 
+//         -shift, 1, 0, 0,
+//              0, 0, 1, 0,
+//              0, 0, 0, 1
+//       );
+  
+  
+//       let tempAngle = tA;
+//       let rotationMatrix = new THREE.Matrix4().set(
+//         Math.cos(tempAngle), -Math.sin(tempAngle), 0, 0,
+//         Math.sin(tempAngle),  Math.cos(tempAngle), 0, 0,
+//                           0,                    0, 1, 0,
+//                           0,                    0, 0, 1
+//       );
+  
+//       let translationMatrix = new THREE.Matrix4().set(
+//         1, 0, 0, contour[i].x,
+//         0, 1, 0, contour[i].y,
+//         0, 0, 1, 0,
+//         0, 0, 0, 1,
+//       );
+  
+//       let cloneOffset = offset.clone();
+//       cloneOffset.needsUpdate = true
+//       // console.log("cloneOffset", cloneOffset);
+//       // shiftMatrix.applyToBufferAttribute(cloneOffset);
+//       // rotationMatrix.applyToBufferAttribute(cloneOffset);
+//       // translationMatrix.applyToBufferAttribute(cloneOffset);
+//       cloneOffset.applyMatrix4(shiftMatrix)
+//       cloneOffset.applyMatrix4(rotationMatrix)
+//       cloneOffset.applyMatrix4(translationMatrix)
+  
+  
+//       result.push(new THREE.Vector2(cloneOffset.getX(0), cloneOffset.getY(0)));
+//     }
+  
+  
+//     return result;
+//   }
+  
+//   const off = offsetContour(-1,contour1);
+  
+//   shape.moveTo( off[0].x, off[0].y );
+//   shape.lineTo( off[1].x, off[1].y );
+//   shape.lineTo( off[2].x, off[2].y );
+//   shape.lineTo( off[3].x, off[3].y );
+//   shape.lineTo( off[4].x, off[4].y );
+//   shape.lineTo( off[0].x, off[0].y );
+  
+//   let geometry = new THREE.ExtrudeGeometry( shape, extrudeSettings );
+//   let mesh = new THREE.Mesh( geometry, material ) ;
+//   mesh.rotation.set(Math.PI/2,0, 0);
+//   mesh.updateMatrix()
+//   scene.add( mesh );
+
 // TODO: Extusion
