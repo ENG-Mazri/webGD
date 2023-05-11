@@ -321,6 +321,9 @@ export default defineComponent({
             document.getElementById('size_tag').innerHTML += 'Base_area';
             document.getElementById('color_tag').innerHTML += 'Perimeter';
 
+            //TODO: add the two result variables + in the algorithm
+            
+
         },
         handleGen(){
             // this.store.design.generations = this.generations
