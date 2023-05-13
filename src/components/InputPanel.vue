@@ -1,25 +1,7 @@
 <template>
 
     <div class='panel'>
-        <n-collapse class='panel-collapse'>
-            <template #arrow>
-                <n-icon>
-                    <inputIcon/>
-                </n-icon>
-            </template>
-            <n-collapse-item title="Inputs" name="1">
-                <n-dynamic-input v-model:value="customValue" :on-create="onCreate" placeholder="ADD">
-                    <template #create-button-default>
-                        Add new input
-                    </template>
-                    <template #default="{ value }">
-                        <div style=" align-items: center; width: 100%">
-                            <InputVue/>
-                        </div>
-                    </template>
-                </n-dynamic-input>
-            </n-collapse-item>
-        </n-collapse>
+
         <n-collapse class='panel-collapse'>
            <template #arrow>
                 <n-icon>
@@ -28,7 +10,7 @@
             </template>
 
             <n-collapse-item title="Generation functions" name="1">
-                <n-select id='input_type' :options="generationFunctions" default-value="Box generation" placeholder='Input types'/>
+                <n-select id='generator' v-model:value="genFunction" :options="generationFunctions" default-value="Box generation" placeholder='Input types'/>
                 <n-button text color="#9cabb4" @click="showModal = true">
                     <template #icon>
                         <n-icon>
@@ -51,6 +33,26 @@
                         </template>
                     </n-card>
                 </n-modal>
+            </n-collapse-item>
+        </n-collapse>
+        <n-collapse class='panel-collapse' default-expanded-names="1">
+            <template #arrow>
+                <n-icon>
+                    <inputIcon/>
+                </n-icon>
+            </template>
+            <n-collapse-item title="Inputs" name="1">
+                <!-- <n-dynamic-input :on-create="onCreate" placeholder="ADD">
+                    <template #create-button-default>
+                        Add new input
+                    </template>
+                    <template #default="{ value }">
+                        <div style=" align-items: center; width: 100%">
+                            <InputVue :function="genFunction"/>
+                        </div>
+                    </template>
+                </n-dynamic-input> -->
+                <InputVue :function="genFunction"/>
             </n-collapse-item>
         </n-collapse>
         <n-collapse class='panel-collapse'>
@@ -167,8 +169,8 @@ export default defineComponent({
         return {
             generationFunctions: [
                 {
-                    label: 'Box generation',
-                    value: 'Box generation'
+                    label: 'Box generator',
+                    value: 'Box generator'
                 },
                 {
                     label: 'Building mass generator',
@@ -196,7 +198,8 @@ export default defineComponent({
             ],
             generations: 1,
             store: '' as any,
-            showModal: false
+            showModal: false,
+            genFunction: 'Box generator'
             // svg: 
             // message: '' as any,
         }
@@ -268,7 +271,10 @@ export default defineComponent({
             const g = svg.append("g");
      
             const GD_test = JSON.parse(localStorage.getItem('gd_result') as any);;
-            if( GD_test.length == 0) return;
+            if( !GD_test || GD_test.length == 0){
+                window?.$message.error('No data to visualize')
+                return;
+            }
             console.log("D3 result", GD_test)
         
             const padding = 60;
@@ -289,13 +295,13 @@ export default defineComponent({
                .append("circle")
                .attr("cx", (d) => xScale(d.surface_area))
                .attr("cy",(d) => yScale(d.volume))
-               .attr("r", (d) => 5)
+               .attr("r", (d) => 10)
                .attr("id", "scatter")
-               .attr('fill', '#a2588f')
+               .attr('fill', 'rgba(162, 88, 143, 0.3)')
                .on("click", () => console.log("CLICKED"))
                .append("title")
                .attr('class', 'svg_tooltip')
-               .text((d) =>d.surface_area)
+               .text((d) => `Width: ${d.inputs.width}\nLength: ${d.inputs.length}\nHeight: ${d.inputs.height}`)
 
             // svg.selectAll("text")
             //    .data([...GD_test])
@@ -345,12 +351,13 @@ h3{
     position: absolute;
     left: 5px;
     top: 35px;
-    width: 230px;
+    width: 270px;
     background-color: #efefef;
     margin: 3px;
     padding: 5px;
     box-shadow: 0px 0px 21px -1px rgba(168, 168, 168, 0.42);
-    z-index: 100
+    z-index: 100;
+    border-radius: 10px;
 }
 
 .outputPanel{
@@ -408,6 +415,11 @@ h3{
 
 .svg_tooltip{
     background-color: #a2588f !important;
+}
+
+#scatter:hover{
+  fill: rgb(162, 88, 143);
+  cursor: pointer
 }
 
 </style>

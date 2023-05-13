@@ -13,7 +13,7 @@
     </n-scrollbar>
     </div>
   <D3Panel/>
-  <p id="app_stamp">Generative design application &copy; - 2023</p>
+  <p id="app_stamp">Design space explorer &copy; - 2023</p>
 </template>
 
 <script lang="ts">
@@ -92,11 +92,6 @@ export default defineComponent({
   fill: yellow;
 }
 
-#scatter:hover{
-  fill: red;
-  cursor: pointer
-}
-
 .outputPanel_gallery{
   position: absolute;
   left: 1070px;
@@ -112,6 +107,7 @@ export default defineComponent({
   /* overflow:scroll; */
   /* background-color: #efefef; */
   box-shadow: 0px 0px 25px 10px rgba(170, 170, 170, 0.2);
+  border-radius: 10px;
 }
 
 /* .outputPanel_gallery > * {
@@ -134,6 +130,7 @@ h3{
 
 .outputPanel_gallery_main{
   margin: 30px 0px;
+  padding: 5px
 }
 
 #app_stamp{
@@ -151,7 +148,10 @@ canvas{
   width: 100% !important;
   height: 100% !important;
   /* padding: 0px 10x !important; */
-  border-bottom: 2px dashed #9cabb4;
+  /* border-bottom: 2px dashed #9cabb4; */
+  border: 2px dashed #9cabb4;
+  border-radius: 10px;
+
 
 }
 </style>

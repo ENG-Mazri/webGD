@@ -171,7 +171,8 @@ export default defineComponent({
   display: flex;
   flex-direction: column; 
   box-shadow: 0px 0px 25px 10px rgba(170, 170, 170, 0.2);
-    
+  border-radius: 10px;
+  
 }
 
 .bar:hover{
@@ -200,8 +201,4 @@ export default defineComponent({
   height: 75%;
 }
 
-#scatter:hover{
-  fill: red;
-  cursor: pointer
-}
 </style>
