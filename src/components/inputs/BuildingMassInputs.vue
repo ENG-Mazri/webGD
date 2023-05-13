@@ -72,45 +72,63 @@
                         clearable />
                 </n-space>
             </div>
+            <div>
+                <n-divider title-placement="left">
+                    Site boundary
+                </n-divider>
+                <n-upload>
+                    <n-button text color="#153048">
+                        <template #icon>
+                            <n-icon>
+                                <fileIcon/>
+                            </n-icon>
+                        </template>
+                        Upload .svg
+                    </n-button>
+                </n-upload>
+            </div>
         </n-space>
     </div>
 </template>
 
 <script lang="ts">
 import { CSSProperties, defineComponent, ref } from 'vue';
-import {useDesign} from '../../store/design'
+import {useDesign} from '../../store/design';
+import { DocumentAttachOutline as fileIcon } from '@vicons/ionicons5';
+
 
 export default defineComponent({
     name: 'InputVue',
+    components:{ fileIcon },
     props: {
         function: String
     },
     setup () {
-    return {
-      railStyle: ({
-        focused,
-        checked
-      }: {
-        focused: boolean
-        checked: boolean
-      }) => {
-        const style: CSSProperties = {}
-        if (checked) {
-          style.background = '#a2588f'
-           if (focused) {
-            style.boxShadow = '0 0 0 2px #d0305040'
-          }
+        return {
+            railStyle: ({
+                focused,
+                checked
+            }: {
+                focused: boolean
+                checked: boolean
+            }) => {
+                const style: CSSProperties = {}
+                if (checked) {
+                style.background = '#a2588f'
+                if (focused) {
+                    style.boxShadow = '0 0 0 2px #d0305040'
+                }
 
-        } else {
-          style.background = '#153048'
-           if (focused) {
-            style.boxShadow = '0 0 0 2px #2080f040'
-          }
+                } else {
+                style.background = '#153048'
+                if (focused) {
+                    style.boxShadow = '0 0 0 2px #2080f040'
+                }
+                }
+                return style
+            }
         }
-        return style
-      }
-    }
-  },
+    },
     data() {
         return {
             inputTypes: [

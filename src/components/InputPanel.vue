@@ -50,11 +50,21 @@
         <n-collapse class='panel-collapse'>
            <template #arrow>
                 <n-icon>
+                    <strategyIcon/>
+                </n-icon>
+            </template>
+            <n-collapse-item title="Strategy" name="1">
+                <n-select id='input_type' :options="strategies" default-value="Randomize" placeholder='Input types'/>
+            </n-collapse-item>
+        </n-collapse>
+        <n-collapse class='panel-collapse' default-expanded-names="1">
+           <template #arrow>
+                <n-icon>
                     <objectivesIcon/>
                 </n-icon>
             </template>
             <n-collapse-item title="Objectives" name="1">
-                <n-select id='input_type' :options="objectives" default-value="Randomize" placeholder='Input types'/>
+                <BoxObjectives/>
             </n-collapse-item>
         </n-collapse>
         <n-collapse class='panel-collapse'>
@@ -133,7 +143,7 @@
 
 <script lang="ts">
 import { defineComponent, ref } from 'vue';
-import { OptionsOutline as optionsIcon , EnterOutline as inputIcon, Flash as testIcon, LogoTableau as resultIcon, BarChartSharp as statsIcon, ConstructOutline as functionsIcon, TrophyOutline as objectivesIcon, SettingsOutline as settingsIcon, HelpCircleOutline as helpIcon} from '@vicons/ionicons5';
+import { OptionsOutline as optionsIcon , EnterOutline as inputIcon, Flash as testIcon, LogoTableau as resultIcon, BarChartSharp as statsIcon, ConstructOutline as functionsIcon, TrophyOutline as objectivesIcon, SettingsOutline as settingsIcon, HelpCircleOutline as helpIcon, FlaskOutline as strategyIcon} from '@vicons/ionicons5';
 import InputVue from './Input.vue';
 import BoxInputVue from './inputs/BoxInputs.vue';
 import BuildingMassInputVue from './inputs/BuildingMassInputs.vue';
@@ -143,14 +153,16 @@ import * as d3 from "d3";
 import { useMessage } from 'naive-ui'
 import {event} from '../events/index'
 import { Viewer } from '../logic/Viewer'
+import BoxObjectives from './objectives/BoxObjectives.vue'
 
 
 export default defineComponent({
     components: {
         optionsIcon, inputIcon, InputVue,
-        testIcon, resultIcon, statsIcon,
+        testIcon, resultIcon, statsIcon, strategyIcon,
         functionsIcon, objectivesIcon, settingsIcon, 
-        helpIcon, BoxInputVue, BuildingMassInputVue
+        helpIcon, BoxInputVue, BuildingMassInputVue,
+        BoxObjectives
     },
     data(){
         return {
@@ -169,7 +181,7 @@ export default defineComponent({
                 }
 
             ],
-            objectives: [
+            strategies: [
                 {
                     label: 'Randomize',
                     value: 'Randomize'
