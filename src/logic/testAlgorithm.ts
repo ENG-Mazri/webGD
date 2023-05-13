@@ -1,14 +1,14 @@
-import {InputParameters} from '../types/inputsParameters.js';
+import {BoxInputType} from '../types/InputTypes';
 import { v4 as uuidv4 } from 'uuid';
 
 export class TestAlgorithm {
 
     private generations: number;
     private seed: number;
-    private inputs: any;
+    private inputs: BoxInputType;
     public outputs: any = [];
 
-    constructor( data: InputParameters ) {
+    constructor( data: any ) {
         this.generations = data.generations;
         this.seed = 0;
         this.inputs = data.inputs

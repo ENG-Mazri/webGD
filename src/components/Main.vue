@@ -18,11 +18,6 @@
 
 <script lang="ts">
 import { defineComponent } from 'vue';
-import * as d3 from "d3";
-import {TestAlgorithm} from '../logic/testAlgorithm';
-import {InputParameters} from '../types/inputsParameters';
-import * as THREE from 'three';
-import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import InputPanel from './InputPanel.vue';
 import D3Panel from './D3Panel.vue';
 import {useDesign} from '../store/design';

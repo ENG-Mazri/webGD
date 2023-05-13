@@ -18,8 +18,6 @@
 <script lang="ts">
 import { defineComponent } from 'vue';
 import * as d3 from "d3";
-import {TestAlgorithm} from '../logic/testAlgorithm';
-import {InputParameters} from '../types/inputsParameters';
 import {useDesign} from '../store/design';
 
 

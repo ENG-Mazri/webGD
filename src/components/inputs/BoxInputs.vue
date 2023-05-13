@@ -78,7 +78,7 @@
 
 <script lang="ts">
 import { CSSProperties, defineComponent, ref } from 'vue';
-import {useDesign} from '../store/design'
+import {useDesign} from '../../store/design'
 // import { } from '@vicons/ionicons5';
 
 export default defineComponent({
@@ -152,15 +152,6 @@ export default defineComponent({
 
     },
     watch: {
-        // input_type() {
-        //     console.log("Input Type: ", this.input_type)
-        // },
-        // input_name() {
-        //     console.log("Input Type: ", this.input_name)
-        // },
-        // input_data() {
-        //     console.log("Input Type: ", this.input_data)
-        // }
     },
     methods: {
         saveInput() {
@@ -190,23 +181,6 @@ export default defineComponent({
     margin: 3px 0px;
 
 }
-
-/* .input{
-    justify-content:space-around !important;
-    position: relative !important;
-    width: 100% !important;
-    width: 40% !important;
-    align-items: center !important;
-    flex-flow:row !important;
-    margin-right:  0px !important;
-} */
-
-/* .input{
-    position: relative !important;
-    width: 70% !important;
-    flex-flow:row !important;
-} */
-
 
 .input_label{
     color: white !important;

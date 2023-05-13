@@ -3,7 +3,7 @@
         <n-space vertical>
             <div>
                 <n-divider title-placement="left">
-                    Width (m)
+                    Site offset (m)
                 </n-divider>
                 <n-space align="center" justify="space-between" inline>
                     <n-switch v-model:value="fixed_width" :rail-style="railStyle">
@@ -27,7 +27,7 @@
             </div>
             <div>
                 <n-divider title-placement="left">
-                    Height (m)
+                    Building height (m)
                 </n-divider>
                 <n-space align="center" justify="space-between" inline>
                     <n-switch v-model:value="fixed_height" :rail-style="railStyle">
@@ -51,7 +51,7 @@
             </div>
             <div>
                 <n-divider title-placement="left">
-                    Length (m)
+                    Floor height (m)
                 </n-divider>
                 <n-space align="center" justify="space-between" inline>
                     <n-switch v-model:value="fixed_length" :rail-style="railStyle">
@@ -78,8 +78,7 @@
 
 <script lang="ts">
 import { CSSProperties, defineComponent, ref } from 'vue';
-import {useDesign} from '../store/design'
-// import { } from '@vicons/ionicons5';
+import {useDesign} from '../../store/design'
 
 export default defineComponent({
     name: 'InputVue',
@@ -152,15 +151,6 @@ export default defineComponent({
 
     },
     watch: {
-        // input_type() {
-        //     console.log("Input Type: ", this.input_type)
-        // },
-        // input_name() {
-        //     console.log("Input Type: ", this.input_name)
-        // },
-        // input_data() {
-        //     console.log("Input Type: ", this.input_data)
-        // }
     },
     methods: {
         saveInput() {
@@ -190,23 +180,6 @@ export default defineComponent({
     margin: 3px 0px;
 
 }
-
-/* .input{
-    justify-content:space-around !important;
-    position: relative !important;
-    width: 100% !important;
-    width: 40% !important;
-    align-items: center !important;
-    flex-flow:row !important;
-    margin-right:  0px !important;
-} */
-
-/* .input{
-    position: relative !important;
-    width: 70% !important;
-    flex-flow:row !important;
-} */
-
 
 .input_label{
     color: white !important;

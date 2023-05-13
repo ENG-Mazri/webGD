@@ -35,24 +35,16 @@
                 </n-modal>
             </n-collapse-item>
         </n-collapse>
-        <n-collapse class='panel-collapse' default-expanded-names="1">
+        <n-collapse class='panel-collapse'>
             <template #arrow>
                 <n-icon>
                     <inputIcon/>
                 </n-icon>
             </template>
             <n-collapse-item title="Inputs" name="1">
-                <!-- <n-dynamic-input :on-create="onCreate" placeholder="ADD">
-                    <template #create-button-default>
-                        Add new input
-                    </template>
-                    <template #default="{ value }">
-                        <div style=" align-items: center; width: 100%">
-                            <InputVue :function="genFunction"/>
-                        </div>
-                    </template>
-                </n-dynamic-input> -->
-                <InputVue :function="genFunction"/>
+                <!-- <InputVue :function="genFunction"/> -->
+                <BoxInputVue v-if="genFunction == 'Box generator'"/>
+                <BuildingMassInputVue v-if="genFunction == 'Building mass generator'"/>
             </n-collapse-item>
         </n-collapse>
         <n-collapse class='panel-collapse'>
@@ -61,7 +53,6 @@
                     <objectivesIcon/>
                 </n-icon>
             </template>
-
             <n-collapse-item title="Objectives" name="1">
                 <n-select id='input_type' :options="objectives" default-value="Randomize" placeholder='Input types'/>
             </n-collapse-item>
@@ -144,26 +135,22 @@
 import { defineComponent, ref } from 'vue';
 import { OptionsOutline as optionsIcon , EnterOutline as inputIcon, Flash as testIcon, LogoTableau as resultIcon, BarChartSharp as statsIcon, ConstructOutline as functionsIcon, TrophyOutline as objectivesIcon, SettingsOutline as settingsIcon, HelpCircleOutline as helpIcon} from '@vicons/ionicons5';
 import InputVue from './Input.vue';
+import BoxInputVue from './inputs/BoxInputs.vue';
+import BuildingMassInputVue from './inputs/BuildingMassInputs.vue';
 import {useDesign} from '../store/design';
 import {TestAlgorithm} from '../logic/testAlgorithm';
-import {InputParameters} from '../types/inputsParameters';
 import * as d3 from "d3";
 import { useMessage } from 'naive-ui'
 import {event} from '../events/index'
 import { Viewer } from '../logic/Viewer'
 
 
-interface ModelType {
-  age: string | null
-  password: string | null
-  reenteredPassword: string | null
-}
-
 export default defineComponent({
     components: {
         optionsIcon, inputIcon, InputVue,
         testIcon, resultIcon, statsIcon,
-        functionsIcon, objectivesIcon, settingsIcon, helpIcon
+        functionsIcon, objectivesIcon, settingsIcon, 
+        helpIcon, BoxInputVue, BuildingMassInputVue
     },
     data(){
         return {
@@ -200,8 +187,6 @@ export default defineComponent({
             store: '' as any,
             showModal: false,
             genFunction: 'Box generator'
-            // svg: 
-            // message: '' as any,
         }
     },
     setup () {
@@ -247,7 +232,7 @@ export default defineComponent({
         runTest() {
             this.store.design.generations = this.generations;
             const {width, length, height} =  this.store.design;
-            const _inputs: InputParameters = {inputs:{width, length, height},
+            const _inputs = {inputs:{width, length, height},
               generations: this.generations}
 
             try {
@@ -351,7 +336,7 @@ h3{
     position: absolute;
     left: 5px;
     top: 35px;
-    width: 270px;
+    width: 250px;
     background-color: #efefef;
     margin: 3px;
     padding: 5px;
