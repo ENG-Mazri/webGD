@@ -22,6 +22,13 @@ export class MassGenerator extends Generator {
 // import { FontLoader } from 'three/examples/jsm/loaders/FontLoader.js';
 // import fontJSON from "three/examples/fonts/droid/droid_sans_bold.typeface.json"
 
+// //* Plane for shadow visualizition
+// // const planeGeometry = new THREE.PlaneGeometry( 100, 100 );
+// // const planeMaterial = new THREE.MeshBasicMaterial( {color: 0xefefef, side: THREE.DoubleSide} );
+// // const plane = new THREE.Mesh( planeGeometry, planeMaterial );
+// // plane.receiveShadow = true;
+// // plane.rotation.set(Math.PI/2,0, 0);
+// // scene.add( plane );
 
 // const greyColor = new THREE.Color(0x4d4d4d);
 
@@ -120,7 +127,7 @@ export class MassGenerator extends Generator {
 //   // }
 //   // let geometry = new THREE.ShapeGeometry( shape );
 //   let geometry = new THREE.ExtrudeGeometry( shape, extrudeSettings );
-//   if (i >= 4) {
+//   if (i > 4) {
 //     geometry.scale(0.8, 0.8, 0.8)
 //   }
 //   let mesh = new THREE.Mesh( geometry, material ) ;
@@ -129,23 +136,39 @@ export class MassGenerator extends Generator {
   
 //   mesh.rotation.set(Math.PI/2,0, 0);
 //   mesh.translateZ(-dist)
-//   mesh.updateMatrix()
+//   mesh.updateMatrix();
 //   scene.add( mesh );
+//   mesh.castShadow = true
 
 //   //TODO: Floor space geometry
 
 //   let spaceGeometry = new THREE.ExtrudeGeometry( spaceShape, spaceExtrudeSettings );
-//   // if (i >= 4) {
-//   //   spaceGeometry.scale(0.8, 0.8, 0.8)
-//   // }
+//   if (i >= 4) {
+//     spaceGeometry.scale(0.8, 0.8, 1)
+//   }
 //   let floorMesh = new THREE.Mesh( spaceGeometry, spaceMaterial ) ;
 //   floorMesh.rotation.set(Math.PI/2,0, 0);
 //   floorMesh.translateZ(-_dist)
-//   floorMesh.updateMatrix()
+//   floorMesh.updateMatrix();
+//   // console.log(floorMesh)
 //   scene.add( floorMesh );
+//   floorMesh.castShadow = true
 
-//   dist += spaceExtrudeSettings.depth
-//   _dist += spaceExtrudeSettings.depth
+//   dist += spaceExtrudeSettings.depth + extrudeSettings.depth
+//   _dist += spaceExtrudeSettings.depth + extrudeSettings.depth
+
+//   //TODO: add roof
+//   if ( i==15) {
+//     let mesh = new THREE.Mesh( geometry, material ) ;
+
+//     // console.log("shape...", geometry)
+    
+//     mesh.rotation.set(Math.PI/2,0, 0);
+//     mesh.translateZ(-dist)
+//     mesh.updateMatrix()
+//     scene.add( mesh );
+//   }
+
   
 // }
 
