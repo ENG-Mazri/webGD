@@ -5,7 +5,11 @@ import { Generator } from "./Generator";
     - generate floor rooms as another box
     - check the possibility of polygon box profile https://threejs.org/docs/index.html#api/en/geometries/ExtrudeGeometry
     - use worker for computations
-    -  
+    - graphics: white gray shades + ambient occlusion 
+    - Generation technics:
+        - scale down 
+        - rotate 
+        - offset
 
 */
 export class MassGenerator extends Generator {
@@ -13,28 +17,61 @@ export class MassGenerator extends Generator {
 }
 
 // TODO: Extusion
+
 // import { TextGeometry } from 'three/examples/jsm/geometries/TextGeometry.js';
 // import { FontLoader } from 'three/examples/jsm/loaders/FontLoader.js';
 // import fontJSON from "three/examples/fonts/droid/droid_sans_bold.typeface.json"
 
 
+// const greyColor = new THREE.Color(0x4d4d4d);
+
+
 // const loader = new FontLoader();
 // const parsedFont = loader.parse(fontJSON)
 
-// let text = new TextGeometry( "HELLOOOOOO",{
-//   font: parsedFont,
-//   size: 0.5,
-//   height: 0.01,
-// });
+// const material = new THREE.MeshPhongMaterial( { greyColor, side: THREE.DoubleSide } );
+// const txtMaterial = new THREE.MeshPhongMaterial( { color: 0x404040 } );
+// const spaceMaterial = new THREE.MeshPhongMaterial( { color: 0xccffff } );
+
+
+
+// let str = ["Public realm area: 2000 m2", "Volume: 40000 m3", "Building height: 80 m" ]
+// // Volume: 5000"
+// for ( let i=0; i < str.length; i++){
+//   let text = new TextGeometry( str[i], {
+//     font: parsedFont,
+//     size: 0.5,
+//     height: 0.01,
+//   });
+
+//   let txtMesh = new THREE.Mesh( text, txtMaterial ) ;
+
+//   txtMesh.rotation.set(-Math.PI/2, 0, -Math.PI/2);
+//   txtMesh.translateY(-3 + (-i))
+//   txtMesh.updateMatrix()
+//   scene.add( txtMesh );
+
+
+// }
 // const length = 5, height = 0.2, width = 8;
 
 // const shape = new THREE.Shape();
+// const spaceShape = new THREE.Shape();
 // shape.moveTo( 0, 0 );
 // shape.lineTo( 0, 8 );
 // shape.lineTo( 3, 8 );
 // shape.lineTo( 10, 5 );
 // shape.lineTo( 10, 0 );
 // shape.lineTo( 0, 0 );
+// const contour1 = [
+//   new THREE.Vector2(0, 0),
+//   new THREE.Vector2(0,8),
+//   new THREE.Vector2(3,8),
+//   new THREE.Vector2(10,5),
+//   new THREE.Vector2(10,0),
+//   new THREE.Vector2(0, 0)
+// ];
+
 
 
 // const extrudeSettings = {
@@ -47,34 +84,68 @@ export class MassGenerator extends Generator {
 // 	bevelSegments: 0
 // };
 
-// const material = new THREE.MeshPhongMaterial( { color } );
-// // let geometry = new THREE.ExtrudeGeometry( shape, extrudeSettings );
-// let mesh = new THREE.Mesh( text, material ) ;
+// const spaceExtrudeSettings = {
+// 	steps: 1,
+// 	depth: 0.8,
+// 	bevelEnabled: true,
+// 	bevelThickness: 0,
+// 	bevelSize: 0,
+// 	bevelOffset: 0,
+// 	bevelSegments: 0
+// };
 
-// mesh.rotation.set(-Math.PI/2, 0, -Math.PI/2);
-// mesh.translateY(-3)
-// mesh.updateMatrix()
-// scene.add( mesh );
+
 // let dist = extrudeSettings.depth;
+// let _dist = dist + spaceExtrudeSettings.depth;
 
-// console.log(mesh)
+// // console.log(mesh)
 
-// for ( let i=0; i <15; i++) {
+// //* FLOOR SPACE SHAPE
+// let off = offsetContour(-0.3,contour1);
+
+// spaceShape.moveTo( off[0].x, off[0].y );
+// spaceShape.lineTo( off[1].x, off[1].y );
+// spaceShape.lineTo( off[2].x, off[2].y );
+// spaceShape.lineTo( off[3].x, off[3].y );
+// spaceShape.lineTo( off[4].x, off[4].y );
+// spaceShape.lineTo( off[0].x, off[0].y );
+
+// for ( let i=0; i < 16; i++) {
   
-//   if (i == 10) {
-//     shape.curves[2].v2.x = 10;
-//     shape.curves[2].v2.y = 3;
-//     shape.curves[3].v1.x = 10;
-//     shape.curves[3].v1.y = 3;
-//   }
+//   // if (i == 7) {
+//   //   shape.curves[2].v2.x = 10;
+//   //   shape.curves[2].v2.y = 3;
+//   //   shape.curves[3].v1.x = 10;
+//   //   shape.curves[3].v1.y = 3;
+//   // }
+//   // let geometry = new THREE.ShapeGeometry( shape );
 //   let geometry = new THREE.ExtrudeGeometry( shape, extrudeSettings );
+//   if (i >= 4) {
+//     geometry.scale(0.8, 0.8, 0.8)
+//   }
 //   let mesh = new THREE.Mesh( geometry, material ) ;
+
+//   // console.log("shape...", geometry)
   
 //   mesh.rotation.set(Math.PI/2,0, 0);
 //   mesh.translateZ(-dist)
 //   mesh.updateMatrix()
-//   dist += 1
 //   scene.add( mesh );
+
+//   //TODO: Floor space geometry
+
+//   let spaceGeometry = new THREE.ExtrudeGeometry( spaceShape, spaceExtrudeSettings );
+//   // if (i >= 4) {
+//   //   spaceGeometry.scale(0.8, 0.8, 0.8)
+//   // }
+//   let floorMesh = new THREE.Mesh( spaceGeometry, spaceMaterial ) ;
+//   floorMesh.rotation.set(Math.PI/2,0, 0);
+//   floorMesh.translateZ(-_dist)
+//   floorMesh.updateMatrix()
+//   scene.add( floorMesh );
+
+//   dist += spaceExtrudeSettings.depth
+//   _dist += spaceExtrudeSettings.depth
   
 // }
 

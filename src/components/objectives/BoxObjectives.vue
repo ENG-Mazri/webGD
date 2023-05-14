@@ -8,12 +8,15 @@
                 <n-space item-style="display: flex;" align="center">
                     <n-checkbox
                         v-model:checked="isMaxSurfaceArea"
+                        color="#9cabb4"
+                        @update:checked="()=> !isMinSurfaceArea"
                         size="small"
                         >
                         Maximize
                     </n-checkbox>
                     <n-checkbox
                         v-model:checked="isMinSurfaceArea"
+                        @update:checked="()=> !isMaxSurfaceArea"
                         size="small"
                         >
                         Minimize
@@ -79,17 +82,23 @@ export default defineComponent({
     watch: {
         isMaxSurfaceArea() {
             // this.isMinSurfaceArea = !this.isMinSurfaceArea
-            if(this.isMinSurfaceArea) this.isMinSurfaceArea = false
+            // if(this.isMinSurfaceArea) this.isMinSurfaceArea = false
 
         },
         isMinSurfaceArea() {
             // this.isMaxSurfaceArea = !this.isMaxSurfaceArea
-            if(this.isMaxSurfaceArea) this.isMaxSurfaceArea = false
+            // if(this.isMaxSurfaceArea) this.isMaxSurfaceArea = false
         }
     },
     methods: {
-        saveInput() {
+        // test() {
             
+        //     this.isMinSurfaceArea = !this.isMinSurfaceArea;
+        //     this.isMaxSurfaceArea = !this.isMaxSurfaceArea;
+        //     console.log('koloooooooo')
+        // },
+        test (checked: boolean) {
+            console.log('koloooooooo', checked)
         }
     }
 })
