@@ -8,7 +8,6 @@
                 <n-space item-style="display: flex;" align="center">
                     <n-checkbox
                         v-model:checked="isMaxSurfaceArea"
-                        color="#9cabb4"
                         @update:checked="()=> !isMinSurfaceArea"
                         size="small"
                         >
