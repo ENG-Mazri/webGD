@@ -35,7 +35,7 @@
                 </n-modal>
             </n-collapse-item>
         </n-collapse>
-        <n-collapse class='panel-collapse'>
+        <n-collapse class='panel-collapse' default-expanded-names="1">
             <template #arrow>
                 <n-icon>
                     <inputIcon/>
@@ -43,7 +43,7 @@
             </template>
             <n-collapse-item title="Inputs" name="1">
                 <!-- <InputVue :function="genFunction"/> -->
-                <BoxInputVue v-if="genFunction == 'Box generator'"/>
+                <BoxInputVue v-if="genFunction == 'Box generator'" :function="strategy"/>
                 <BuildingMassInputVue v-if="genFunction == 'Building mass generator'"/>
             </n-collapse-item>
         </n-collapse>
@@ -54,10 +54,10 @@
                 </n-icon>
             </template>
             <n-collapse-item title="Strategy" name="1">
-                <n-select id='input_type' :options="strategies" default-value="Randomize" placeholder='Input types'/>
+                <n-select id='input_type' :options="strategies" v-model:value="strategy" placeholder='Input types'/>
             </n-collapse-item>
         </n-collapse>
-        <n-collapse class='panel-collapse' default-expanded-names="1">
+        <n-collapse v-if="strategy == 'Optimize'" class='panel-collapse'>
            <template #arrow>
                 <n-icon>
                     <objectivesIcon/>
@@ -75,8 +75,19 @@
             </template>
 
             <n-collapse-item title="Design options" name="1">
-                <n-input-number clearable :precision="0" min="1" max="10"  v-model:value="generations" @update:value="handleGen" placeholder='Number of generations' />
+                <n-input-number clearable :precision="0" min="1" max="50"  v-model:value="populations" placeholder='Populations' />
+                <n-input-number v-if="strategy == 'Optimize'" clearable :precision="0" min="1" max="10"  v-model:value="generations" placeholder='Generations' />
                 <n-input-number clearable :precision="0" placeholder='Seed'/>
+            </n-collapse-item>
+        </n-collapse>
+        <n-collapse class='panel-collapse' default-expanded-names="1">
+            <template #arrow>
+                <n-icon>
+                    <outputIcon/>
+                </n-icon>
+            </template>
+            <n-collapse-item title="Output settings" name="1">
+                <OutputSettingsVue v-if="showOutputs"/>
             </n-collapse-item>
         </n-collapse>
         <n-collapse class='panel-collapse settings'>
@@ -143,8 +154,9 @@
 
 <script lang="ts">
 import { defineComponent, ref } from 'vue';
-import { OptionsOutline as optionsIcon , EnterOutline as inputIcon, Flash as testIcon, LogoTableau as resultIcon, BarChartSharp as statsIcon, ConstructOutline as functionsIcon, TrophyOutline as objectivesIcon, SettingsOutline as settingsIcon, HelpCircleOutline as helpIcon, FlaskOutline as strategyIcon} from '@vicons/ionicons5';
+import { OptionsOutline as optionsIcon , EnterOutline as inputIcon, Flash as testIcon, LogoTableau as resultIcon, BarChartSharp as statsIcon, ConstructOutline as functionsIcon, TrophyOutline as objectivesIcon, SettingsOutline as settingsIcon, HelpCircleOutline as helpIcon, FlaskOutline as strategyIcon, LogOutOutline as outputIcon} from '@vicons/ionicons5';
 import InputVue from './Input.vue';
+import OutputSettingsVue from './OutputSettings.vue';
 import BoxInputVue from './inputs/BoxInputs.vue';
 import BuildingMassInputVue from './inputs/BuildingMassInputs.vue';
 import {useDesign} from '../store/design';
@@ -154,6 +166,9 @@ import { useMessage } from 'naive-ui'
 import {event} from '../events/index'
 import { Viewer } from '../logic/Viewer'
 import BoxObjectives from './objectives/BoxObjectives.vue'
+import {Strategy} from '../enums/Strategy'
+import {Generator} from '../enums/Generator'
+
 
 
 export default defineComponent({
@@ -162,7 +177,7 @@ export default defineComponent({
         testIcon, resultIcon, statsIcon, strategyIcon,
         functionsIcon, objectivesIcon, settingsIcon, 
         helpIcon, BoxInputVue, BuildingMassInputVue,
-        BoxObjectives
+        BoxObjectives, outputIcon, OutputSettingsVue
     },
     data(){
         return {
@@ -195,27 +210,25 @@ export default defineComponent({
                     value: 'Cross product'
                 }
             ],
-            generations: 1,
+            strategy: "Randomize",
+            generations: null ,
+            populations: null ,
             store: '' as any,
             showModal: false,
-            genFunction: 'Box generator'
+            genFunction: 'Box generator',
+            showOutputs: false
         }
     },
     setup () {
         window.$message = useMessage();
+    },
+    watch: {
     },
     created (){},
     mounted() {
         this.store = useDesign();
     },
     methods: {
-        genData($event) {
-            this.generations = $event;
-            console.log($event)
-        },
-        addInput(){
-            console.log('Add input')
-        },
         onCreate () {
             return {
                 isCheck: false,
@@ -242,23 +255,33 @@ export default defineComponent({
             console.log(this.store.design)
         },
         runTest() {
-            this.store.design.generations = this.generations;
-            const {width, length, height} =  this.store.design;
-            const _inputs = {inputs:{width, length, height},
-              generations: this.generations}
+            // this.store.design.generations = this.generations;
+            // const {width, length, height} =  this.store.design;
+            // const _inputs = {inputs:{width, length, height},
+            //   populations: this.generations}
 
-            try {
-                const GD_test = new TestAlgorithm(_inputs).process();
-                window.dispatchEvent(event);
+            // try {
+            //     const GD_test = new TestAlgorithm(_inputs).process();
+            //     window.dispatchEvent(event);
             
-                window?.$message.success('Test completed successfully!');
-                this.store.result = [...GD_test];
+            //     window?.$message.success('Test completed successfully!');
+            //     this.store.result = [...GD_test];
 
-                localStorage.setItem('gd_result', JSON.stringify(GD_test))
-            } catch (error) {
-                window?.$message.error('Test failed: make sure you provide inputs correctly')
-                console.warn(error)
+            //     localStorage.setItem('gd_result', JSON.stringify(GD_test))
+            // } catch (error) {
+            //     window?.$message.error('Test failed: make sure you provide inputs correctly')
+            //     console.warn(error)
+            // }
+            switch(this.genFunction){
+                case Generator.BoxGenerator:
+                    this.store.design[Strategy.Randomize]['populations'] = this.populations;
+                    console.log( this.store.design[Strategy.Randomize] )
+                    const results = new TestAlgorithm(this.store.design[Strategy.Randomize]).process();
+                    console.log("RESULTs...", results)
+                    break; 
+
             }
+            
 
         },
         visualizeResult() {
@@ -327,9 +350,6 @@ export default defineComponent({
             //TODO: add the two result variables + in the algorithm
             
 
-        },
-        handleGen(){
-            // this.store.design.generations = this.generations
         }
     }
 })

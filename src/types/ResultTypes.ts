@@ -5,8 +5,8 @@ import { BoxEvaluatorType, BuildingMassEvaluatorType, LayoutEvaluatorType } from
 
 export type StudyType = {
     id: string,
-    generator: Generator,
-    strategy: Strategy,
+    generator: string,
+    strategy: string,
     data: any               // data: {
 }                           //   generation_0: {
                             //    population_0: [{VariationType},{VariationType},...],
@@ -17,8 +17,8 @@ export type StudyType = {
 
 export type VariationType = {
     id: string,
-    generator: Generator,
-    strategy: Strategy,
+    generator: string,
+    strategy: string,
     genPop: string,
     inputs: BoxInputType | BuildingMassInputType | LayoutInputType,
     outputs: BoxEvaluatorType | BuildingMassEvaluatorType | LayoutEvaluatorType
