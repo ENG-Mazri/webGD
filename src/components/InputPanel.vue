@@ -35,7 +35,7 @@
                 </n-modal>
             </n-collapse-item>
         </n-collapse>
-        <n-collapse class='panel-collapse' default-expanded-names="1">
+        <n-collapse class='panel-collapse'>
             <template #arrow>
                 <n-icon>
                     <inputIcon/>
@@ -80,14 +80,14 @@
                 <n-input-number clearable :precision="0" placeholder='Seed'/>
             </n-collapse-item>
         </n-collapse>
-        <n-collapse class='panel-collapse' default-expanded-names="1">
+        <n-collapse class='panel-collapse' v-if="showOutputs">
             <template #arrow>
                 <n-icon>
                     <outputIcon/>
                 </n-icon>
             </template>
             <n-collapse-item title="Output settings" name="1">
-                <OutputSettingsVue v-if="showOutputs"/>
+                <OutputSettingsVue :outputOptions="outputSet"/>
             </n-collapse-item>
         </n-collapse>
         <n-collapse class='panel-collapse settings'>
@@ -216,7 +216,12 @@ export default defineComponent({
             store: '' as any,
             showModal: false,
             genFunction: 'Box generator',
-            showOutputs: false
+            showOutputs: false,
+            x_axis: null,
+            y_axis: null,
+            size: null,
+            color: null,
+            outputSet: []
         }
     },
     setup () {
@@ -227,6 +232,19 @@ export default defineComponent({
     created (){},
     mounted() {
         this.store = useDesign();
+        const GD_d3 = JSON.parse(localStorage.getItem('gd_d3') as any);
+        const GD_results = JSON.parse(localStorage.getItem('gd_result') as any);
+        console.log('00...', GD_results)
+
+        if ( Object.keys(GD_d3).length > 0 ) {
+            
+            for (let res in GD_results) {
+                this.outputSet.push({label: res, value: res})
+                console.log({label: res, value: res})
+            }
+            this.showOutputs = true;
+        }
+
     },
     methods: {
         onCreate () {
@@ -255,51 +273,59 @@ export default defineComponent({
             console.log(this.store.design)
         },
         runTest() {
-            // this.store.design.generations = this.generations;
-            // const {width, length, height} =  this.store.design;
-            // const _inputs = {inputs:{width, length, height},
-            //   populations: this.generations}
 
-            // try {
-            //     const GD_test = new TestAlgorithm(_inputs).process();
-            //     window.dispatchEvent(event);
+            try {
+                switch(this.genFunction){
+                    case Generator.BoxGenerator:
+                        this.store.design[Strategy.Randomize]['populations'] = this.populations;
+                        const generate = new TestAlgorithm(this.store.design[Strategy.Randomize])
+                        const results = generate.process();
+                        const study = generate.getStudyData();
+                        localStorage.setItem('gd_result', JSON.stringify(results));
+                        localStorage.setItem('gd_study', JSON.stringify(study));
+                        this.showOutputs = true;
+                        for (let res in results) {
+                            this.outputSet.push({label: res, value: res})
+                            console.log({label: res, value: res})
+                        }
+                        break; 
+
+                }
             
-            //     window?.$message.success('Test completed successfully!');
-            //     this.store.result = [...GD_test];
-
-            //     localStorage.setItem('gd_result', JSON.stringify(GD_test))
-            // } catch (error) {
-            //     window?.$message.error('Test failed: make sure you provide inputs correctly')
-            //     console.warn(error)
-            // }
-            switch(this.genFunction){
-                case Generator.BoxGenerator:
-                    this.store.design[Strategy.Randomize]['populations'] = this.populations;
-                    console.log( this.store.design[Strategy.Randomize] )
-                    const results = new TestAlgorithm(this.store.design[Strategy.Randomize]).process();
-                    console.log("RESULTs...", results)
-                    break; 
-
+                window?.$message.success('Test completed successfully!');
+            } catch (error) {
+                window?.$message.error('Test failed: make sure you provide inputs correctly')
+                console.warn(error)
             }
-            
 
         },
         visualizeResult() {
             const w = 500;
             const h = 500;
+            // const svgContainer = document.getElementById('d3Panel_main') as HTMLElement;
+            // const svgElement = document.createElement('svg');
+            // svgElement.id = "d3Svg";
+            // svgContainer.appendChild(svgElement)
+            const _svg = document.getElementById('d3Svg') as HTMLElement;
+
+            while (_svg.lastChild) {
+                _svg.removeChild(_svg.lastChild);
+            }
             const svg = d3.select("#d3Svg").attr("width", w).attr("height", h);
             const g = svg.append("g");
      
-            const GD_test = JSON.parse(localStorage.getItem('gd_result') as any);;
-            if( !GD_test || GD_test.length == 0){
+            const GD_results = JSON.parse(localStorage.getItem('gd_result') as any);
+            if( !GD_results || GD_results.length == 0){
                 window?.$message.error('No data to visualize')
                 return;
             }
-            console.log("D3 result", GD_test)
+            const GD_d3 = JSON.parse(localStorage.getItem('gd_d3') as any);
+
         
             const padding = 60;
-            const maxX = d3.max( [...GD_test], (d,i) => d.surface_area);
-            const maxY = d3.max( [...GD_test], (d,i) => d.volume);
+            const maxX = d3.max( [ ...GD_results[GD_d3['x_axis']] ], (d,i) => d);
+            const maxY = d3.max( [ ...GD_results[GD_d3['y_axis']] ], (d,i) => d);
+            const maxSize = d3.max( [...GD_results[GD_d3['size']] ], (d,i) => d);
 
             const xScale = d3.scaleLinear()
                              .domain([0, maxX as number])
@@ -309,13 +335,21 @@ export default defineComponent({
                              .domain([0, maxY as number])
                              .range([h - padding, padding]);
 
+            const sizeScale = d3.scaleLinear()
+                             .domain([0, maxSize as number])
+                             .range([0, 10]);
+
+            console.log("D3 result- scale...", maxSize);
+            const GD_data = JSON.parse(localStorage.getItem('gd_study') as any);
+
+
             svg.selectAll("circle")
-               .data([...GD_test])
+               .data([...GD_data])
                .enter()
                .append("circle")
-               .attr("cx", (d) => xScale(d.surface_area))
-               .attr("cy",(d) => yScale(d.volume))
-               .attr("r", (d) => 10)
+               .attr("cx", (d) => xScale(d.outputs[GD_d3['x_axis']]))
+               .attr("cy",(d) => yScale(d.outputs[GD_d3['y_axis']]))
+               .attr("r", (d) => sizeScale(d.outputs[GD_d3['size']]))
                .attr("id", "scatter")
                .attr('fill', 'rgba(162, 88, 143, 0.3)')
                .on("click", () => console.log("CLICKED"))
@@ -341,13 +375,17 @@ export default defineComponent({
                .attr("transform", `translate(${(padding)}, 0)`)
                .call(yAxis); 
 
-            //TODO: output data inserting
-            document.getElementById('xAxis_tag').innerHTML += 'Surface_area';
-            document.getElementById('yAxis_tag').innerHTML += 'Volume';
-            document.getElementById('size_tag').innerHTML += 'Base_area';
-            document.getElementById('color_tag').innerHTML += 'Perimeter';
+            // //TODO: output data inserting
+            document.getElementById('xAxis_tag').innerHTML = 'X-axis: ';
+            document.getElementById('yAxis_tag').innerHTML = 'Y-axis: ';
+            document.getElementById('size_tag').innerHTML = 'Size: ';
+            document.getElementById('color_tag').innerHTML = 'Color: ';
+            document.getElementById('xAxis_tag').innerHTML += GD_d3['x_axis'];
+            document.getElementById('yAxis_tag').innerHTML += GD_d3['y_axis'];
+            document.getElementById('size_tag').innerHTML += GD_d3['size'];
+            document.getElementById('color_tag').innerHTML += '';
 
-            //TODO: add the two result variables + in the algorithm
+            // //TODO: add the two result variables + in the algorithm
             
 
         }

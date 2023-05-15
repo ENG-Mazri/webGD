@@ -10,7 +10,7 @@ export class TestAlgorithm {
     private populations: number;
     private seed: number;
     private inputs: BoxInputType;
-    private variations: any[] = [];
+    private outputs: any = {};
     public study: StudyType;
     private generator: string = Generator.BoxGenerator;
     private strategy: string;
@@ -24,6 +24,10 @@ export class TestAlgorithm {
         const id = uuidv4();
         this.generator = Generator.BoxGenerator;
         this.strategy = data.strategy;
+        this.outputs['surface_area'] = [];
+        this.outputs['base_area'] = [];
+        this.outputs['volume'] = [];
+
         
         this.study = { 
             id, 
@@ -42,6 +46,7 @@ export class TestAlgorithm {
             const inputs = this.generateBox(this.inputs);
             const outputs = this.evaluate( inputs );
             const id = uuidv4();
+
             variation = {
                 id,
                 generator: this.generator,
@@ -49,11 +54,15 @@ export class TestAlgorithm {
                 genPop: `0_${i}`,
                 inputs,
                 outputs
-            }
-            this.study.data.push(variation)
+            };
+            this.study.data.push(variation);
+
+            this.outputs['surface_area'].push(outputs.surface_area);
+            this.outputs['base_area'].push(outputs.base_area);
+            this.outputs['volume'].push(outputs.volume);
         }
 
-        return this.study;
+        return this.outputs;
 
     }
 
@@ -77,7 +86,7 @@ export class TestAlgorithm {
 
         }
         
-        console.log('GENERATOR: ', randomValues);
+        // console.log('GENERATOR: ', randomValues);
 
         return randomValues;
     }
@@ -94,6 +103,10 @@ export class TestAlgorithm {
             volume,
             base_area
         }
+    }
+
+    public getStudyData(){
+        return this.studyData;
     }
 
     // public clearTest() {

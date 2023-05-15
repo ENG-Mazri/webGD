@@ -1,6 +1,6 @@
 <template>
   <div class="d3Panel" ref="$wrapper" @showResultEvent="visualizeResult">
-    <div class="d3Panel_main">
+    <div class="d3Panel_main" id="d3Panel_main">
       <svg id="d3Svg"></svg>
     </div>
     <div class="d3Panel_footer">

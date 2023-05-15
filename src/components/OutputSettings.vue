@@ -3,19 +3,19 @@
     <n-divider title-placement="left">
         X axis
     </n-divider>
-    <n-select id='outputs' :options="outputs" v-model:value="output"/>
+    <n-select id='outputs' :options="outputOptions" v-model:value="x_axis"/>
     <n-divider title-placement="left">
         Y axis
     </n-divider>
-    <n-select id='outputs' :options="outputs" v-model:value="output"/>
+    <n-select id='outputs' :options="outputOptions" v-model:value="y_axis"/>
     <n-divider title-placement="left">
         Size
     </n-divider>
-    <n-select id='outputs' :options="outputs" v-model:value="output"/>
+    <n-select id='outputs' :options="outputOptions" v-model:value="size"/>
     <n-divider title-placement="left">
         Color
     </n-divider>
-    <n-select id='outputs' :options="outputs" v-model:value="output"/>
+    <n-select id='outputs' :options="outputOptions" v-model:value="color"/>
 </div>
 </template>
 
@@ -26,20 +26,68 @@ import { LogOutOutline as outputIcon} from '@vicons/ionicons5';
 
 
 export default defineComponent({
+    props:{
+        outputOptions: []
+    },
     components: {
         outputIcon
     },
     data(){
         return {
             outputs: [],
-            output:''
+            output:'',
+            x_axis: null,
+            y_axis: null,
+            size: null,
+            color: null,
         }
     },
     setup () {
     },
     created (){},
+    watch:{
+        x_axis(){
+            localStorage.setItem('gd_d3', JSON.stringify({
+            x_axis: this.x_axis,
+            y_axis: this.y_axis,
+            size: this.size,
+            color: this.color
+            }));
+        },
+        y_axis(){
+            localStorage.setItem('gd_d3', JSON.stringify({
+            x_axis: this.x_axis,
+            y_axis: this.y_axis,
+            size: this.size,
+            color: this.color
+            }));
+        },
+        size(){
+            localStorage.setItem('gd_d3', JSON.stringify({
+            x_axis: this.x_axis,
+            y_axis: this.y_axis,
+            size: this.size,
+            color: this.color
+            }));
+        },
+        color(){
+            localStorage.setItem('gd_d3', JSON.stringify({
+            x_axis: this.x_axis,
+            y_axis: this.y_axis,
+            size: this.size,
+            color: this.color
+            }));
+        }
+    },
     mounted() {
         this.store = useDesign();
+        console.log("OUTPUT ", this.outputOptions)
+        localStorage.setItem('gd_d3', JSON.stringify({
+            x_axis: this.x_axis,
+            y_axis: this.y_axis,
+            size: this.size,
+            color: this.color
+        }));
     },
     methods: {
     }
