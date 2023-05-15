@@ -8,21 +8,56 @@
                 <n-space item-style="display: flex;" align="center">
                     <n-checkbox
                         v-model:checked="isMaxSurfaceArea"
-                        @update:checked="()=> !isMinSurfaceArea"
-                        size="small"
-                        >
+                        @click="onMaxSurfaceArea"
+                        size="small">
                         Maximize
                     </n-checkbox>
                     <n-checkbox
                         v-model:checked="isMinSurfaceArea"
-                        @update:checked="()=> !isMaxSurfaceArea"
-                        size="small"
-                        >
+                        @click="onMinSurfaceArea"
+                        size="small">
                         Minimize
                     </n-checkbox>
                 </n-space>
             </div>
-            
+            <div>
+                <n-divider title-placement="left">
+                    Volume
+                </n-divider>
+                <n-space item-style="display: flex;" align="center">
+                    <n-checkbox
+                        v-model:checked="isMaxVolume"
+                        @click="onMaxVolume"
+                        size="small">
+                        Maximize
+                    </n-checkbox>
+                    <n-checkbox
+                        v-model:checked="isMinVolume"
+                        @click="onMinVolume"
+                        size="small">
+                        Minimize
+                    </n-checkbox>
+                </n-space>
+            </div>
+            <div>
+                <n-divider title-placement="left">
+                    Base area
+                </n-divider>
+                <n-space item-style="display: flex;" align="center">
+                    <n-checkbox
+                        v-model:checked="isMaxBaseArea"
+                        @click="onMaxBaseArea"
+                        size="small">
+                        Maximize
+                    </n-checkbox>
+                    <n-checkbox
+                        v-model:checked="isMinBaseArea"
+                        @click="onMinBaseArea"
+                        size="small">
+                        Minimize
+                    </n-checkbox>
+                </n-space>
+            </div>           
         </n-space>
     </div>
 </template>
@@ -62,12 +97,16 @@ export default defineComponent({
         return style
       }
     }
-  },
+    },
     data() {
         return {
             store: '' as any,
             isMaxSurfaceArea: false,
             isMinSurfaceArea: false,
+            isMaxVolume: false,
+            isMinVolume: false,
+            isMaxBaseArea: false,
+            isMinBaseArea: false,
             disabled: true,
             value: ''
             
@@ -90,15 +129,26 @@ export default defineComponent({
         }
     },
     methods: {
-        // test() {
-            
-        //     this.isMinSurfaceArea = !this.isMinSurfaceArea;
-        //     this.isMaxSurfaceArea = !this.isMaxSurfaceArea;
-        //     console.log('koloooooooo')
-        // },
-        test (checked: boolean) {
-            console.log('koloooooooo', checked)
-        }
+        onMaxSurfaceArea() {
+            if (this.isMaxSurfaceArea) this.isMinSurfaceArea = false;
+        },
+        onMinSurfaceArea() {
+            if (this.isMinSurfaceArea) this.isMaxSurfaceArea = false;
+        },
+        onMaxVolume() {
+            if (this.isMaxVolume) this.isMinVolume = false;
+        },
+        onMinVolume() {
+            if (this.isMinVolume) this.isMaxVolume = false;
+        },
+        onMaxBaseArea() {
+            if (this.isMaxBaseArea) this.isMinBaseArea = false;
+        },
+        onMinBaseArea() {
+            if (this.isMinBaseArea) this.isMaxBaseArea = false;
+        },
+
+
     }
 })
 </script>
