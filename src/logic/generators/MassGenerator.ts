@@ -17,6 +17,7 @@ export class MassGenerator extends Generator {
 }
 
 // TODO: Extusion
+// let hasBBox = false;
 // const height = 0.2;
 // const extrudeSettings = {
 // 	steps: 1,
@@ -44,13 +45,22 @@ export class MassGenerator extends Generator {
 
 // const contour1 = [
 //   new THREE.Vector2(0, 0),
-//   new THREE.Vector2(0,8),
-//   new THREE.Vector2(3,8),
-//   new THREE.Vector2(10,5),
+//   new THREE.Vector2(0,18),
+//   new THREE.Vector2(13,18),
+//   new THREE.Vector2(20,15),
+//   new THREE.Vector2(20,0),
+//   new THREE.Vector2(0, 0)
+// ];
+// const contour2 = [
+//   new THREE.Vector2(0, 0),
+//   new THREE.Vector2(0,20),
+//   new THREE.Vector2(10,20),
+//   new THREE.Vector2(15,15),
+//   new THREE.Vector2(15,5),
 //   new THREE.Vector2(10,0),
 //   new THREE.Vector2(0, 0)
 // ];
-// const createText = (results, position) => {
+// const createText = (results, offset) => {
 //   const loader = new FontLoader();
 //   const parsedFont = loader.parse(fontJSON)
   
@@ -59,17 +69,28 @@ export class MassGenerator extends Generator {
 //   for ( let i=0; i < str.length; i++){
 //     let text = new TextGeometry( str[i], {
 //       font: parsedFont,
-//       size: 0.5,
+//       size: 0.7,
 //       height: 0.01,
 //     });
   
 //     let txtMesh = new THREE.Mesh( text, txtMaterial ) ;
   
 //     txtMesh.rotation.set(-Math.PI/2, 0, -Math.PI/2);
-//     txtMesh.translateY(-3 -i)
+//     txtMesh.translateY(offset -i)
 //     txtMesh.updateMatrix()
 //     scene.add( txtMesh );
 //   }
+// }
+
+// const visualizeBBox = ( bbox ) => {
+//   const geometry = new THREE.SphereGeometry( 0.3, 32, 16 ); 
+//   const material = new THREE.MeshBasicMaterial( { color: 0xff0000 } ); 
+//   const sMax = new THREE.Mesh( geometry, material ); 
+//   sMax.position.set( bbox.max.x,0, bbox.max.y );
+//   const sMin = new THREE.Mesh( geometry, material ); 
+//   sMin.position.set( bbox.min.x, 0, bbox.min.z );
+//   scene.add( sMax );
+//   scene.add( sMin );
 // }
 
 // const offsetContour = (offset, contour) => {
@@ -130,25 +151,77 @@ export class MassGenerator extends Generator {
 //   return result;
 // }
 
+// const setScale = (currScale) =>{
+  
+//   if (!currScale) return currScale = new THREE.Vector3(1, 1, 1);
+
+//   if (currScale.x == 1){
+//     let rndBool = Math.random() < 0.5;
+//     if( rndBool == false ) return currScale = new THREE.Vector3(1, 1, 1)
+//     else {
+//     let rndBool = Math.random() < 0.5;
+//     if( rndBool == false ) currScale = new THREE.Vector3(0.9, 0.9, 1)
+//     else currScale = new THREE.Vector3(0.7, 0.7, 1)
+//     return currScale
+//     }
+//   }
+
+//   if (currScale.x == 0.9){
+//     let rndBool = Math.random() < 0.5;
+//     if( rndBool == false ) currScale = new THREE.Vector3(0.9, 0.9, 1)
+//     else currScale = new THREE.Vector3(0.7, 0.7, 1)
+//     return currScale
+//   } 
+
+//   if (currScale.x == 0.7) return currScale;
+// } 
+
 // const createShape = ( points, floors ) => {
 //   let dist = extrudeSettings.depth; 
 //   let _dist = dist + spaceExtrudeSettings.depth;
-//   const offs = [ 0, -0.4, -0.7, -0.7, -0.7, -2];
-//   const results = {area: 6666, volume: 100000, height: 95}
 
-//   const scale = [ new THREE.Vector3(1,1,1), new THREE.Vector3(0.8, 0.8, 1), new THREE.Vector3(0.8, 0.8, 1) ]
+//   let currScale;
+//   let currOff = 0;
+//   let offFloor;
+//   let offSpace;
+
+//   const offs = [ 0, -0.4, -0.7, -0.7, -0.7, -2];
+
+//   const scale = { min: new THREE.Vector3(1,1,1),
+//                   mid: new THREE.Vector3(0.9, 0.9, 1),
+//                   max: new THREE.Vector3(0.7, 0.7, 1) 
+//                 };
 
 //   for ( let i = 0; i < floors.length; i++) { 
-//     const offFloor = offsetContour( offs[i], points );
-//     const offSpace = offsetContour( offs[i] - 0.2, points );
-//     const floorShape = formBaseShape(offFloor );
-//     const spaceFloorShape = formBaseShape( offSpace );
-//     dist = createFloors( floorShape, floors[i], dist, scale[0] );
-//     _dist = createFloorSpaces( spaceFloorShape, floors[i], _dist, scale[0] );
+    
+    
+//     if(currScale && currScale.x == 1) {
+//       let rndBool = Math.random() < 0.5;
+//       if( rndBool == false ) currOff = randomIntFromInterval(currOff,-2);
+//     } 
+//     currScale = setScale(currScale);
+//     console.log("Scale: ", currScale)
+//     // else {
+//     //   currOff = 0
+//     // }
 
+    
+//     console.log("Offset: ", currOff)
+
+
+//     offFloor = offsetContour( currOff, points );
+//     offSpace = offsetContour( currOff - 0.2, points );
+
+//     const floorShape = formBaseShape( offFloor );
+//     const spaceFloorShape = formBaseShape( offSpace );
+
+//     dist = createFloors( floorShape, floors[i], dist, currScale );
+//     _dist = createFloorSpaces( spaceFloorShape, floors[i], _dist, currScale );
 //   }
 
-//   createText(results, '')
+//   const results = {area: 6666, volume: 100000, height: dist}
+
+//   createText(results, -3)
 // }
 
 // const createFloors = ( shape, nFloors, dist, scale ) => {
@@ -160,6 +233,13 @@ export class MassGenerator extends Generator {
 //     mesh.rotation.set(Math.PI/2,0, 0);
 //     mesh.translateZ(-dist)
 //     mesh.updateMatrix();
+
+//     // if(!hasBBox){
+//     //   geometry.computeBoundingBox();
+//     //   visualizeBBox( geometry.boundingBox );
+//     //   hasBBox = true
+//     // }
+
 //     scene.add( mesh );
 //     mesh.castShadow = true
 //     dist += spaceExtrudeSettings.depth + extrudeSettings.depth
@@ -219,10 +299,28 @@ export class MassGenerator extends Generator {
 //   return out.map( (el) => { return Math.round(el * mult + min); });
 // }
 
-// const floors = nDivider(20, 3, 2)
+// const randomIntFromInterval = (min, max) => { 
+//   return Math.floor(Math.random() * (max - min + 1) + min)
+// }
+
+// const randomPolies = ( max, min, nPolies ) => {
+//   const randomPolies = [];
+//   while( randomPolies.lenth < nPolies ) {
+//     let randX = randomIntFromInterval( min.x, max.x );
+//     let randY = randomIntFromInterval( min.y, max.y );
+
+
+
+//   }
+// }
+
+
+// const rndInt = randomIntFromInterval(15, 30);
+// const floors = nDivider(rndInt, 6, 2);
+
+// console.log(rndInt);
 // console.log(floors);
-// // const floors = [3, 12, 1];
-// createShape( contour1, floors )
+// createShape( contour1, floors );
 
 
 // TODO: Extusion
