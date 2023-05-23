@@ -1,19 +1,8 @@
 <template>
   <InputPanel/>
-  <!-- <div class="canvas">
-      <canvas id="three-canvas"></canvas>
-  </div> -->
-    <div class="outputPanel_gallery">
-    <n-scrollbar style="max-height: 650px">
-      <div class="panel_header">
-        <h3> Output 3D gallery </h3>
-      </div>
-      <div class="outputPanel_gallery_main" id="gallery_container">
-      </div>
-    </n-scrollbar>
-    </div>
   <D3Panel/>
-  <p id="app_stamp">Design space explorer &copy; - 2023</p>
+  <VarResultPanel/>
+  <p id="app_stamp">Design space explorer - 2023</p>
 </template>
 
 <script lang="ts">
@@ -21,13 +10,14 @@ import { defineComponent } from 'vue';
 import InputPanel from './InputPanel.vue';
 import D3Panel from './D3Panel.vue';
 import {useDesign} from '../store/design';
-import { Viewer } from '../logic/Viewer'
+import { Viewer } from '../logic/Viewer';
+import VarResultPanel from '../components/Rsult3DGallery.vue'
 
 
 export default defineComponent({
   name: 'Main',
   components: {
-    InputPanel, D3Panel
+    InputPanel, D3Panel, VarResultPanel
   },
   props: {
     msg: String,
@@ -49,26 +39,26 @@ export default defineComponent({
 
   },
   methods:{
-    buildViewer() {
-      let resultsData = JSON.parse(localStorage.getItem('gd_result') as any);
+    // buildViewer() {
+    //   let resultsData = JSON.parse(localStorage.getItem('gd_result') as any);
 
-      const gens = resultsData.length;
-      const threeContainer = document.getElementById('gallery_container') as HTMLElement;
+    //   const gens = resultsData.length;
+    //   const threeContainer = document.getElementById('gallery_container') as HTMLElement;
       
-      //* Clear all children
-      while (threeContainer.firstChild) {
-        threeContainer.removeChild(threeContainer.lastChild as ChildNode);
-      }
+    //   //* Clear all children
+    //   while (threeContainer.firstChild) {
+    //     threeContainer.removeChild(threeContainer.lastChild as ChildNode);
+    //   }
       
-      // const data = {inputs: {width: 20, height: 30, length: 80}};
-      // const canvas = document.getElementById("three-canvas") as HTMLElement;
-      // const viewer = new Viewer(canvas, data);
-      for ( let i=0; i < gens; i++) {
-        let canvas = document.createElement("canvas");
-        threeContainer.appendChild(canvas);
-        const viewer = new Viewer(canvas,resultsData[i]);
-      }
-    }
+    //   // const data = {inputs: {width: 20, height: 30, length: 80}};
+    //   // const canvas = document.getElementById("three-canvas") as HTMLElement;
+    //   // const viewer = new Viewer(canvas, data);
+    //   for ( let i=0; i < gens; i++) {
+    //     let canvas = document.createElement("canvas");
+    //     threeContainer.appendChild(canvas);
+    //     const viewer = new Viewer(canvas,resultsData[i]);
+    //   }
+    // }
    
   }
 });
@@ -76,6 +66,11 @@ export default defineComponent({
 
 <style >
 @import url('https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@600&display=swap');
+
+*{
+  font-family: 'Chakra Petch', sans-serif !important;
+}
+
 .canvas{
   /* display: none */
   height: 300px;
@@ -86,28 +81,6 @@ export default defineComponent({
 .bar:hover{
   fill: yellow;
 }
-
-.outputPanel_gallery{
-  position: absolute;
-  left: 1070px;
-  top: 35px;
-  width: 400px;
-  min-height:100px;
-  max-height: 650px;
-  margin: 3px;
-  padding: 5px;
-  display: flex;
-  flex-direction: column; 
-  text-align: left;
-  /* overflow:scroll; */
-  /* background-color: #efefef; */
-  box-shadow: 0px 0px 25px 10px rgba(170, 170, 170, 0.2);
-  border-radius: 10px;
-}
-
-/* .outputPanel_gallery > * {
-  margin: 5px 10px;
-} */
 
 h3{
   font-family: 'Chakra Petch', sans-serif;
@@ -137,16 +110,12 @@ h3{
 
 }
 
-canvas{
+/* canvas{
   position: relative;
   background-color: white;
   width: 100% !important;
   height: 100% !important;
-  /* padding: 0px 10x !important; */
-  /* border-bottom: 2px dashed #9cabb4; */
   border: 2px dashed #9cabb4;
   border-radius: 10px;
-
-
-}
+} */
 </style>

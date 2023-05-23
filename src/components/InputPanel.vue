@@ -1,7 +1,5 @@
 <template>
-
     <div class='panel'>
-
         <n-collapse class='panel-collapse'>
            <template #arrow>
                 <n-icon>
@@ -145,7 +143,17 @@
                         </n-icon>
                     </n-button>
                 </template>
-                Show chart
+                Update chart
+            </n-tooltip>      
+            <n-tooltip trigger="hover" placement="bottom">
+                <template #trigger>
+                    <n-button  @click="visualizeResult" quaternary>
+                        <n-icon >
+                            <clearIcon/>
+                        </n-icon>
+                    </n-button>
+                </template>
+                Clear results
             </n-tooltip>      
         </div>
     </div>
@@ -154,7 +162,7 @@
 
 <script lang="ts">
 import { defineComponent, ref } from 'vue';
-import { OptionsOutline as optionsIcon , EnterOutline as inputIcon, Flash as testIcon, LogoTableau as resultIcon, BarChartSharp as statsIcon, ConstructOutline as functionsIcon, TrophyOutline as objectivesIcon, SettingsOutline as settingsIcon, HelpCircleOutline as helpIcon, FlaskOutline as strategyIcon, LogOutOutline as outputIcon} from '@vicons/ionicons5';
+import { OptionsOutline as optionsIcon , EnterOutline as inputIcon, Flash as testIcon, LogoTableau as resultIcon, BarChartSharp as statsIcon, ConstructOutline as functionsIcon, TrophyOutline as objectivesIcon, SettingsOutline as settingsIcon, HelpCircleOutline as helpIcon, FlaskOutline as strategyIcon, LogOutOutline as outputIcon, TrashBinOutline as clearIcon} from '@vicons/ionicons5';
 import InputVue from './Input.vue';
 import OutputSettingsVue from './OutputSettings.vue';
 import BoxInputVue from './inputs/BoxInputs.vue';
@@ -177,7 +185,8 @@ export default defineComponent({
         testIcon, resultIcon, statsIcon, strategyIcon,
         functionsIcon, objectivesIcon, settingsIcon, 
         helpIcon, BoxInputVue, BuildingMassInputVue,
-        BoxObjectives, outputIcon, OutputSettingsVue
+        BoxObjectives, outputIcon, OutputSettingsVue,
+        clearIcon
     },
     data(){
         return {
@@ -194,7 +203,6 @@ export default defineComponent({
                     label: 'Floor plan layout generator',
                     value: 'Floor plan layout generator'
                 }
-
             ],
             strategies: [
                 {
@@ -216,12 +224,13 @@ export default defineComponent({
             store: '' as any,
             showModal: false,
             genFunction: 'Box generator',
-            showOutputs: false,
+            showOutputs: true,
             x_axis: null,
             y_axis: null,
             size: null,
             color: null,
-            outputSet: []
+            outputSet: [],
+            selectedVarData: {}
         }
     },
     setup () {
@@ -234,16 +243,23 @@ export default defineComponent({
         this.store = useDesign();
         const GD_d3 = JSON.parse(localStorage.getItem('gd_d3') as any);
         const GD_results = JSON.parse(localStorage.getItem('gd_result') as any);
-        console.log('00...', GD_results)
 
-        if ( Object.keys(GD_d3).length > 0 ) {
+        if ( GD_d3 && Object.keys(GD_d3).length > 0 ) {
+            // this.visualizeResult();
             
             for (let res in GD_results) {
-                this.outputSet.push({label: res, value: res})
-                console.log({label: res, value: res})
+                this.outputSet.push({label: res, value: res});
             }
             this.showOutputs = true;
         }
+
+        window.addEventListener("show_chart", (e) => {
+            console.log("Listen show chart")
+
+            if ( GD_d3 && Object.keys(GD_d3).length > 0 ) {
+                this.visualizeResult();
+            }
+        }, false);
 
     },
     methods: {
@@ -284,6 +300,7 @@ export default defineComponent({
                         localStorage.setItem('gd_result', JSON.stringify(results));
                         localStorage.setItem('gd_study', JSON.stringify(study));
                         this.showOutputs = true;
+                        this.outputSet.length = 0;
                         for (let res in results) {
                             this.outputSet.push({label: res, value: res})
                             console.log({label: res, value: res})
@@ -306,12 +323,14 @@ export default defineComponent({
             // const svgElement = document.createElement('svg');
             // svgElement.id = "d3Svg";
             // svgContainer.appendChild(svgElement)
-            const _svg = document.getElementById('d3Svg') as HTMLElement;
 
-            while (_svg.lastChild) {
-                _svg.removeChild(_svg.lastChild);
-            }
             const svg = d3.select("#d3Svg").attr("width", w).attr("height", h);
+            const _svg = document.getElementById('d3Svg') as HTMLElement;
+            
+            if (_svg.lastChild)
+                while (_svg.lastChild)
+                    _svg.removeChild(_svg.lastChild);
+
             const g = svg.append("g");
      
             const GD_results = JSON.parse(localStorage.getItem('gd_result') as any);
@@ -352,7 +371,10 @@ export default defineComponent({
                .attr("r", (d) => sizeScale(d.outputs[GD_d3['size']]))
                .attr("id", "scatter")
                .attr('fill', 'rgba(162, 88, 143, 0.3)')
-               .on("click", () => console.log("CLICKED"))
+               .on("click", (d) => {
+                 console.log("CLICKED", d.target.__data__);              
+                 this.showVarData(d.target.__data__);
+                })
                .append("title")
                .attr('class', 'svg_tooltip')
                .text((d) => `Width: ${d.inputs.width}\nLength: ${d.inputs.length}\nHeight: ${d.inputs.height}`)
@@ -376,18 +398,70 @@ export default defineComponent({
                .call(yAxis); 
 
             // //TODO: output data inserting
-            document.getElementById('xAxis_tag').innerHTML = 'X-axis: ';
-            document.getElementById('yAxis_tag').innerHTML = 'Y-axis: ';
-            document.getElementById('size_tag').innerHTML = 'Size: ';
-            document.getElementById('color_tag').innerHTML = 'Color: ';
-            document.getElementById('xAxis_tag').innerHTML += GD_d3['x_axis'];
-            document.getElementById('yAxis_tag').innerHTML += GD_d3['y_axis'];
-            document.getElementById('size_tag').innerHTML += GD_d3['size'];
-            document.getElementById('color_tag').innerHTML += '';
+            // document.getElementById('xAxis_tag').innerHTML = 'X-axis: ';
+            // document.getElementById('yAxis_tag').innerHTML = 'Y-axis: ';
+            // document.getElementById('size_tag').innerHTML = 'Size: ';
+            // document.getElementById('color_tag').innerHTML = 'Color: ';
+            // document.getElementById('xAxis_tag').innerHTML += GD_d3['x_axis'];
+            // document.getElementById('yAxis_tag').innerHTML += GD_d3['y_axis'];
+            // document.getElementById('size_tag').innerHTML += GD_d3['size'];
+            // document.getElementById('color_tag').innerHTML += '';
 
             // //TODO: add the two result variables + in the algorithm
             
 
+        },
+        varViewer() {
+            let resultsData = JSON.parse(localStorage.getItem('gd_study') as any);
+            const threeContainer = document.getElementById('result3D_var') as HTMLElement;
+
+            //* Clear all children
+            while (threeContainer.firstChild) {
+                threeContainer.removeChild(threeContainer.lastChild as ChildNode);
+            }
+            
+            let canvas = document.createElement("canvas");
+            canvas.classList.add("result_canvas");
+            threeContainer.appendChild(canvas);
+            const viewer = new Viewer(canvas, this.selectedVarData);
+        },
+        showVarData(data: any) {
+            this.selectedVarData = data;
+            const infoContainer = document.getElementById('resultInfo_var') as HTMLElement;
+            while (infoContainer.firstChild) {
+                infoContainer.removeChild(infoContainer.lastChild as ChildNode);
+            }
+            
+            const i_id = document.createElement("p");           
+            i_id.innerHTML = `ID: ${data.id}`;
+            infoContainer.appendChild(i_id);
+
+            const i_gen = document.createElement("p");           
+            i_gen.innerHTML = `Generation: ${data.genPop.split("_")[0]}`;
+            infoContainer.appendChild(i_gen);
+
+            const i_pop = document.createElement("p");           
+            i_pop.innerHTML = `Population: ${data.genPop.split("_")[1]}`;
+            infoContainer.appendChild(i_pop);
+
+            const i_st = document.createElement("p");           
+            i_st.innerHTML = `Strategy: ${data.strategy}`;
+            infoContainer.appendChild(i_st);
+
+            for(let input in data.inputs){
+                let i = document.createElement("p");           
+                i.innerHTML = `${input}: ${data.inputs[input]}`;
+                infoContainer.appendChild(i);
+            }
+
+            for(let output in data.outputs){
+                let j = document.createElement("p");           
+                j.innerHTML = `${output}: ${data.outputs[output]}`;
+                infoContainer.appendChild(j);
+            }
+
+            
+            this.varViewer();
         }
     }
 })
@@ -476,5 +550,7 @@ h3{
   fill: rgb(162, 88, 143);
   cursor: pointer
 }
+
+
 
 </style>

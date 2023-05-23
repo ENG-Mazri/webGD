@@ -17,3 +17,4 @@
 // }
 
 export const event = new Event("generation_completed");
+export const show_chart_event = new Event("show_chart");
