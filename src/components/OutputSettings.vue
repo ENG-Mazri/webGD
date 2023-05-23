@@ -90,7 +90,7 @@ export default defineComponent({
             this.y_axis = keys[1];
             this.size = keys[2];
             // this.color = keys[3];
-            window.dispatchEvent(show_chart_event)
+            // window.dispatchEvent(show_chart_event)
 
             
         }

@@ -1,6 +1,8 @@
 <template>
-  <InputPanel/>
-  <D3Panel/>
+  <InputPanel @test_eventy="testFunc"
+              :hasStudy="hasStudy"
+              @generate_finished="hasStudy = true" />
+  <D3Panel :msg="mockData" :hasStudy="hasStudy"/>
   <VarResultPanel/>
   <p id="app_stamp">Design space explorer - 2023</p>
 </template>
@@ -24,21 +26,23 @@ export default defineComponent({
   },
   data() {
     return {
-      store: '' as any
+      store: '' as any,
+      mockData: null,
+      hasStudy: false
     }
   },
   mounted() {
     this.store = useDesign();
-    // window.addEventListener("generation_completed", (e) => {
-    //     this.buildViewer();
-    //   },
-    //   false
-    // );
-    // this.buildViewer();
-
+    let resultsData = JSON.parse(localStorage.getItem('gd_study') as any);
+    if( !resultsData || resultsData.length > 0) this.hasStudy = true;
+    else this.hasStudy = false;
 
   },
   methods:{
+    testFunc(value){
+      this.mockData = value;
+      console.log("Parent got test event: ", value)
+    }
     // buildViewer() {
     //   let resultsData = JSON.parse(localStorage.getItem('gd_result') as any);
 

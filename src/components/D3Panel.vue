@@ -62,9 +62,7 @@ export default defineComponent({
     outputIcon
   },
   name: 'D3Panel',
-  props: {
-    msg: String,
-  },
+  props: ['msg', 'hasStudy'],
   data() {
     return {
       show: false,
@@ -80,30 +78,23 @@ export default defineComponent({
   watch:{
     store(){
       console.log("D3 PANEL WATCHING STORE")
+    },
+    msg(){
+      console.log("D3 Panel got message from Input panel: ",this.msg)
+    },
+    hasStudy(){
+      if(this.hasStudy){
+        this.visualizeResult();
+        this.buildTable();
+      }
     }
   },
   mounted() {
-    const GD_results = JSON.parse(localStorage.getItem('gd_result'));
-    const GD_study = JSON.parse(localStorage.getItem('gd_study'));
+    console.log(this.hasStudy);
 
-    if( GD_results ){
-      const keys = Object.keys(GD_results);
-      for( let i = 0; i < keys.length; i++ )
-        this.columns.push({title: keys[i], key: keys[i]})
-
-      for( let i = 0; i < GD_study.length; i++ ) {
-        let outs = Object.keys(GD_study[i].outputs);
-        let data = {};
-
-        for( let j = 0; j < outs.length; j++ ){
-          data[keys[j]] = GD_study[i].outputs[keys[j]];
-        }
-        // data['sorter'] = (row1, row2) => row1[data['key']] - row2[data['key']]
-        this.data.push(data);
-      }
-      // console.log(this.data);
-
-      // this.buildViewer();
+    if(this.hasStudy) {
+      this.visualizeResult();
+      this.buildTable();
     }
       // const GD_d3 = JSON.parse(localStorage.getItem('gd_d3') as any);
       // if ( GD_d3 && Object.keys(GD_d3).length > 0 ) {
@@ -115,26 +106,140 @@ export default defineComponent({
   },
   methods: {
     visualizeResult(){
+      const w = 500;
+      const h = 500;
+
+      const svg = d3.select("#d3Svg").attr("width", w).attr("height", h);
+      const _svg = document.getElementById('d3Svg') as HTMLElement;
+      console.log("SVG")
+      if (_svg.lastChild)
+          while (_svg.lastChild)
+              _svg.removeChild(_svg.lastChild);
+
+      const g = svg.append("g");
+
+      const GD_results = JSON.parse(localStorage.getItem('gd_result') as any);
+      if( !GD_results || GD_results.length == 0){
+          window?.$message.error('No data to visualize')
+          return;
+      }
+      const GD_d3 = JSON.parse(localStorage.getItem('gd_d3') as any);
+
+  
+      const padding = 60;
+      const maxX = d3.max( [ ...GD_results[GD_d3['x_axis']] ], (d,i) => d);
+      const maxY = d3.max( [ ...GD_results[GD_d3['y_axis']] ], (d,i) => d);
+      const maxSize = d3.max( [...GD_results[GD_d3['size']] ], (d,i) => d);
+
+      const xScale = d3.scaleLinear()
+                        .domain([0, maxX as number])
+                        .range([padding, w - padding]);
+
+      const yScale = d3.scaleLinear()
+                        .domain([0, maxY as number])
+                        .range([h - padding, padding]);
+
+      const sizeScale = d3.scaleLinear()
+                        .domain([0, maxSize as number])
+                        .range([0, 10]);
+
+      console.log("D3 result- scale...", maxSize);
+      const GD_data = JSON.parse(localStorage.getItem('gd_study') as any);
+
+
+      svg.selectAll("circle")
+          .data([...GD_data])
+          .enter()
+          .append("circle")
+          .attr("cx", (d) => xScale(d.outputs[GD_d3['x_axis']]))
+          .attr("cy",(d) => yScale(d.outputs[GD_d3['y_axis']]))
+          .attr("r", (d) => sizeScale(d.outputs[GD_d3['size']]))
+          .attr("id", "scatter")
+          .attr('fill', 'rgba(162, 88, 143, 0.3)')
+          .on("click", (d) => {
+            console.log("CLICKED", d.target.__data__);              
+            this.showVarData(d.target.__data__);
+          })
+          .append("title")
+          .attr('class', 'svg_tooltip')
+          .text((d) => `Width: ${d.inputs.width}\nLength: ${d.inputs.length}\nHeight: ${d.inputs.height}`)
+
+      const xAxis = d3.axisBottom(xScale);
+      const yAxis = d3.axisLeft(yScale);
+
+      svg.append("g")
+          .attr("transform", `translate(0, ${(h - padding)})`)
+          .call(xAxis);
+
+      svg.append("g")
+          .attr("transform", `translate(${(padding)}, 0)`)
+          .call(yAxis); 
+
+    },
+    varViewer() {
+      let resultsData = JSON.parse(localStorage.getItem('gd_study') as any);
+      const threeContainer = document.getElementById('result3D_var') as HTMLElement;
+
+      //* Clear all children
+      while (threeContainer.firstChild) {
+          threeContainer.removeChild(threeContainer.lastChild as ChildNode);
+      }
+      
+      let canvas = document.createElement("canvas");
+      canvas.classList.add("result_canvas");
+      threeContainer.appendChild(canvas);
+      const viewer = new Viewer(canvas, this.selectedVarData);
+    },
+    showVarData(data: any) {
+        this.selectedVarData = data;
+        const infoContainer = document.getElementById('resultInfo_var') as HTMLElement;
+        while (infoContainer.firstChild) {
+            infoContainer.removeChild(infoContainer.lastChild as ChildNode);
+        }
+        
+        const i_id = document.createElement("p");           
+        i_id.innerHTML = `ID: ${data.id}`;
+        infoContainer.appendChild(i_id);
+
+        const i_gen = document.createElement("p");           
+        i_gen.innerHTML = `Generation: ${data.genPop.split("_")[0]}`;
+        infoContainer.appendChild(i_gen);
+
+        const i_pop = document.createElement("p");           
+        i_pop.innerHTML = `Population: ${data.genPop.split("_")[1]}`;
+        infoContainer.appendChild(i_pop);
+
+        const i_st = document.createElement("p");           
+        i_st.innerHTML = `Strategy: ${data.strategy}`;
+        infoContainer.appendChild(i_st);
+
+        for(let input in data.inputs){
+            let i = document.createElement("p");           
+            i.innerHTML = `${input}: ${data.inputs[input]}`;
+            infoContainer.appendChild(i);
+        }
+
+        for(let output in data.outputs){
+            let j = document.createElement("p");           
+            j.innerHTML = `${output}: ${data.outputs[output]}`;
+            infoContainer.appendChild(j);
+        }
+
+        
+        this.varViewer();
     },
     tabChange(){
       console.log("Tab click")
 
+      //* SVG output
       const threeContainer = document.getElementById('gallery_container') as HTMLElement;
 
       // if(threeContainer) {
       //   this.buildViewer()
       // }
-   
+      //* SVG output
       const svg = document.getElementById('d3Svg') as HTMLElement;
-
-      if(svg) {
-        const GD_d3 = JSON.parse(localStorage.getItem('gd_d3') as any);
-        if ( GD_d3 && Object.keys(GD_d3).length > 0 ) {
-          window.dispatchEvent(show_chart_event)
-          console.log("Dispatch show chart")
-
-        }
-      }
+      if(svg && this.hasStudy) this.visualizeResult()
 
     },
     buildViewer() {
@@ -156,6 +261,30 @@ export default defineComponent({
         canvas.classList.add("result_canvas");
         threeContainer.appendChild(canvas);
         const viewer = new Viewer(canvas,resultsData[i]);
+      }
+    },
+    buildTable(){
+      const GD_results = JSON.parse(localStorage.getItem('gd_result'));
+      const GD_study = JSON.parse(localStorage.getItem('gd_study'));
+
+      if( GD_results ){
+        const keys = Object.keys(GD_results);
+        for( let i = 0; i < keys.length; i++ )
+          this.columns.push({title: keys[i], key: keys[i]})
+
+        for( let i = 0; i < GD_study.length; i++ ) {
+          let outs = Object.keys(GD_study[i].outputs);
+          let data = {};
+
+          for( let j = 0; j < outs.length; j++ ){
+            data[keys[j]] = GD_study[i].outputs[keys[j]];
+          }
+          // data['sorter'] = (row1, row2) => row1[data['key']] - row2[data['key']]
+          this.data.push(data);
+        }
+        // console.log(this.data);
+
+        // this.buildViewer();
       }
     }
   }
@@ -184,7 +313,7 @@ export default defineComponent({
 
 #d3Svg{
   margin: 10px 100px;
-  /*background-color: #efefef;*/
+  /* background-color: #efefef; */
 
 }
 

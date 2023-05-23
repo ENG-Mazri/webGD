@@ -78,13 +78,13 @@
                 <n-input-number clearable :precision="0" placeholder='Seed'/>
             </n-collapse-item>
         </n-collapse>
-        <n-collapse class='panel-collapse' v-if="showOutputs">
+        <n-collapse class='panel-collapse' v-if="showOutputs" default-expanded-names="9">
             <template #arrow>
                 <n-icon>
                     <outputIcon/>
                 </n-icon>
             </template>
-            <n-collapse-item title="Output settings" name="1">
+            <n-collapse-item title="Output settings" name="9">
                 <OutputSettingsVue :outputOptions="outputSet"/>
             </n-collapse-item>
         </n-collapse>
@@ -147,7 +147,7 @@
             </n-tooltip>      
             <n-tooltip trigger="hover" placement="bottom">
                 <template #trigger>
-                    <n-button  @click="visualizeResult" quaternary>
+                    <n-button  @click="clearData" quaternary>
                         <n-icon >
                             <clearIcon/>
                         </n-icon>
@@ -188,6 +188,7 @@ export default defineComponent({
         BoxObjectives, outputIcon, OutputSettingsVue,
         clearIcon
     },
+    props: ['hasStudy'],
     data(){
         return {
             generationFunctions: [
@@ -224,19 +225,24 @@ export default defineComponent({
             store: '' as any,
             showModal: false,
             genFunction: 'Box generator',
-            showOutputs: true,
+            showOutputs: false,
             x_axis: null,
             y_axis: null,
             size: null,
             color: null,
             outputSet: [],
-            selectedVarData: {}
+            selectedVarData: {},
+            name:0
         }
     },
     setup () {
         window.$message = useMessage();
     },
     watch: {
+        // showOutputs(){
+        //     if(this.showOutputs) this.name = 1;
+        //     else this.name = 0
+        // }
     },
     created (){},
     mounted() {
@@ -244,7 +250,7 @@ export default defineComponent({
         const GD_d3 = JSON.parse(localStorage.getItem('gd_d3') as any);
         const GD_results = JSON.parse(localStorage.getItem('gd_result') as any);
 
-        if ( GD_d3 && Object.keys(GD_d3).length > 0 ) {
+        if ( GD_d3['x_axis'] && Object.keys(GD_d3).length > 0 ) {
             // this.visualizeResult();
             
             for (let res in GD_results) {
@@ -253,13 +259,18 @@ export default defineComponent({
             this.showOutputs = true;
         }
 
-        window.addEventListener("show_chart", (e) => {
-            console.log("Listen show chart")
+        // window.addEventListener("show_chart", (e) => {
+        //     console.log("Listen show chart")
 
-            if ( GD_d3 && Object.keys(GD_d3).length > 0 ) {
-                this.visualizeResult();
-            }
-        }, false);
+        //     if ( GD_d3 && Object.keys(GD_d3).length > 0 ) {
+        //         this.visualizeResult();
+        //     }
+        // }, false);
+
+        if(this.hasStudy) {
+            this.name = 1;
+            this.showOutputs = true
+        }
 
     },
     methods: {
@@ -310,6 +321,7 @@ export default defineComponent({
                 }
             
                 window?.$message.success('Test completed successfully!');
+                this.$emit('generate_finished')
             } catch (error) {
                 window?.$message.error('Test failed: make sure you provide inputs correctly')
                 console.warn(error)
@@ -317,85 +329,85 @@ export default defineComponent({
 
         },
         visualizeResult() {
-            const w = 500;
-            const h = 500;
-            // const svgContainer = document.getElementById('d3Panel_main') as HTMLElement;
-            // const svgElement = document.createElement('svg');
-            // svgElement.id = "d3Svg";
-            // svgContainer.appendChild(svgElement)
+            // const w = 500;
+            // const h = 500;
+            // // const svgContainer = document.getElementById('d3Panel_main') as HTMLElement;
+            // // const svgElement = document.createElement('svg');
+            // // svgElement.id = "d3Svg";
+            // // svgContainer.appendChild(svgElement)
 
-            const svg = d3.select("#d3Svg").attr("width", w).attr("height", h);
-            const _svg = document.getElementById('d3Svg') as HTMLElement;
+            // const svg = d3.select("#d3Svg").attr("width", w).attr("height", h);
+            // const _svg = document.getElementById('d3Svg') as HTMLElement;
             
-            if (_svg.lastChild)
-                while (_svg.lastChild)
-                    _svg.removeChild(_svg.lastChild);
+            // if (_svg.lastChild)
+            //     while (_svg.lastChild)
+            //         _svg.removeChild(_svg.lastChild);
 
-            const g = svg.append("g");
+            // const g = svg.append("g");
      
-            const GD_results = JSON.parse(localStorage.getItem('gd_result') as any);
-            if( !GD_results || GD_results.length == 0){
-                window?.$message.error('No data to visualize')
-                return;
-            }
-            const GD_d3 = JSON.parse(localStorage.getItem('gd_d3') as any);
+            // const GD_results = JSON.parse(localStorage.getItem('gd_result') as any);
+            // if( !GD_results || GD_results.length == 0){
+            //     window?.$message.error('No data to visualize')
+            //     return;
+            // }
+            // const GD_d3 = JSON.parse(localStorage.getItem('gd_d3') as any);
 
         
-            const padding = 60;
-            const maxX = d3.max( [ ...GD_results[GD_d3['x_axis']] ], (d,i) => d);
-            const maxY = d3.max( [ ...GD_results[GD_d3['y_axis']] ], (d,i) => d);
-            const maxSize = d3.max( [...GD_results[GD_d3['size']] ], (d,i) => d);
+            // const padding = 60;
+            // const maxX = d3.max( [ ...GD_results[GD_d3['x_axis']] ], (d,i) => d);
+            // const maxY = d3.max( [ ...GD_results[GD_d3['y_axis']] ], (d,i) => d);
+            // const maxSize = d3.max( [...GD_results[GD_d3['size']] ], (d,i) => d);
 
-            const xScale = d3.scaleLinear()
-                             .domain([0, maxX as number])
-                             .range([padding, w - padding]);
+            // const xScale = d3.scaleLinear()
+            //                  .domain([0, maxX as number])
+            //                  .range([padding, w - padding]);
 
-            const yScale = d3.scaleLinear()
-                             .domain([0, maxY as number])
-                             .range([h - padding, padding]);
+            // const yScale = d3.scaleLinear()
+            //                  .domain([0, maxY as number])
+            //                  .range([h - padding, padding]);
 
-            const sizeScale = d3.scaleLinear()
-                             .domain([0, maxSize as number])
-                             .range([0, 10]);
+            // const sizeScale = d3.scaleLinear()
+            //                  .domain([0, maxSize as number])
+            //                  .range([0, 10]);
 
-            console.log("D3 result- scale...", maxSize);
-            const GD_data = JSON.parse(localStorage.getItem('gd_study') as any);
+            // console.log("D3 result- scale...", maxSize);
+            // const GD_data = JSON.parse(localStorage.getItem('gd_study') as any);
 
 
-            svg.selectAll("circle")
-               .data([...GD_data])
-               .enter()
-               .append("circle")
-               .attr("cx", (d) => xScale(d.outputs[GD_d3['x_axis']]))
-               .attr("cy",(d) => yScale(d.outputs[GD_d3['y_axis']]))
-               .attr("r", (d) => sizeScale(d.outputs[GD_d3['size']]))
-               .attr("id", "scatter")
-               .attr('fill', 'rgba(162, 88, 143, 0.3)')
-               .on("click", (d) => {
-                 console.log("CLICKED", d.target.__data__);              
-                 this.showVarData(d.target.__data__);
-                })
-               .append("title")
-               .attr('class', 'svg_tooltip')
-               .text((d) => `Width: ${d.inputs.width}\nLength: ${d.inputs.length}\nHeight: ${d.inputs.height}`)
-
-            // svg.selectAll("text")
-            //    .data([...GD_test])
+            // svg.selectAll("circle")
+            //    .data([...GD_data])
             //    .enter()
-            //    .append("text")
-            //    .text((d) =>  `(${d.inputs.width}, ${d.inputs.length})`)
-            //    .attr("x", (d) => xScale(d.surface_area + 20))
-            //    .attr("y", (d) => yScale(d.volume))
-            const xAxis = d3.axisBottom(xScale);
-            const yAxis = d3.axisLeft(yScale);
+            //    .append("circle")
+            //    .attr("cx", (d) => xScale(d.outputs[GD_d3['x_axis']]))
+            //    .attr("cy",(d) => yScale(d.outputs[GD_d3['y_axis']]))
+            //    .attr("r", (d) => sizeScale(d.outputs[GD_d3['size']]))
+            //    .attr("id", "scatter")
+            //    .attr('fill', 'rgba(162, 88, 143, 0.3)')
+            //    .on("click", (d) => {
+            //      console.log("CLICKED", d.target.__data__);              
+            //      this.showVarData(d.target.__data__);
+            //     })
+            //    .append("title")
+            //    .attr('class', 'svg_tooltip')
+            //    .text((d) => `Width: ${d.inputs.width}\nLength: ${d.inputs.length}\nHeight: ${d.inputs.height}`)
 
-            svg.append("g")
-               .attr("transform", `translate(0, ${(h - padding)})`)
-               .call(xAxis);
+            // // svg.selectAll("text")
+            // //    .data([...GD_test])
+            // //    .enter()
+            // //    .append("text")
+            // //    .text((d) =>  `(${d.inputs.width}, ${d.inputs.length})`)
+            // //    .attr("x", (d) => xScale(d.surface_area + 20))
+            // //    .attr("y", (d) => yScale(d.volume))
+            // const xAxis = d3.axisBottom(xScale);
+            // const yAxis = d3.axisLeft(yScale);
 
-            svg.append("g")
-               .attr("transform", `translate(${(padding)}, 0)`)
-               .call(yAxis); 
+            // svg.append("g")
+            //    .attr("transform", `translate(0, ${(h - padding)})`)
+            //    .call(xAxis);
+
+            // svg.append("g")
+            //    .attr("transform", `translate(${(padding)}, 0)`)
+            //    .call(yAxis); 
 
             // //TODO: output data inserting
             // document.getElementById('xAxis_tag').innerHTML = 'X-axis: ';
@@ -412,56 +424,59 @@ export default defineComponent({
 
         },
         varViewer() {
-            let resultsData = JSON.parse(localStorage.getItem('gd_study') as any);
-            const threeContainer = document.getElementById('result3D_var') as HTMLElement;
+            // let resultsData = JSON.parse(localStorage.getItem('gd_study') as any);
+            // const threeContainer = document.getElementById('result3D_var') as HTMLElement;
 
-            //* Clear all children
-            while (threeContainer.firstChild) {
-                threeContainer.removeChild(threeContainer.lastChild as ChildNode);
-            }
+            // //* Clear all children
+            // while (threeContainer.firstChild) {
+            //     threeContainer.removeChild(threeContainer.lastChild as ChildNode);
+            // }
             
-            let canvas = document.createElement("canvas");
-            canvas.classList.add("result_canvas");
-            threeContainer.appendChild(canvas);
-            const viewer = new Viewer(canvas, this.selectedVarData);
+            // let canvas = document.createElement("canvas");
+            // canvas.classList.add("result_canvas");
+            // threeContainer.appendChild(canvas);
+            // const viewer = new Viewer(canvas, this.selectedVarData);
         },
         showVarData(data: any) {
-            this.selectedVarData = data;
-            const infoContainer = document.getElementById('resultInfo_var') as HTMLElement;
-            while (infoContainer.firstChild) {
-                infoContainer.removeChild(infoContainer.lastChild as ChildNode);
-            }
+            // this.selectedVarData = data;
+            // const infoContainer = document.getElementById('resultInfo_var') as HTMLElement;
+            // while (infoContainer.firstChild) {
+            //     infoContainer.removeChild(infoContainer.lastChild as ChildNode);
+            // }
             
-            const i_id = document.createElement("p");           
-            i_id.innerHTML = `ID: ${data.id}`;
-            infoContainer.appendChild(i_id);
+            // const i_id = document.createElement("p");           
+            // i_id.innerHTML = `ID: ${data.id}`;
+            // infoContainer.appendChild(i_id);
 
-            const i_gen = document.createElement("p");           
-            i_gen.innerHTML = `Generation: ${data.genPop.split("_")[0]}`;
-            infoContainer.appendChild(i_gen);
+            // const i_gen = document.createElement("p");           
+            // i_gen.innerHTML = `Generation: ${data.genPop.split("_")[0]}`;
+            // infoContainer.appendChild(i_gen);
 
-            const i_pop = document.createElement("p");           
-            i_pop.innerHTML = `Population: ${data.genPop.split("_")[1]}`;
-            infoContainer.appendChild(i_pop);
+            // const i_pop = document.createElement("p");           
+            // i_pop.innerHTML = `Population: ${data.genPop.split("_")[1]}`;
+            // infoContainer.appendChild(i_pop);
 
-            const i_st = document.createElement("p");           
-            i_st.innerHTML = `Strategy: ${data.strategy}`;
-            infoContainer.appendChild(i_st);
+            // const i_st = document.createElement("p");           
+            // i_st.innerHTML = `Strategy: ${data.strategy}`;
+            // infoContainer.appendChild(i_st);
 
-            for(let input in data.inputs){
-                let i = document.createElement("p");           
-                i.innerHTML = `${input}: ${data.inputs[input]}`;
-                infoContainer.appendChild(i);
-            }
+            // for(let input in data.inputs){
+            //     let i = document.createElement("p");           
+            //     i.innerHTML = `${input}: ${data.inputs[input]}`;
+            //     infoContainer.appendChild(i);
+            // }
 
-            for(let output in data.outputs){
-                let j = document.createElement("p");           
-                j.innerHTML = `${output}: ${data.outputs[output]}`;
-                infoContainer.appendChild(j);
-            }
+            // for(let output in data.outputs){
+            //     let j = document.createElement("p");           
+            //     j.innerHTML = `${output}: ${data.outputs[output]}`;
+            //     infoContainer.appendChild(j);
+            // }
 
             
-            this.varViewer();
+            // this.varViewer();
+        },
+        clearData(){
+            this.$emit('test_eventy', this.strategies)
         }
     }
 })
