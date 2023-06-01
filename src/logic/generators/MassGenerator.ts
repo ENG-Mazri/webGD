@@ -533,3 +533,52 @@ export class MassGenerator extends Generator {
 // createFloors2( topPodShapeF, extrudeSettings, pod.height, 1, towerFloorsRnd, podiumBase.matrix)
 // createSpaces2( topPodShapeS, spaceExtrudeSettings, pod.height, extrudeSettings.depth, towerFloorsRnd, podiumBase.matrix)
 
+//TODO: Generate mass - Tower type B
+// const _contourF = offsetContour( 2, pod.top_contour);
+// const _contourS = offsetContour( 2.3, pod.top_contour);
+
+
+
+// function getShapesforTypeB(_contour, paramA, paramB){
+//   const _a = new THREE.Line3(_contour[0],_contour[1]);
+//   const _b = new THREE.Line3(_contour[1],_contour[2]);
+//   const _c = new THREE.Line3(_contour[1],_contour[2]);
+//   const _d = new THREE.Line3(_contour[1],_contour[2]);
+
+//   const pt_a = new THREE.Vector2()
+//   const pt_b = new THREE.Vector2()
+//   const pt_c = new THREE.Vector2()
+//   const pt_d = new THREE.Vector2()
+
+//   _a.at(0.5, pt_a)
+//   _b.at(paramA, pt_b) // this is the one that controls the 
+//   _c.at(0.5, pt_c)
+//   _d.at(1-paramB, pt_d)
+
+//   const pt_ab = new THREE.Vector2(pt_b.x, pt_a.y)
+//   const pt_b0 = new THREE.Vector2(pt_b.x,_contour[0].y)
+
+
+//   const first_half = [_contour[0], pt_a, pt_ab, pt_b0, _contour[0]]
+//   const _shape = formBaseShape(first_half);
+
+//   const pt_x = new THREE.Vector2(pt_d.x, pt_a.y)
+
+//   const pt_y = new THREE.Vector2(_contour[2].x,pt_x.y)
+//   const second_half = [_contour[2], pt_d, pt_x, pt_y, _contour[2]]
+//   const _shape2 = formBaseShape(second_half);
+//   return [_shape, _shape2]
+// }
+
+// const _shapeF = getShapesforTypeB(_contourF, 0.6, 0.9)
+// const _shapeS = getShapesforTypeB(_contourS, 0.6, 0.9)
+
+// // console.log("TYPE B: ", first_half)
+
+// const towerFloorsRnd1 = randomIntFromInterval(8, 16);
+// const towerFloorsRnd2 = randomIntFromInterval(8, 16);
+
+// createFloors2( _shapeF[0], extrudeSettings, pod.height, 1, towerFloorsRnd1, podiumBase.matrix)
+// createSpaces2( _shapeS[0], spaceExtrudeSettings, pod.height, extrudeSettings.depth, towerFloorsRnd1, podiumBase.matrix)
+// createFloors2( _shapeF[1], extrudeSettings, pod.height, 1, towerFloorsRnd2, podiumBase.matrix)
+// createSpaces2( _shapeS[1], spaceExtrudeSettings, pod.height, extrudeSettings.depth, towerFloorsRnd2, podiumBase.matrix)
