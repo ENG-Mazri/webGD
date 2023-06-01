@@ -324,7 +324,6 @@ export class MassGenerator extends Generator {
 
 
 // TODO: Extusion
-
 //TODO: NEW WAY Site - building contour - check for intersection with site boudries
 // //* Contour
 // const mat = new THREE.LineBasicMaterial( {color: 0x6600cc, linewidth: 2} );
@@ -458,14 +457,17 @@ export class MassGenerator extends Generator {
   
 //   //* Roof points
 //   const topP = []
+//   const shapeP = []
 //   const x = Array.from(setX)
 //   const y = Array.from(setY)
 
 //   for( let a=0; a < x.length; a++ ){
 //     for( let b=0; b < y.length; b++ ){
 //       topP.push(new THREE.Vector3(x[a], y[b], -hF ))
+//       shapeP.push(new THREE.Vector2(x[a], y[b]))
 //     }
 //   }
+//   // shapeP.push(shapeP[0])
 
 //   //!<              Visualize top points              >!
 //   const geometry = new THREE.SphereGeometry( 0.1, 32, 16 ); 
@@ -476,21 +478,58 @@ export class MassGenerator extends Generator {
 //     s.applyMatrix4(matrix)
 //     scene.add( s );
 //   }
-//   console.log("Roof: ", topP)
+
+//   const sortedCountour = [shapeP[2], shapeP[3], shapeP[1], shapeP[0], shapeP[2]];
 
 //   topPodium = hF
-//   return {height: topPodium, topVectors: topP}
+//   return {height: topPodium, top_positions: topP, top_contour: sortedCountour}
 
 // }
+
+// function createFloors2(shape, extrudeSettings, stHeight, floorHeight, nFloor, matrix){
+//   const geometry = new THREE.ExtrudeGeometry( shape, extrudeSettings );
+//   const material = new THREE.MeshPhongMaterial( { color: 0xd9d9d9 } );
+//   // geometry.scale( scale.x, scale.y, scale.z);
+//   let dist = stHeight + floorHeight;
+//   for( let i = 0; i < nFloor; i++){
+//     let mesh = new THREE.Mesh( geometry, material ) ;
+//     mesh.translateZ(-dist)
+//     mesh.applyMatrix4(matrix)
+//     scene.add(mesh)
+//     dist += floorHeight
+//   }
+// }
+
+// function createSpaces2(shape, extrudeSettings, stHeight, floorHeight, nFloor, matrix){
+//   const geometry = new THREE.ExtrudeGeometry( shape, extrudeSettings );
+//   const material = new THREE.MeshPhongMaterial( { color:0xb3e6ff, side: THREE.DoubleSide, transparent: true, opacity: 0.7} );
+//   // geometry.scale( scale.x, scale.y, scale.z);
+//   let dist = stHeight + extrudeSettings.depth;
+//   for( let i = 0; i < nFloor; i++){
+//     let mesh = new THREE.Mesh( geometry, material ) ;
+//     mesh.translateZ(-dist)
+//     mesh.applyMatrix4(matrix)
+//     scene.add(mesh)
+//     dist += extrudeSettings.depth + floorHeight
+//   }
+// }
+
 // const rndInt = randomIntFromInterval(1, 4);
 // // const floors = nDivider(rndInt, 6, 2);
 // const pod = createPodium(dist, dist/2, 0.2, podiumBase.matrix , rndInt, 2)
 // console.log(`Top podium is at: ${topPodium}`)
 // console.log('Podium: ', pod)
 
+// const contourF = offsetContour( 2, pod.top_contour);
+// const contourS = offsetContour( 2.3, pod.top_contour);
+
+// const topPodShapeF = formBaseShape(contourF);
+// const topPodShapeS = formBaseShape(contourS);
+
+// console.log('Shape: ', ShapeUtils.isClockWise(pod.top_contour))
 
 
-
-
-
+// const towerFloorsRnd = randomIntFromInterval(6, 16);
+// createFloors2( topPodShapeF, extrudeSettings, pod.height, 1, towerFloorsRnd, podiumBase.matrix)
+// createSpaces2( topPodShapeS, spaceExtrudeSettings, pod.height, extrudeSettings.depth, towerFloorsRnd, podiumBase.matrix)
 
