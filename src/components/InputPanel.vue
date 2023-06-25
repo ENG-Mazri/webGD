@@ -195,6 +195,7 @@ export default defineComponent({
                 {
                     label: 'Box generator',
                     value: 'Box generator'
+                    
                 },
                 {
                     label: 'Building mass generator',
@@ -202,7 +203,8 @@ export default defineComponent({
                 },
                 {
                     label: 'Floor plan layout generator',
-                    value: 'Floor plan layout generator'
+                    value: 'Floor plan layout generator',
+                    disable: false
                 }
             ],
             strategies: [
@@ -250,7 +252,8 @@ export default defineComponent({
         const GD_d3 = JSON.parse(localStorage.getItem('gd_d3') as any);
         const GD_results = JSON.parse(localStorage.getItem('gd_result') as any);
 
-        if ( GD_d3['x_axis'] && Object.keys(GD_d3).length > 0 ) {
+        if ( GD_d3 && GD_d3['x_axis'] ) {
+            // && Object.keys(GD_d3).length > 0
             // this.visualizeResult();
             
             for (let res in GD_results) {

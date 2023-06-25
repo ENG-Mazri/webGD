@@ -1,14 +1,7 @@
 <template>
   <div class="d3Panel" ref="$wrapper" @showResultEvent="visualizeResult">
-    <!-- <div class="d3Panel_footer">
-      <h3> Output chart data</h3>
-      <h5 id="xAxis_tag">X - axis: </h5>
-      <h5 id="yAxis_tag">Y - axis: </h5>
-      <h5 id="size_tag">Size: </h5>
-      <h5 id="color_tag">Color: </h5>
-    </div> -->
     <n-card style="margin-bottom: 16px" class="d3Panel_main" justify-content="space-evenly">
-      <n-tabs @click="tabChange" type="line" animated justify-content="space-around" :disabled="hasTabs" tab-style="color: #a2588f; font-size: 16px !important;">
+      <n-tabs @click="tabChange" type="line" animated justify-content="space-around" :disabled="hasTabs" default-value="3D space" tab-style="color: #a2588f; font-size: 16px !important;">
         <n-tab-pane name="Scatterplot chart" tab="Scatterplot chart">
           <div class="d3Panel_main" id="d3Panel_main">
             <svg id="d3Svg"></svg>
@@ -22,25 +15,15 @@
             max-height=500
           />
         </n-tab-pane>
-        <n-tab-pane name="3D results" tab="3D results">
-          <n-scrollbar style="max-height: 550px">
+        <n-tab-pane name="3D space" tab="3D space" style="height: 520px">
+          <!-- <n-scrollbar style="max-height: 550px"> -->
           <div class="results3D" id="gallery_container">
-              <!-- <div></div>
-              <div></div>
-              <div></div>
-              <div></div>
-              <div></div>
-              <div></div>
-              <div></div>
-              <div></div>
-              <div></div>
-              <div></div>
-              <div></div>
-              <div></div>
-              <div></div>
-              <div></div> -->
           </div>
-          </n-scrollbar>
+          <!-- </n-scrollbar> -->
+          <!-- <n-pagination 
+            v-model:page="viewerCurrPage"
+            size="small"
+           :page-count="viewerTotalpages" /> -->
         </n-tab-pane>
       </n-tabs>
     </n-card>
@@ -71,7 +54,10 @@ export default defineComponent({
       hasTabs: true,
       columns: [],
       data: [],
-      selectedVarData: {}
+      selectedVarData: {},
+      viewerTotalpages: 2,
+      viewerCurrPage: 2
+
     }
    
   },
@@ -82,19 +68,25 @@ export default defineComponent({
     msg(){
       console.log("D3 Panel got message from Input panel: ",this.msg)
     },
-    hasStudy(){
-      if(this.hasStudy){
-        this.visualizeResult();
-        this.buildTable();
-      }
-    }
+    // hasStudy(){
+    //   if(this.hasStudy){
+    //     this.visualizeResult();
+    //     this.buildTable();
+    //     this.buildViewer();
+    //   }
+    // }
   },
   mounted() {
-    console.log(this.hasStudy);
+    console.log("[Study available]: ", this.hasStudy);
 
-    if(this.hasStudy) {
+    let hasStudy = JSON.parse(localStorage.getItem('gd_hasStudy') as any);
+
+
+    if(hasStudy) {
       this.visualizeResult();
       this.buildTable();
+      this.buildViewer();
+      console.log("D3 panel mounted has study")
     }
       // const GD_d3 = JSON.parse(localStorage.getItem('gd_d3') as any);
       // if ( GD_d3 && Object.keys(GD_d3).length > 0 ) {
@@ -102,7 +94,6 @@ export default defineComponent({
       //   console.log("Dispatch show chart")
 
       // }
-
   },
   methods: {
     visualizeResult(){
@@ -111,8 +102,8 @@ export default defineComponent({
 
       const svg = d3.select("#d3Svg").attr("width", w).attr("height", h);
       const _svg = document.getElementById('d3Svg') as HTMLElement;
-      console.log("SVG")
-      if (_svg.lastChild)
+
+      if (_svg && _svg.lastChild)
           while (_svg.lastChild)
               _svg.removeChild(_svg.lastChild);
 
@@ -143,7 +134,6 @@ export default defineComponent({
                         .domain([0, maxSize as number])
                         .range([0, 10]);
 
-      console.log("D3 result- scale...", maxSize);
       const GD_data = JSON.parse(localStorage.getItem('gd_study') as any);
 
 
@@ -181,12 +171,12 @@ export default defineComponent({
       const threeContainer = document.getElementById('result3D_var') as HTMLElement;
 
       //* Clear all children
-      while (threeContainer.firstChild) {
+      while (threeContainer && threeContainer.firstChild) {
           threeContainer.removeChild(threeContainer.lastChild as ChildNode);
       }
       
       let canvas = document.createElement("canvas");
-      canvas.classList.add("result_canvas");
+      canvas.classList.add("result_canvas_var");
       threeContainer.appendChild(canvas);
       const viewer = new Viewer(canvas, this.selectedVarData);
     },
@@ -229,12 +219,12 @@ export default defineComponent({
         this.varViewer();
     },
     tabChange(){
-      console.log("Tab click")
+      // console.log("Tab click")
 
       //* SVG output
-      const threeContainer = document.getElementById('gallery_container') as HTMLElement;
+      // const threeContainer = document.getElementById('gallery_container') as HTMLElement;
 
-      // if(threeContainer) {
+      // if(threeContainer && this.hasStudy) {
       //   this.buildViewer()
       // }
       //* SVG output
@@ -248,6 +238,7 @@ export default defineComponent({
       const gens = resultsData.length;
       const threeContainer = document.getElementById('gallery_container') as HTMLElement;
 
+      console.log("[Generations]: ", gens);
       //* Clear all children
       while (threeContainer.firstChild) {
         threeContainer.removeChild(threeContainer.lastChild as ChildNode);
@@ -256,7 +247,7 @@ export default defineComponent({
       // const data = {inputs: {width: 20, height: 30, length: 80}};
       // const canvas = document.getElementById("three-canvas") as HTMLElement;
       // const viewer = new Viewer(canvas, data);
-      for ( let i=0; i < gens; i++) {
+      for ( let i=0; i < 1; i++) {
         let canvas = document.createElement("canvas");
         canvas.classList.add("result_canvas");
         threeContainer.appendChild(canvas);
@@ -267,7 +258,7 @@ export default defineComponent({
       const GD_results = JSON.parse(localStorage.getItem('gd_result'));
       const GD_study = JSON.parse(localStorage.getItem('gd_study'));
 
-      if( GD_results ){
+      if( GD_results && this.hasStudy ){
         const keys = Object.keys(GD_results);
         for( let i = 0; i < keys.length; i++ )
           this.columns.push({title: keys[i], key: keys[i]})
@@ -297,7 +288,7 @@ export default defineComponent({
   left: 300px;
   top: 35px;
   width: 700px;
-  height: 650px;
+  height: 620px;
   margin: 3px;
   padding: 5px;
   display: flex;
@@ -319,14 +310,14 @@ export default defineComponent({
 
 .d3Panel_footer{
   /*background-color: #efefef;*/
-  height: 25%;
+  /* height: 25%;
   text-align: left;
-  border-top: 2px dashed #9cabb4;
+  border-top: 2px dashed #9cabb4; */
 
 }
 
 .d3Panel_footer > * {
-  margin: 5px 10px;
+  /* margin: 5px 10px; */
 }
 
 .d3Panel_main{
@@ -356,27 +347,28 @@ export default defineComponent({
 
 .results3D{
   position: relative;
-  /* background-color: aquamarine; */
+  /* background-color: aquamarine !important; */
   width: 97%;
   height: 100%;
   margin: 3px;
   padding: 5px;
-  display: flex;
+  /* display: flex;
   flex-wrap: wrap;
-  justify-content:space-evenly;
+  justify-content:space-between; */
   /* box-shadow: 0px 0px 25px 10px rgba(170, 170, 170, 0.2); */
   /* border-radius: 10px; */
 }
 
-/* .result_canvas{
+.result_canvas{
   position: relative !important;
   background-color: white!important;
-  width: 30% !important;
-  height: 120px !important;
+  width: 100% !important;
+  height: 100% !important;
   margin: 5px 0px !important;
-  border: 1px solid #9cabb4 !important;
-  border-radius: 10px !important;
-} */
+  /* border: 1px solid #9cabb4 !important; */
+  /* border-radius: 10px !important;
+  box-shadow: 0px 0px 10px 3px rgba(170, 170, 170, 0.2); */
+}
 
 canvas{
   position: relative !important;
@@ -386,5 +378,18 @@ canvas{
   margin: 5px 0px !important;
   /* border: 1px solid #9cabb4 !important; */
   /* border-radius: 10px !important; */
+}
+.n-pagination{
+  color: #a2588f !important;
+  position: relative;
+  margin: 7px 7px
+  /* right: 50%;
+  transform: translateX(-50%); */
+}
+.n-pagination > *{
+  color: #a2588f !important;
+}
+.n-pagination-item--active{
+  border-color:  #a2588f !important;
 }
 </style>

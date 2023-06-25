@@ -1,26 +1,23 @@
 <template>
     <div class="outputPanel_gallery">
         <div class="panel_header">
-            <h3> Variation's information </h3>
+            <h3> Variation's info </h3>
         </div>
         <div class="result3D_var" id="result3D_var"></div>
-            <n-scrollbar style="max-height: 200px">
-                <div class="resultInfo_var" id="resultInfo_var">
-
-                </div>
+            <n-scrollbar style="max-height: 200px" trigger='none'>
+                <div class="resultInfo_var" id="resultInfo_var"></div>
             </n-scrollbar>
-        <div class="outputPanel_gallery_main">
+        <!-- <div class="outputPanel_gallery_main">
             <n-result v-if="isPicked" title="No data to display" description="After generating, pick a variation from the ouptput panel to display details.">
                 <template #icon>
-                    <!-- <div>
+                    <div>
                         <n-icon>
                             <outputIcon/>
                         </n-icon>
-                    </div> -->
+                    </div>
                 </template>
             </n-result>
-        </div>
-        
+        </div>   -->
     </div>
 </template>
 
@@ -89,7 +86,7 @@ export default defineComponent({
     width: 100% !important;
     height: 350px !important;
     margin: 0px 0px !important;
-    padding: 5px 0px !important;
+    padding: 5px 10px !important;
     /* border: 1px solid #9cabb4 !important;
     border-radius: 10px !important; */
 }

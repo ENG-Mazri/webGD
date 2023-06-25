@@ -30,7 +30,8 @@
       "esnext",
       "dom",
       "dom.iterable",
-      "scripthost"
+      "scripthost",
+      "webworker"
     ]
   },
   "include": [
@@ -42,5 +43,6 @@
   ],
   "exclude": [
     "node_modules"
-  ]
+  ],
+  // "lib": ["webworker", "es5", "scripthost"]
 }

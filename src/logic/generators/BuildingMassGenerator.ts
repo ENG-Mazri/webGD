@@ -1,4 +1,8 @@
+import { Model } from "../Model";
 import { Generator } from "./Generator";
+
+// @ts-ignore
+import MGWorker from './MassGeneratorWorker?worker&inline';
 
 /*// TODO: Mass Generation logic
     - generate floor slabs as box
@@ -12,8 +16,25 @@ import { Generator } from "./Generator";
         - offset
 
 */
-export class MassGenerator extends Generator {
-    
+export class BuildingMassGenerator extends Generator {
+    evaluate(): Model {
+        throw new Error("Method not implemented.");
+    }
+
+    constructor(){
+        super()
+        console.log("[MG]",MGWorker)
+        // const worker = new Worker('./MassGeneratorWorker.ts');
+        this.init()
+
+    }
+
+    init(){
+        const worker = new MGWorker()
+        
+        // const worker = new Worker('./MassGeneratorWorker.ts');
+        worker.postMessage({name: 'botty', type: 'bot-24'})
+    }
 }
 
 // TODO: Extusion

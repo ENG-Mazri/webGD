@@ -81,7 +81,7 @@ export default defineComponent({
     },
     mounted() {
         this.store = useDesign();
-        console.log("OUTPUT ", this.outputOptions);
+        // console.log("OUTPUT ", this.outputOptions);
 
         const GD_results = JSON.parse(localStorage.getItem('gd_result'));
         if( GD_results ){

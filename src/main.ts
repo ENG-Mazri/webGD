@@ -7,6 +7,8 @@ import PrimeVue from 'primevue/config';
 
 // import Vue from 'vue';
 // const EventBus = new Vue();
+// import {MassGenerator} from './logic/generators/MassGenerator'
+// const mg = new MassGenerator();
 
 const app = createApp(App);
 app.use(naive);

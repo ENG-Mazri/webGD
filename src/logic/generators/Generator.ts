@@ -1,7 +1,11 @@
+import { Model } from "../Model";
+
 export abstract class Generator {
-    private generations: number;
+
     private seed: number;
     private inputs: any;
-    public outputs: any = [];
+    private outputs: any = [];
+    abstract evaluate(): Model; 
+    public getModel = (): any => {};
     
 }

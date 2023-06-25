@@ -54,11 +54,12 @@ export class Viewer {
 
         renderer.setSize(size.width, size.height);
         renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-        renderer.outputEncoding = THREE.sRGBEncoding;
+        // renderer.outputEncoding = THREE.sRGBEncoding;
         // const grid = new THREE.GridHelper(50, 30);
         // scene.add(grid);
 
         const controls = new OrbitControls(camera, canvas);
+        controls.target.set(0,0,0)
 
         //* shape
         const inputs = data.inputs;
@@ -68,17 +69,20 @@ export class Viewer {
         const mesh = new THREE.Mesh( geometry, material ); 
         scene.add( mesh );
 
-        geometry.computeBoundingSphere()
+        // geometry.computeBoundingSphere()
 
-        const radius = geometry.boundingSphere.radius;
-        const cog = mesh.localToWorld(geometry.boundingSphere.center.clone());
-        camera.position.set( cog.x, cog.y * 3, cog.z + 1.1*radius/Math.tan(fov*Math.PI/360));
+        // const radius = geometry.boundingSphere.radius;
+        // const cog = mesh.localToWorld(geometry.boundingSphere.center.clone());
+        // camera.position.set( cog.x, cog.y * 3, cog.z + 1.1*radius/Math.tan(fov*Math.PI/360));
+        camera.position.set(24, 13, 30)
 
         //* rendering
         const animate = () => {
             controls.update();
             renderer.render(scene, camera);
             requestAnimationFrame(animate);
+            // console.log("Cam: ", camera.position);
+            // console.log("Target: ", controls.target)
         };
         animate();
 
