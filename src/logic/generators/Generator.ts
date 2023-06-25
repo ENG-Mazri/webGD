@@ -6,6 +6,6 @@ export abstract class Generator {
     private inputs: any;
     private outputs: any = [];
     abstract evaluate(): Model; 
-    public getModel = (): any => {};
+    public getVariant = (): any => {};
     
 }
