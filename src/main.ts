@@ -10,6 +10,8 @@ import PrimeVue from 'primevue/config';
 // import {MassGenerator} from './logic/generators/MassGenerator'
 // const mg = new MassGenerator();
 
+
+
 const app = createApp(App);
 app.use(naive);
 app.use(PrimeVue);
@@ -17,6 +19,7 @@ app.use(PrimeVue);
 import Button from "primevue/button"
 import TabView from "primevue/tabview"
 import TabPanel from "primevue/tabpanel"
+import { BoxGenerator } from './logic/generators/BoxGenerator';
 app.component('Button', Button);
 app.component('TabView', TabView);
 app.component('TabPanel', TabPanel);

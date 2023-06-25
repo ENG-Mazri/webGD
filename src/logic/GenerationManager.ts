@@ -12,6 +12,7 @@ type Objective = {
     goal: string
 }
 
+
 export class GenerationManager {
     
     private populations: number;
@@ -69,7 +70,6 @@ export class GenerationManager {
             let min = this.results.get(variant.outputs.propName).min;
             let value = variant.outputs.propValue;
 
-
             switch (goal) {
                 case 'max':
                     variant.fitness =  (value - min) / (max - min);
@@ -80,8 +80,6 @@ export class GenerationManager {
                 default:
                     break;
             }
-
-            
         })
 
     }
@@ -104,6 +102,7 @@ variant = {
     inputs: { '' : '' },
     outputs: [
         {
+            goal: '',
             propName: '',
             propValue: 232,
             fitness: 0.1,
