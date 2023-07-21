@@ -213,7 +213,6 @@ export default defineComponent({
     left:0px;
     margin: 1px;
 }
-
 .n-divider{
     margin: 0px !important
 }

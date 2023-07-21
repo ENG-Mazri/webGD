@@ -14,6 +14,10 @@
     "d3-selection": "^3.0.0",
     "pinia": "^2.0.36",
     "primevue": "^3.29.1",
+    "svg-parser": "^2.0.4",
+    "svg-path-interpolator": "^0.3.0",
+    "svg-path-tools": "^1.0.0",
+    "svgson": "^5.2.1",
     "three": "^0.152.2",
     "uuid": "^9.0.0",
     "vue": "^3.2.13"

@@ -76,7 +76,7 @@
                 <n-divider title-placement="left">
                     Site boundary
                 </n-divider>
-                <n-upload>
+                <!-- <n-upload :on-change="upload" ref="file2">
                     <n-button text color="#153048">
                         <template #icon>
                             <n-icon>
@@ -85,7 +85,8 @@
                         </template>
                         Upload .svg
                     </n-button>
-                </n-upload>
+                </n-upload> -->
+                <DrawPad/>
             </div>
         </n-space>
     </div>
@@ -95,11 +96,16 @@
 import { CSSProperties, defineComponent, ref } from 'vue';
 import {useDesign} from '../../store/design';
 import { DocumentAttachOutline as fileIcon } from '@vicons/ionicons5';
+import { parse as SVGParser } from 'svg-parser';
+import DrawPad from './DrawPad.vue'
+// import { parse, stringify } from 'svgson';
+import { parse, scale, stringify } from 'svg-path-tools'
 
+import {createInterpolator} from 'svg-path-interpolator';
 
 export default defineComponent({
     name: 'InputVue',
-    components:{ fileIcon },
+    components:{ fileIcon, DrawPad },
     props: {
         function: String
     },
@@ -186,7 +192,41 @@ export default defineComponent({
                 // show error message
             }
             console.log("Save input", this.store.design)
-        }
+        },
+        async upload(file: any){
+            const url = URL.createObjectURL(file.fileList[0].file);
+            const data = await this.getFile(url);
+            const enc = new TextDecoder("utf-8");
+            const dec = enc.decode( data as Uint8Array );
+            const parsed = SVGParser(dec);
+            const path = parsed.children[0].children[0].properties.d;
+            const lines = [];
+
+            const config = {
+                joinPathData: false,
+                minDistance: 0.5,
+                roundToNearest: 0.25,
+                sampleFrequency: 0.001
+            };
+            // const interpolator = new SVGPathInterpolator(config);
+            // const pathData = interpolator.processSvg(dec);
+
+            // console.log('SVG Boundary: ', pathData)
+        },
+        getFile(url: any){
+
+            return new Promise((resolve, reject) => {
+                var oReq = new XMLHttpRequest();
+                oReq.responseType = "arraybuffer";
+                oReq.addEventListener("load", () => {
+                    resolve(new Uint8Array(oReq.response));
+                });
+                oReq.open("GET", url);
+                oReq.send();
+            })
+
+        },
+       
     }
 })
 </script>

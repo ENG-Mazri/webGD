@@ -7,8 +7,10 @@ import PrimeVue from 'primevue/config';
 
 // import Vue from 'vue';
 // const EventBus = new Vue();
+//@ts-ignore
 // import {MassGenerator} from './logic/generators/MassGenerator'
 // const mg = new MassGenerator();
+// console.log()
 
 
 

@@ -52,23 +52,23 @@ export class GenerationManager {
     private getResults() {
 
         this.variants.forEach( variant => {
-            let prop = this.results.get(variant.outputs.propName);
+            let evaluator = this.results.get(variant.outputs.evalName);
 
-            if( prop ) prop.values.push(variant.outputs.propValue);
-            else this.results.set(variant.outputs.propName, {
-                values: [variant.outputs.propValue],
+            if( evaluator ) evaluator.values.push(variant.outputs.evalValue);
+            else this.results.set(variant.outputs.evalName, {
+                values: [variant.outputs.evalValue],
                 max: 0,
                 min: 0
             });
         })
     }
 
-    private computeFitness() {
+    public computeFitness() {
         this.variants.forEach( variant => {
             let goal = variant.outputs.goal;
-            let max = this.results.get(variant.outputs.propName).max;
-            let min = this.results.get(variant.outputs.propName).min;
-            let value = variant.outputs.propValue;
+            let max = this.results.get(variant.outputs.evalName).max;
+            let min = this.results.get(variant.outputs.evalName).min;
+            let value = variant.outputs.evalValue;
 
             switch (goal) {
                 case 'max':
@@ -84,7 +84,7 @@ export class GenerationManager {
 
     }
 
-    private computeMaxMin() {
+    public computeMaxMin() {
         for (let result of this.results.values()) {
             result.max = Math.max(...result.values);
             result.min = Math.min(...result.values);
@@ -102,15 +102,16 @@ variant = {
     inputs: { '' : '' },
     outputs: [
         {
-            goal: '',
-            propName: '',
-            propValue: 232,
+            goal: 'max' | 'min' | 'undefined',
+            evalName: '',
+            evalValue: 232,
             fitness: 0.1,
         },
         {}
     ]
 }
 
+//* from inputs panel
 objective = [
     {
         outputName: '',
