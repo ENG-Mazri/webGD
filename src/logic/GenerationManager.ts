@@ -18,12 +18,12 @@ export class GenerationManager {
     private populations: number;
     private generations: number;
     private strategy: string;
-    private generator: Generator;
+    private generator: any; //Generator;
     private variants: any[] = [];
     private results = new Map<string,Result>();
     // private sortedResults = 
 
-    constructor( generator: Generator,
+    constructor( generator: any,
                  strategy: string,
                  objectives: Objective[],
                  populations: number,

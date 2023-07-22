@@ -131,7 +131,11 @@ export default defineComponent({
             isMaxTotalArea: false,
             isMinTotalArea: false,
             disabled: true,
-            value: ''
+            value: '',
+            extArea: null,
+            towerVolume: null,
+            podiumVolume: null,
+            totalArea: null
             
         }
     },
@@ -155,11 +159,17 @@ export default defineComponent({
     },
     methods: {
         onMaxExtArea() {
-            if (this.isMaxExtArea) this.isMinExtArea = false;
+            if (this.isMaxExtArea){
+                this.isMinExtArea = false;
+                this.extArea = 'Max' 
+            } else this.extArea = null
             this.save();
         },
         onMinExtArea() {
-            if (this.isMinExtArea) this.isMaxExtArea = false;
+            if (this.isMinExtArea){
+                this.isMaxExtArea = false;
+                this.extArea = 'Min'
+            } else this.extArea = null
             this.save();
         },
         // onMaxVolume() {
@@ -169,44 +179,57 @@ export default defineComponent({
         //     if (this.isMinVolume) this.isMaxVolume = false;
         // },
         onMaxTVolume() {
-            if (this.isMaxTVolume) this.isMinTVolume = false;
+            if (this.isMaxTVolume) {
+                this.isMinTVolume = false;
+                this.towerVolume = 'Max';
+            } else this.towerVolume = null;
             this.save();
         },
         onMinTVolume() {
-            if (this.isMinTVolume) this.isMaxTVolume = false;
+            if (this.isMinTVolume){
+                this.isMaxTVolume = false;
+                this.towerVolume= 'Min'
+            } else this.towerVolume = null;
             this.save();
         },
         onMaxPVolume() {
-            if (this.isMaxPVolume) this.isMinPVolume = false;
+            if (this.isMaxPVolume){
+                this.isMinPVolume = false;
+                this.podiumVolume = 'Max'
+            } else this.podiumVolume = null
             this.save();
         },
         onMinPVolume() {
-            if (this.isMinPVolume) this.isMaxPVolume = false;
+            if (this.isMinPVolume){
+                this.isMaxPVolume = false;
+                this.podiumVolume = 'Min'
+            } else this.podiumVolume = null
             this.save();
         },
         onMaxTotalArea() {
-            if (this.isMaxTotalArea) this.isMinTotalArea = false;
+            if (this.isMaxTotalArea){
+                this.isMinTotalArea = false;
+                this.totalArea = 'Max'
+            } else this.totalArea = null
             this.save();
         },
         onMinTotalArea() {
-            if (this.isMinTotalArea) this.isMaxTotalArea = false;
+            if (this.isMinTotalArea){
+                this.isMaxTotalArea = false;
+                this.totalArea = 'Min'
+            } else this.totalArea = null
             this.save();
         },
         save(){
-            if(!this.store.design[this.function]) return;
+            if(!this.store.design[this.function]) this.store.design[this.function] = {};
             
             this.store.design[this.function]['objectives'] = {
-                isMaxExtArea: this.isMaxExtArea,
-                isMinExtArea: this.isMinExtArea,
-                isMaxVolume: this.isMaxVolume,
-                isMinVolume: this.isMinVolume,
-                isMaxTVolume: this.isMaxTVolume,
-                isMinTVolume: this.isMinTVolume,
-                isMaxPVolume: this.isMaxPVolume,
-                isMinPVolume: this.isMinPVolume,
-                isMaxTotalArea: this.isMaxTotalArea,
-                isMinTotalArea: this.isMinTotalArea
+                exteriorArea: this.extArea,
+                towerVolume: this.towerVolume,
+                podiumVolume: this.podiumVolume,
+                totalArea: this.totalArea
             };
+            // console.log('[Objectives]: ', this.store.design[this.function]['objectives']);
             // this.store.design[this.function]['objectives']['']
         }
 

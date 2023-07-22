@@ -185,6 +185,8 @@ import BoxObjectives from './objectives/BoxObjectives.vue'
 import BuildingMassObjectives from './objectives/BuildingMassObjectives.vue'
 import {Strategy} from '../enums/Strategy'
 import {Generator} from '../enums/Generator'
+import {GenerationManager} from '../logic/GenerationManager'
+import {BuildingMassGenerator} from '../logic/generators/BuildingMassGenerator'
 
 
 
@@ -270,6 +272,11 @@ export default defineComponent({
             }
             this.showOutputs = true;
         }
+        const genManager = new GenerationManager(   BuildingMassGenerator,
+                                                    this.strategy,
+                                                    [],
+                                                    this.populations);
+        console.log('[Gen Manager]: ', genManager)
 
         // window.addEventListener("show_chart", (e) => {
         //     console.log("Listen show chart")
@@ -320,6 +327,8 @@ export default defineComponent({
             }
             console.log('[Inputs]: ', inputs)
             console.log('[Store]: ', this.store.design)
+
+
             //TODO: just for now, the contour is hardcoded
 
             // try {
