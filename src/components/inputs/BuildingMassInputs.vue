@@ -6,7 +6,7 @@
                     Site offset (m)
                 </n-divider>
                 <n-space align="center" justify="space-between" inline>
-                    <n-switch v-model:value="fixed_width" :rail-style="railStyle">
+                    <n-switch v-model:value="fixed_offset" :rail-style="railStyle">
                         <template #checked>
                         fixed
                         </template>
@@ -14,11 +14,11 @@
                         var
                         </template>
                     </n-switch>
-                    <n-input-number v-if="fixed_width" class="input" clearable/>
-                    <n-input v-if="!fixed_width"
+                    <n-input-number v-if="fixed_offset" v-model:value="input_offset" class="input" clearable/>
+                    <n-input v-if="!fixed_offset"
                         class="input"
                         id='input_value'
-                        v-model:value="input_data"
+                        v-model:value="input_offset"
                         pair
                         separator="-"
                         :placeholder="['Min', 'Max']"
@@ -30,7 +30,7 @@
                     Building height (m)
                 </n-divider>
                 <n-space align="center" justify="space-between" inline>
-                    <n-switch v-model:value="fixed_height" :rail-style="railStyle">
+                    <n-switch v-model:value="fixed_bld_height" :rail-style="railStyle">
                         <template #checked>
                         fixed
                         </template>
@@ -38,11 +38,11 @@
                         var
                         </template>
                     </n-switch>
-                    <n-input-number v-if="fixed_height" class="input" clearable/>
-                    <n-input v-if="!fixed_height"
+                    <n-input-number v-if="fixed_bld_height" v-model:value="input_bld_height" class="input" clearable/>
+                    <n-input v-if="!fixed_bld_height"
                         class="input"
                         id='input_value'
-                        v-model:value="input_data"
+                        v-model:value="input_bld_height"
                         pair
                         separator="-"
                         :placeholder="['Min', 'Max']"
@@ -54,7 +54,7 @@
                     Floor height (m)
                 </n-divider>
                 <n-space align="center" justify="space-between" inline>
-                    <n-switch v-model:value="fixed_length" :rail-style="railStyle">
+                    <n-switch v-model:value="fixed_flr_height" :rail-style="railStyle">
                         <template #checked>
                         fixed
                         </template>
@@ -62,10 +62,10 @@
                         var
                         </template>
                     </n-switch>
-                    <n-input-number v-if="fixed_length" clearable/>
-                    <n-input v-if="!fixed_length"
+                    <n-input-number v-if="fixed_flr_height" v-model:value="input_flr_height" clearable/>
+                    <n-input v-if="!fixed_flr_height"
                         id='input_value'
-                        v-model:value="input_data"
+                        v-model:value="input_flr_height"
                         pair
                         separator="-"
                         :placeholder="['Min', 'Max']"
@@ -99,9 +99,10 @@ import { DocumentAttachOutline as fileIcon } from '@vicons/ionicons5';
 import { parse as SVGParser } from 'svg-parser';
 import DrawPad from './DrawPad.vue'
 // import { parse, stringify } from 'svgson';
-import { parse, scale, stringify } from 'svg-path-tools'
+import * as THREE from 'three';
+// import { parse, scale, stringify } from 'svg-path-tools'
 
-import {createInterpolator} from 'svg-path-interpolator';
+// import {createInterpolator} from 'svg-path-interpolator';
 
 export default defineComponent({
     name: 'InputVue',
@@ -162,35 +163,85 @@ export default defineComponent({
             store: '' as any,
             input_name: null,
             input_type: 'Sequence',
-            input_data: null,
-            fixed_width: true,
-            fixed_height: true,
-            fixed_length: true
+            input_offset: null,
+            input_bld_height: null,
+            input_flr_height: null,
+            fixed_offset: true,
+            fixed_bld_height: true,
+            fixed_flr_height: true
             
         }
     },
     mounted() {
         this.store = useDesign();
-        console.log("Function: ", this.function)
+        this.store.design[this.function] = {};
+        this.store.design[this.function]['strategy'] = this.function;
+        this.store.design[this.function]['inputs'] = {};
+        //TODO: just for now, the contour is hardcoded
+        this.store.design[this.function]['inputs']['site_boundaries'] = [
+                                                                            new THREE.Vector2(0, 0),
+                                                                            new THREE.Vector2(0,28),
+                                                                            new THREE.Vector2(13,28),
+                                                                            new THREE.Vector2(20,15),
+                                                                            new THREE.Vector2(20,0),
+                                                                            new THREE.Vector2(0, 0)
+                                                                        ];
+        console.log("Function: ", this.store.design)
 
     },
     watch: {
+        input_offset(){
+            let w = this.input_offset;
+            if(this.fixed_offset) {
+                this.store.design[this.function]['inputs']['offset'] = {};
+                this.store.design[this.function]['inputs']['offset']['type'] = 'static';
+                this.store.design[this.function]['inputs']['offset']['value'] = w;
+            } else {
+                this.store.design[this.function]['inputs']['offset'] = {};
+                this.store.design[this.function]['inputs']['offset']['type'] = 'variable';
+                this.store.design[this.function]['inputs']['offset']['value'] = [parseInt(w[0]), parseInt(w[1])];
+            }
+        },
+        input_bld_height(){
+            let l = this.input_bld_height;
+            if(this.fixed_bld_height) {
+                this.store.design[this.function]['inputs']['bld_height'] = {};
+                this.store.design[this.function]['inputs']['bld_height']['type'] = 'static';
+                this.store.design[this.function]['inputs']['bld_height']['value'] = l;
+            } else {
+                this.store.design[this.function]['inputs']['bld_height'] = {};
+                this.store.design[this.function]['inputs']['bld_height']['type'] = 'variable';
+                this.store.design[this.function]['inputs']['bld_height']['value'] = [parseInt(l[0]), parseInt(l[1])];
+            }
+        },
+        input_flr_height(){
+            let h = this.input_flr_height;
+            if(this.fixed_flr_height) {
+                this.store.design[this.function]['inputs']['flr_height'] = {};
+                this.store.design[this.function]['inputs']['flr_height']['type'] = 'static';
+                this.store.design[this.function]['inputs']['flr_height']['value'] = h;
+            } else {
+                this.store.design[this.function]['inputs']['flr_height'] = {};
+                this.store.design[this.function]['inputs']['flr_height']['type'] = 'variable';
+                this.store.design[this.function]['inputs']['flr_height']['value'] = [parseInt(h[0]), parseInt(h[1])];
+            }
+        },
     },
     methods: {
         saveInput() {
-            if(this.input_data && this.input_name){
-                if ( Array.isArray(this.input_data) ) {
-                    const min = this.input_data[0];
-                    const max = this.input_data[1];
+            // if(this.input_data && this.input_name){
+            //     if ( Array.isArray(this.input_data) ) {
+            //         const min = this.input_data[0];
+            //         const max = this.input_data[1];
     
-                    this.store.design[this.input_name] = { type: this.input_type, range: [min, max] }
-                } else {
-                    this.store.design[this.input_name] = { type: this.input_type, value: this.input_data }
-                }
+            //         this.store.design[this.input_name] = { type: this.input_type, range: [min, max] }
+            //     } else {
+            //         this.store.design[this.input_name] = { type: this.input_type, value: this.input_data }
+            //     }
 
-            } else {
-                // show error message
-            }
+            // } else {
+            //     // show error message
+            // }
             console.log("Save input", this.store.design)
         },
         async upload(file: any){

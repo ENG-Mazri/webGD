@@ -1,14 +1,14 @@
 <template>
     <div class='panel'>
-        <n-collapse class='panel-collapse'>
-           <template #arrow>
+        <n-collapse class='panel-collapse'> <!-- Function -->
+            <template #arrow>
                 <n-icon>
                     <functionsIcon/>
                 </n-icon>
             </template>
 
             <n-collapse-item title="Generation functions" name="1">
-                <n-select id='generator' v-model:value="genFunction" :options="generationFunctions" default-value="Box generation" placeholder='Input types'/>
+                <n-select id='generator' v-model:value="genFunction" :options="generationFunctions" default-value="Building mass generator" placeholder='Input types'/>
                 <n-button text color="#9cabb4" @click="showModal = true">
                     <template #icon>
                         <n-icon>
@@ -19,12 +19,12 @@
                 </n-button>
                 <n-modal v-model:show="showModal">
                     <n-card
-                    style="width: 600px"
-                    title="Informations"
-                    :bordered="false"
-                    size="huge"
-                    role="dialog"
-                    aria-modal="true"
+                        style="width: 600px"
+                        title="Informations"
+                        :bordered="false"
+                        size="huge"
+                        role="dialog"
+                        aria-modal="true"
                     >
                         <template #header-extra>
                             Function's usage
@@ -33,19 +33,7 @@
                 </n-modal>
             </n-collapse-item>
         </n-collapse>
-        <n-collapse class='panel-collapse'>
-            <template #arrow>
-                <n-icon>
-                    <inputIcon/>
-                </n-icon>
-            </template>
-            <n-collapse-item title="Inputs" name="1">
-                <!-- <InputVue :function="genFunction"/> -->
-                <BoxInputVue v-if="genFunction == 'Box generator'" :function="strategy"/>
-                <BuildingMassInputVue v-if="genFunction == 'Building mass generator'"/>
-            </n-collapse-item>
-        </n-collapse>
-        <n-collapse class='panel-collapse'>
+        <n-collapse class='panel-collapse'> <!-- Strategy -->
            <template #arrow>
                 <n-icon>
                     <strategyIcon/>
@@ -55,30 +43,50 @@
                 <n-select id='input_type' :options="strategies" v-model:value="strategy" placeholder='Input types'/>
             </n-collapse-item>
         </n-collapse>
-        <n-collapse v-if="strategy == 'Optimize'" class='panel-collapse'>
+        <n-collapse class='panel-collapse'> <!-- Inputs -->
+            <template #arrow>
+                <n-icon>
+                    <inputIcon/>
+                </n-icon>
+            </template>
+            <n-collapse-item title="Inputs" name="1">
+                <!-- <InputVue :function="genFunction"/> -->
+                <BoxInputVue v-if="genFunction == 'Box generator'" :function="strategy"/>
+                <BuildingMassInputVue v-if="genFunction == 'Building mass generator'" :function="strategy"/>
+            </n-collapse-item>
+        </n-collapse>
+        <n-collapse v-if="strategy == 'Optimize'" class='panel-collapse'> <!-- Objectives -->
            <template #arrow>
                 <n-icon>
                     <objectivesIcon/>
                 </n-icon>
             </template>
             <n-collapse-item title="Objectives" name="1">
-                <BoxObjectives/>
+                <BoxObjectives v-if="genFunction == 'Box generator'" :function="strategy"/>
+                <BuildingMassObjectives v-if="genFunction == 'Building mass generator'" :function="strategy"/>
             </n-collapse-item>
         </n-collapse>
-        <n-collapse class='panel-collapse'>
+        <n-collapse class='panel-collapse'> <!-- Design Options -->
            <template #arrow>
                 <n-icon>
                     <optionsIcon/>
                 </n-icon>
             </template>
-
             <n-collapse-item title="Design options" name="1">
-                <n-input-number clearable :precision="0" min="1" max="50"  v-model:value="populations" placeholder='Populations' />
-                <n-input-number v-if="strategy == 'Optimize'" clearable :precision="0" min="1" max="10"  v-model:value="generations" placeholder='Generations' />
-                <n-input-number clearable :precision="0" placeholder='Seed'/>
+                <n-input-number clearable :precision="0" min="1" max="50"  v-model:value="populations" placeholder='Populations' >
+                    <template #prefix>
+                        Populations
+                    </template>    
+                </n-input-number>
+                <n-input-number v-if="strategy == 'Optimize'" clearable :precision="0" min="1" max="10"  v-model:value="generations" placeholder='Generations' >
+                    <template #prefix>
+                        Generations
+                    </template>    
+                </n-input-number>
+                <!-- <n-input-number clearable :precision="0" placeholder='Seed'/> -->
             </n-collapse-item>
         </n-collapse>
-        <n-collapse class='panel-collapse' v-if="showOutputs" default-expanded-names="9">
+        <n-collapse class='panel-collapse' v-if="showOutputs" default-expanded-names="9"> <!-- Outputs -->
             <template #arrow>
                 <n-icon>
                     <outputIcon/>
@@ -88,7 +96,7 @@
                 <OutputSettingsVue :outputOptions="outputSet"/>
             </n-collapse-item>
         </n-collapse>
-        <n-collapse class='panel-collapse settings'>
+        <n-collapse class='panel-collapse settings'> <!-- Project settings -->
             <template #arrow>
                 <n-icon>
                     <settingsIcon/>
@@ -114,7 +122,7 @@
                 </div>
             </n-collapse-item>
         </n-collapse> -->
-        <div class='outputPanel'>
+        <div class='outputPanel'> <!-- Toolbar -->
             <n-tooltip trigger="hover" placement="bottom">
                 <template #trigger>
                     <n-button  @click='runTest' type="warning" quaternary>
@@ -174,6 +182,7 @@ import { useMessage } from 'naive-ui'
 import {event} from '../events/index'
 import { Viewer } from '../logic/Viewer'
 import BoxObjectives from './objectives/BoxObjectives.vue'
+import BuildingMassObjectives from './objectives/BuildingMassObjectives.vue'
 import {Strategy} from '../enums/Strategy'
 import {Generator} from '../enums/Generator'
 
@@ -185,7 +194,7 @@ export default defineComponent({
         testIcon, resultIcon, statsIcon, strategyIcon,
         functionsIcon, objectivesIcon, settingsIcon, 
         helpIcon, BoxInputVue, BuildingMassInputVue,
-        BoxObjectives, outputIcon, OutputSettingsVue,
+        BoxObjectives, BuildingMassObjectives, outputIcon, OutputSettingsVue,
         clearIcon
     },
     props: ['hasStudy'],
@@ -222,11 +231,11 @@ export default defineComponent({
                 }
             ],
             strategy: "Randomize",
-            generations: null ,
-            populations: null ,
+            generations: 1 ,
+            populations: 1 ,
             store: '' as any,
             showModal: false,
-            genFunction: 'Box generator',
+            genFunction: 'Building mass generator',
             showOutputs: false,
             x_axis: null,
             y_axis: null,
@@ -303,32 +312,41 @@ export default defineComponent({
             console.log(this.store.design)
         },
         runTest() {
-
-            try {
-                switch(this.genFunction){
-                    case Generator.BoxGenerator:
-                        this.store.design[Strategy.Randomize]['populations'] = this.populations;
-                        const generate = new TestAlgorithm(this.store.design[Strategy.Randomize])
-                        const results = generate.process();
-                        const study = generate.getStudyData();
-                        localStorage.setItem('gd_result', JSON.stringify(results));
-                        localStorage.setItem('gd_study', JSON.stringify(study));
-                        this.showOutputs = true;
-                        this.outputSet.length = 0;
-                        for (let res in results) {
-                            this.outputSet.push({label: res, value: res})
-                            console.log({label: res, value: res})
-                        }
-                        break; 
-
-                }
-            
-                window?.$message.success('Test completed successfully!');
-                this.$emit('generate_finished')
-            } catch (error) {
-                window?.$message.error('Test failed: make sure you provide inputs correctly')
-                console.warn(error)
+            const inputs = {
+                strategy: this.strategy,
+                generator: this.genFunction,
+                generations: this.generations,
+                populations: this.populations,
             }
+            console.log('[Inputs]: ', inputs)
+            console.log('[Store]: ', this.store.design)
+            //TODO: just for now, the contour is hardcoded
+
+            // try {
+            //     switch(this.genFunction){
+            //         case Generator.BoxGenerator:
+            //             this.store.design[Strategy.Randomize]['populations'] = this.populations;
+            //             const generate = new TestAlgorithm(this.store.design[Strategy.Randomize])
+            //             const results = generate.process();
+            //             const study = generate.getStudyData();
+            //             localStorage.setItem('gd_result', JSON.stringify(results));
+            //             localStorage.setItem('gd_study', JSON.stringify(study));
+            //             this.showOutputs = true;
+            //             this.outputSet.length = 0;
+            //             for (let res in results) {
+            //                 this.outputSet.push({label: res, value: res})
+            //                 console.log({label: res, value: res})
+            //             }
+            //             break; 
+
+            //     }
+            
+            //     window?.$message.success('Test completed successfully!');
+            //     this.$emit('generate_finished')
+            // } catch (error) {
+            //     window?.$message.error('Test failed: make sure you provide inputs correctly')
+            //     console.warn(error)
+            // }
 
         },
         visualizeResult() {
