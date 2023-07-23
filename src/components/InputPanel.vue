@@ -78,7 +78,7 @@
                         Populations
                     </template>    
                 </n-input-number>
-                <n-input-number v-if="strategy == 'Optimize'" clearable :precision="0" min="1" max="10"  v-model:value="generations" placeholder='Generations' >
+                <n-input-number :disabled="strategy !== 'Optimize'" clearable :precision="0" min="1" max="10"  v-model:value="generations" placeholder='Generations' >
                     <template #prefix>
                         Generations
                     </template>    

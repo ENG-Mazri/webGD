@@ -27,7 +27,7 @@
             </div>
             <div>
                 <n-divider title-placement="left">
-                    Building height (m)
+                    Total floors number
                 </n-divider>
                 <n-space align="center" justify="space-between" inline>
                     <n-switch v-model:value="fixed_bld_height" :rail-style="railStyle">
@@ -51,7 +51,30 @@
             </div>
             <div>
                 <n-divider title-placement="left">
-                    Floor height (m)
+                    Tower floor height (m)
+                </n-divider>
+                <n-space align="center" justify="space-between" inline>
+                    <n-switch v-model:value="fixed_flr_height" :rail-style="railStyle">
+                        <template #checked>
+                        fixed
+                        </template>
+                        <template #unchecked>
+                        var
+                        </template>
+                    </n-switch>
+                    <n-input-number v-if="fixed_flr_height" v-model:value="input_flr_height" clearable/>
+                    <n-input v-if="!fixed_flr_height"
+                        id='input_value'
+                        v-model:value="input_flr_height"
+                        pair
+                        separator="-"
+                        :placeholder="['Min', 'Max']"
+                        clearable />
+                </n-space>
+            </div>
+            <div> <!-- fix this -->
+                <n-divider title-placement="left">
+                    Podium floor height (m)
                 </n-divider>
                 <n-space align="center" justify="space-between" inline>
                     <n-switch v-model:value="fixed_flr_height" :rail-style="railStyle">

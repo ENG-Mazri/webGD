@@ -88,6 +88,9 @@ export default defineComponent({
       this.buildViewer();
       console.log("D3 panel mounted has study")
     }
+
+    this.buildViewer();
+
       // const GD_d3 = JSON.parse(localStorage.getItem('gd_d3') as any);
       // if ( GD_d3 && Object.keys(GD_d3).length > 0 ) {
       //   window.dispatchEvent(show_chart_event)
@@ -222,23 +225,24 @@ export default defineComponent({
       // console.log("Tab click")
 
       //* SVG output
-      // const threeContainer = document.getElementById('gallery_container') as HTMLElement;
+      const threeContainer = document.getElementById('gallery_container') as HTMLElement;
 
-      // if(threeContainer && this.hasStudy) {
-      //   this.buildViewer()
-      // }
+      if(threeContainer ) {//&& this.hasStudy
+        this.buildViewer()
+      }
       //* SVG output
       const svg = document.getElementById('d3Svg') as HTMLElement;
       if(svg && this.hasStudy) this.visualizeResult()
 
     },
     buildViewer() {
-      let resultsData = JSON.parse(localStorage.getItem('gd_study') as any);
+      // let resultsData = JSON.parse(localStorage.getItem('gd_study') as any);
+      const mockData = {inputs: {width: 15, length: 19, height: 2}}
 
-      const gens = resultsData.length;
+      // const gens = resultsData.length;
       const threeContainer = document.getElementById('gallery_container') as HTMLElement;
 
-      console.log("[Generations]: ", gens);
+      // console.log("[Generations]: ", gens);
       //* Clear all children
       while (threeContainer.firstChild) {
         threeContainer.removeChild(threeContainer.lastChild as ChildNode);
@@ -247,12 +251,12 @@ export default defineComponent({
       // const data = {inputs: {width: 20, height: 30, length: 80}};
       // const canvas = document.getElementById("three-canvas") as HTMLElement;
       // const viewer = new Viewer(canvas, data);
-      for ( let i=0; i < 1; i++) {
-        let canvas = document.createElement("canvas");
-        canvas.classList.add("result_canvas");
-        threeContainer.appendChild(canvas);
-        const viewer = new Viewer(canvas,resultsData[i]);
-      }
+      // for ( let i=0; i < 1; i++) {
+      let canvas = document.createElement("canvas");
+      canvas.classList.add("result_canvas");
+      threeContainer.appendChild(canvas);
+      const viewer = new Viewer(canvas, mockData) //resultsData[i]);
+      // }
     },
     buildTable(){
       const GD_results = JSON.parse(localStorage.getItem('gd_result'));
