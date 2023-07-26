@@ -40,7 +40,7 @@ import fontJSON from "three/examples/fonts/droid/droid_sans_bold.typeface.json"
 
 const constants = {
     SLAB_THICKNESS: 0.2,
-    SLAB_COLOR: 0xf2f2f2, //f2f2f2 , //a6a6a6,//737373,
+    SLAB_COLOR: 0xa6a6a6,//f2f2f2, //f2f2f2 , //a6a6a6,//737373,
     SPACE_COLOR: 0xb3e6ff,
 }
 
@@ -217,7 +217,7 @@ export class BuildingMassGenerator extends Generator {
         
 
         const outputs = {area: 232, volume: 1986, height: 100};
-        const text_meshes = this.createText(outputs, CONTOUR[0].x - 2 , CONTOUR[0].y);
+        const text_meshes = this.createText(outputs, CONTOUR[0].x - 5 , CONTOUR[0].y);
 
         const main = new Mesh();
         main.children = [...meshes, ...text_meshes];
@@ -235,21 +235,24 @@ export class BuildingMassGenerator extends Generator {
                       `Building height: ${results.height} m`
                     ]
         const text_meshes = [];
+        let pos = 0;
         for ( let i=0; i < str.length; i++){
           let text = new TextGeometry( str[i], {
             font: parsedFont,
-            size: 0.7,
+            size: 1.5,
             height: 0.01,
           });
         
           let txtMesh = new Mesh( text, txtMaterial ) ;
         
           txtMesh.rotation.set(-Math.PI/2, 0, -Math.PI/2);
-          txtMesh.translateY(offsetX - i)
+          console.log('[Offset x]:', offsetX)
+          txtMesh.translateY(offsetX - pos)
           txtMesh.translateX(offsetY)
       
           txtMesh.updateMatrix();
           text_meshes.push( txtMesh );
+          pos += 2.5
         }
         return text_meshes;
     }

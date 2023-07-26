@@ -15,12 +15,12 @@ export class Viewer {
     private camera: Camera;
     private options: any
 
-    constructor( canvas: HTMLElement, mesh: Mesh, options:any = {} ) {
+    constructor( canvas: HTMLElement, meshes: Mesh[], options:any = {} ) {
         this.options = options;
-        this.init(canvas, mesh)
+        this.init(canvas, meshes)
     }
 
-    init(canvas: HTMLElement, mesh: Mesh) {
+    init(canvas: HTMLElement, meshes: Mesh[]) {
         const scene = new THREE.Scene();
 
         const size = {
@@ -36,7 +36,7 @@ export class Viewer {
         const camera = new THREE.PerspectiveCamera(fov, aspect, near, far);
 
         // camera.position.set(40, 15, 45);
-        camera.position.set(-87, 51, -65);
+        camera.position.set(-107, 100, -85);
         camera.up.set(0, 1, 0);
         camera.lookAt(0, 0, 0);
 
@@ -96,7 +96,7 @@ export class Viewer {
 
         const controls = new OrbitControls(camera, canvas);
         // controls.target.set(0,0,0)
-        controls.target.set(30, 2.5, 14.8)
+        controls.target.set(30, 24, 23)
 
 
         //* shape
@@ -105,7 +105,8 @@ export class Viewer {
         // const geometry = new THREE.BoxGeometry( inputs.width, inputs.length, inputs.height ); 
         // const material = new THREE.MeshPhongMaterial( {color: 0x9ca884, transparent: true, opacity: 0.5} ); 
         // const mesh = new THREE.Mesh( geometry, material ); 
-        scene.add( mesh );
+        for( let i=0; i < meshes.length; i++ )
+            scene.add( meshes[i] );
 
         // geometry.computeBoundingSphere()
 
@@ -117,8 +118,8 @@ export class Viewer {
         //* rendering
         const animate = () => {
             controls.update();
-            // renderer.render(scene, camera);
-            composer.render()
+            renderer.render(scene, camera);
+            // composer.render()
             requestAnimationFrame(animate);
             // console.log("Cam: ", camera.position);
             // console.log("Target: ", controls.target)
@@ -130,8 +131,8 @@ export class Viewer {
             size.height = window.innerHeight;
             camera.aspect = size.width / size.height;
             camera.updateProjectionMatrix();
-            // renderer.setSize(size.width, size.height);
-            composer.setSize( size.width, size.height );
+            renderer.setSize(size.width, size.height);
+            // composer.setSize( size.width, size.height );
         });
     }
 

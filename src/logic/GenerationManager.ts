@@ -19,14 +19,14 @@ export class GenerationManager {
     private generations: number;
     private strategy: string;
     private generator: any; //Generator;
-    private variants: any[] = [];
+    public variants: any[] = [];
     private results = new Map<string,Result>();
     // private sortedResults = 
 
     constructor( generator: any,
                  strategy: string,
                  objectives: Objective[],
-                 populations: number,
+                 populations: number = 1,
                  generations: number = 1 )
     {
         this.populations = populations;
@@ -39,14 +39,27 @@ export class GenerationManager {
 
     process(){}
 
-    private populate() {
+    public populate(inputs: any) {
         if( this.populations == 0 || this.generations == 0 ) return;
 
+        let transX = 0;
+        let transY = 0;
+        let pos = 0;
         for( let i = 0; i < this.populations; i++ ){
-            this.generator.evaluate();
-            let variant = this.generator.getVariant();
-            this.variants.push(variant);
+            let var_mesh = this.generator.generateVariant(inputs, transX, transY);
+            // this.generator.evaluate();
+            pos += 1;
+            transX += 100;
+            if( pos == 4){
+                pos = 0;
+                transX = 0;
+                transY += 200;
+            }
+            
+            // transY += 100;
+            this.variants.push(var_mesh);
         }
+        console.log('[Variants]: ', this.variants);
     }
 
     private getResults() {
