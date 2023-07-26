@@ -217,7 +217,7 @@ export default defineComponent({
             let w = this.input_offset;
             if(this.fixed_offset) {
                 this.store.design[this.function]['inputs']['offset'] = {};
-                this.store.design[this.function]['inputs']['offset']['type'] = 'static';
+                this.store.design[this.function]['inputs']['offset']['type'] = 'constant';
                 this.store.design[this.function]['inputs']['offset']['value'] = w;
             } else {
                 this.store.design[this.function]['inputs']['offset'] = {};
@@ -229,7 +229,7 @@ export default defineComponent({
             let l = this.input_bld_height;
             if(this.fixed_bld_height) {
                 this.store.design[this.function]['inputs']['bld_height'] = {};
-                this.store.design[this.function]['inputs']['bld_height']['type'] = 'static';
+                this.store.design[this.function]['inputs']['bld_height']['type'] = 'constant';
                 this.store.design[this.function]['inputs']['bld_height']['value'] = l;
             } else {
                 this.store.design[this.function]['inputs']['bld_height'] = {};
@@ -241,7 +241,7 @@ export default defineComponent({
             let h = this.input_flr_height;
             if(this.fixed_flr_height) {
                 this.store.design[this.function]['inputs']['flr_height'] = {};
-                this.store.design[this.function]['inputs']['flr_height']['type'] = 'static';
+                this.store.design[this.function]['inputs']['flr_height']['type'] = 'constant';
                 this.store.design[this.function]['inputs']['flr_height']['value'] = h;
             } else {
                 this.store.design[this.function]['inputs']['flr_height'] = {};

@@ -2,15 +2,15 @@
   <InputPanel @test_eventy="testFunc"
               :hasStudy="hasStudy"
               @generate_finished="hasStudy = true" />
-  <D3Panel :msg="mockData" :hasStudy="hasStudy"/>
-  <VarResultPanel/>
+  <OutputsPanel :msg="mockData" :hasStudy="hasStudy"/>
+  <!-- <VarResultPanel/> -->
   <p id="app_stamp">Design space explorer - 2023</p>
 </template>
 
 <script lang="ts">
 import { defineComponent } from 'vue';
 import InputPanel from './InputPanel.vue';
-import D3Panel from './D3Panel.vue';
+import OutputsPanel from './OutputsPanel.vue';
 import {useDesign} from '../store/design';
 import { Viewer } from '../logic/Viewer';
 import VarResultPanel from '../components/Rsult3DGallery.vue'
@@ -19,7 +19,7 @@ import VarResultPanel from '../components/Rsult3DGallery.vue'
 export default defineComponent({
   name: 'Main',
   components: {
-    InputPanel, D3Panel, VarResultPanel
+    InputPanel, OutputsPanel, VarResultPanel
   },
   props: {
     msg: String,

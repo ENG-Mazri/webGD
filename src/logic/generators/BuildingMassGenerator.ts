@@ -1,5 +1,27 @@
 import { Model } from "../Model";
 import { Generator } from "./Generator";
+import { TextGeometry } from 'three/examples/jsm/geometries/TextGeometry.js';
+import { FontLoader } from 'three/examples/jsm/loaders/FontLoader.js';
+import {Mesh,
+        Box3,
+        BoxGeometry,
+        SphereGeometry,
+        MeshBasicMaterial,
+        DoubleSide,
+        MeshPhongMaterial,
+        Vector2,
+        BufferAttribute,
+        Matrix4,
+        Vector3,
+        BufferGeometry,
+        Line,
+        Line3,
+        LineBasicMaterial,
+        Shape,
+        ExtrudeGeometry } from 'three';
+
+// @ts-ignore
+import fontJSON from "three/examples/fonts/droid/droid_sans_bold.typeface.json"
 // @ts-ignore
 // import MGWorker from './MassGeneratorWorker?worker&inline';
 
@@ -15,7 +37,25 @@ import { Generator } from "./Generator";
         - offset
 
 */
+
+const constants = {
+    SLAB_THICKNESS: 0.2,
+    SLAB_COLOR: 0xf2f2f2, //f2f2f2 , //a6a6a6,//737373,
+    SPACE_COLOR: 0xb3e6ff,
+}
+
 export class BuildingMassGenerator extends Generator {
+
+    extrudeSettings = {
+        steps: 1,
+        depth: constants.SLAB_THICKNESS,
+        bevelEnabled: false,
+        bevelThickness: 0,
+        bevelSize: 0,
+        bevelOffset: 0,
+        bevelSegments: 0
+    };
+
     evaluate(): Model {
         throw new Error("Method not implemented.");
     }
@@ -25,17 +65,613 @@ export class BuildingMassGenerator extends Generator {
         // console.log("[MG]",MGWorker)
         // const worker = new Worker('./MassGeneratorWorker.ts');
         this.init()
+        // this.generateVariant(inputs)
 
     }
 
-    init(){
+    private init(){
         // const worker = new MGWorker()
         console.log("[BLD mass generator]")
         
         // const worker = new Worker('./MassGeneratorWorker.ts');
         // worker.postMessage({name: 'botty', type: 'bot-24'})
     }
+
+    private getInputs(inputs: any){
+        const site_offset = inputs.site_offset.type == 'constant' ? inputs.site_offset.value : this.randomIntFromInterval(inputs.site_offset.value.min, inputs.site_offset.value.max);
+        const total_floors = inputs.total_floors.type == 'constant' ? inputs.total_floors.value : this.randomIntFromInterval(inputs.total_floors.value.min, inputs.total_floors.value.max);
+        const tower_floor_height = inputs.tower_floor_height.type == 'constant' ? inputs.tower_floor_height.value : this.randomIntFromInterval(inputs.tower_floor_height.value.min, inputs.tower_floor_height.value.max);
+        const podium_floor_height = inputs.podium_floor_height.type == 'constant' ? inputs.podium_floor_height.value : this.randomIntFromInterval(inputs.podium_floor_height.value.min, inputs.podium_floor_height.value.max);
+
+        return {site_offset, contour: inputs.contour, total_floors, tower_floor_height, podium_floor_height}
+    }
+
+    public generateVariant(inputs: any, transX: number = 0, transY: number= 0){
+        const {site_offset, contour, total_floors, tower_floor_height, podium_floor_height} = this.getInputs(inputs);
+
+        const meshes = [];
+
+        const spaceExtrudeSettings = {
+            steps: 1,
+            depth: tower_floor_height - constants.SLAB_THICKNESS,
+            bevelEnabled: true,
+            bevelThickness: 0,
+            bevelSize: 0,
+            bevelOffset: 0,
+            bevelSegments: 0
+        };
+
+        const offsetedContour = this.offsetContour( site_offset, contour );
+        const CONTOUR = this.getTranslatedContour(offsetedContour, transX, transY);
+        const TOTAL_FLOORS_NUMBER = total_floors;
+      
+        const PODIUM_FLOORS_NUMBER = this.randomIntFromInterval(1, 4);
+        const TOWER_FLOORS_NUMBER = TOTAL_FLOORS_NUMBER - PODIUM_FLOORS_NUMBER;
+
+        const mat = new LineBasicMaterial( {color: 0x00b386, linewidth: 2} );
+        const contourLines = []; // add this to scene
+        const contourLines3 = [];
+
+
+        for( let i=0; i < CONTOUR.length - 1; i++ ){
+
+            let current = CONTOUR[i];
+            let incremented = CONTOUR[i+1];
+            const geometry = new BufferGeometry().setFromPoints([current,incremented]);
+            const line = new Line(geometry, mat);
+            line.rotation.set(Math.PI/2,0, 0);
+            line.updateMatrix()
+            
+            let l3 = new Line3( new Vector3(current.x, 0, current.y),
+                                new Vector3(incremented.x, 0, incremented.y));
+            contourLines.push(line)
+            meshes.push(line)
+            contourLines3.push(l3)
+
+        }
+          
+          // TODO: SITE BASE
+        const origin = new Vector3(0,0,0);
+        
+        //* Get bbox of contour
+        const shape = this.formBaseShape(CONTOUR);
+        const geom = new ExtrudeGeometry( shape, this.extrudeSettings ); // try using buffergeometry instead
+        const shape_mat = new MeshPhongMaterial( { color: 0x00cc99, opacity: 0.2, transparent: true } );
+        let site_mesh = new Mesh( geom, shape_mat );
+        site_mesh.rotation.set(Math.PI/2,0, 0);
+        
+        let matrix = site_mesh.matrix.clone()
+        const pos = new Vector3().setFromMatrixPosition(matrix)
+        matrix.setPosition(pos.x - origin.x, pos.y - origin.y, pos.z - origin.z)
+        
+        site_mesh.applyMatrix4(matrix);
+        site_mesh.updateMatrix();
+        site_mesh.updateMatrixWorld();
+
+        let bbox = new Box3().setFromObject(site_mesh)
+
+        site_mesh.geometry.computeBoundingBox();
+        // scene.add(site_mesh); -----------------> add site_mesh
+        meshes.push(site_mesh)
+        
+        
+        //* COMPUTED INPUTS
+        const PODIUM_BASE_WIDTH = bbox.min.distanceTo(bbox.max) / 1.7; // TRY PLAYING WITH 1.7 VALUE
+        const PODIUM_BASE_LENGTH = PODIUM_BASE_WIDTH / 2; // HEIGHT PARAMETER IN THE BOX METHOD
+        const PODIUM_WIDTH = this.randomFloatFromInterval( PODIUM_BASE_WIDTH / 2, PODIUM_BASE_WIDTH);
+        const PODIUM_LENGTH = this.randomFloatFromInterval( PODIUM_BASE_LENGTH / 2, PODIUM_BASE_LENGTH);
+        const axesLines = this.drawAxes(bbox, false);
+
+        
+        const podiumBaseGeom = new BoxGeometry( PODIUM_BASE_WIDTH, PODIUM_BASE_LENGTH, 0.5 ); 
+        const podiumBaseMat = new MeshBasicMaterial( {color: 0xff0000, side: DoubleSide, transparent: true, opacity:0.5} );
+        const podiumBase = new Mesh( podiumBaseGeom, podiumBaseMat );
+        // podiumBase.translateZ(5)
+        podiumBase.updateMatrix()
+        let times = 0;
+        let intersections = [];
+        let rotation = 0; //TODO: metric - maybe as a matrix 
+        podiumBase.geometry.computeBoundingBox();
+        podiumBase.updateMatrixWorld();
+
+        // meshes.push(podiumBase)
+        
+        while(intersections.includes(true) || intersections.length == 0) {
+        
+          let n = Math.random();
+          let axis = this.randomIntFromInterval(0, axesLines.length-1)
+          let pointAtParam = this.getPointAtParameter(axesLines[axis], n, false);
+        
+          podiumBase.rotation.set(Math.PI/2, 0, rotation);
+          podiumBase.position.copy(pointAtParam)
+          podiumBase.updateMatrix()
+        
+          for ( let j = 0; j < contourLines.length; j++)
+            intersections.push(this.checkTwoShapeIntersect(podiumBase, contourLines[j]));
+        
+        //   console.log('[Intersections]: ', intersections)
+        
+          if(intersections.includes(true)) {
+            intersections = []
+            rotation = Math.PI / (Math.random() * 4)
+            times++;
+            if(times == 500) break;
+          } 
+        }
+
+        console.log(`Found base position and orientation after: ${times} times`)
+
+        let topPodium = 0; // the highest point on the podium
+
+        const pod = this.generatePodium(meshes, PODIUM_WIDTH, PODIUM_LENGTH , this.extrudeSettings.depth, podiumBase.matrix , PODIUM_FLOORS_NUMBER, podium_floor_height)
+        // console.log(`Top podium is at: ${topPodium}`)
+        // console.log('Podium: ', pod)
+        
+        const contourF = this.offsetContour( 2, pod.top_contour);
+        const contourS = this.offsetContour( 2.3, pod.top_contour);
+        
+        const topPodShapeF = this.formBaseShape(contourF);
+        const topPodShapeS = this.formBaseShape(contourS);
+
+        this.createTypeA(meshes, topPodShapeF,topPodShapeS, spaceExtrudeSettings, pod.height, tower_floor_height, TOWER_FLOORS_NUMBER, podiumBase.matrix) ;
+        
+
+        const outputs = {area: 232, volume: 1986, height: 100};
+        const text_meshes = this.createText(outputs, CONTOUR[0].x - 2 , CONTOUR[0].y);
+
+        const main = new Mesh();
+        main.children = [...meshes, ...text_meshes];
+        
+        return main
+    }
+
+    private createText( results: any, offsetX = 1, offsetY = 1 ): Mesh[]{
+        const loader = new FontLoader();
+        const parsedFont = loader.parse(fontJSON)
+        
+        const txtMaterial = new MeshPhongMaterial( { color: 0x404040 } );
+        const str = [ `Exterior area: ${results.area} m2`,
+                      `Volume: ${results.volume} m3`,
+                      `Building height: ${results.height} m`
+                    ]
+        const text_meshes = [];
+        for ( let i=0; i < str.length; i++){
+          let text = new TextGeometry( str[i], {
+            font: parsedFont,
+            size: 0.7,
+            height: 0.01,
+          });
+        
+          let txtMesh = new Mesh( text, txtMaterial ) ;
+        
+          txtMesh.rotation.set(-Math.PI/2, 0, -Math.PI/2);
+          txtMesh.translateY(offsetX - i)
+          txtMesh.translateX(offsetY)
+      
+          txtMesh.updateMatrix();
+          text_meshes.push( txtMesh );
+        }
+        return text_meshes;
+    }
+
+    private offsetContour = ( offset: any, contour: Vector2[] ) => {
+        let result = [];
+      
+        offset = new BufferAttribute(new Float32Array([offset, 0, 0]), 3);
+      
+        for (let i = 0; i < contour.length - 1; i++) {
+          let v1 = new Vector2().subVectors(contour[i - 1 < 0 ? contour.length - 1 : i - 1], contour[i]);
+          let v2 = new Vector2().subVectors(contour[i + 1 == contour.length ? 0 : i + 1], contour[i]);
+          let angle = v2.angle() - v1.angle();
+          let halfAngle = angle * 0.5;
+      
+          let hA = halfAngle;
+          let tA = v2.angle() + Math.PI * 0.5;
+      
+          let shift = Math.tan(hA - Math.PI * 0.5);
+          let shiftMatrix = new Matrix4().set(
+                 1, 0, 0, 0, 
+            -shift, 1, 0, 0,
+                 0, 0, 1, 0,
+                 0, 0, 0, 1
+          );
+      
+      
+          let tempAngle = tA;
+          let rotationMatrix = new Matrix4().set(
+            Math.cos(tempAngle), -Math.sin(tempAngle), 0, 0,
+            Math.sin(tempAngle),  Math.cos(tempAngle), 0, 0,
+                              0,                    0, 1, 0,
+                              0,                    0, 0, 1
+          );
+      
+          let translationMatrix = new Matrix4().set(
+            1, 0, 0, contour[i].x,
+            0, 1, 0, contour[i].y,
+            0, 0, 1, 0,
+            0, 0, 0, 1,
+          );
+      
+          let cloneOffset = offset.clone();
+          cloneOffset.needsUpdate = true
+          cloneOffset.applyMatrix4(shiftMatrix)
+          cloneOffset.applyMatrix4(rotationMatrix)
+          cloneOffset.applyMatrix4(translationMatrix)
+      
+      
+          result.push(new Vector2(cloneOffset.getX(0), cloneOffset.getY(0)));
+        }
+      
+        //added recently
+        result.push(result[0])
+        return result;
+    }
+
+    private formBaseShape( points: Vector2[] ){
+        const shape = new Shape();
+        shape.moveTo( points[0].x, points[0].y );
+      
+        for ( let i = 1; i < points.length; i++)
+          shape.lineTo( points[i].x, points[i].y );
+        
+        // shape.lineTo( points[0].x, points[0].y );
+      
+        return shape;
+    }
+      
+    private nDivider( number: number, parts: number, min: number ){
+      
+        let randombit = number - min * parts;
+        let out = [];
+        
+        for (let i=0; i < parts; i++) {
+          out.push( Math.random() );
+        }
+        
+        let mult = randombit / out.reduce( (a,b)=> {return a+b;});
+        
+        return out.map( (el) => { return Math.round(el * mult + min); });
+    }
+      
+    private randomIntFromInterval(min: number, max: number){ 
+        return Math.floor(Math.random() * (max - min + 1) + min)
+    }
+      
+    private randomFloatFromInterval(min: number, max: number){ 
+        return Math.random() * (max - min + 1) + min
+    }
+
+    private getPointAtParameter( line: any, param: any, visualize: boolean = true){
+        // const p    = new THREE.Vector3((p1.x+p2.x)*param,(p1.y+p2.y)*param,(p1.z+p2.z)*param) 
+        const p = new Vector3();
+        line.at(param, p);
+        // console.log("This is P: ", p)
+        // const midGeom = new SphereGeometry( 0.2, 32, 16 ); 
+        // const midMat  = new MeshBasicMaterial( { color: 0x0000ff } ); 
+        // let midMesh   = new Mesh( midGeom, midMat );
+        // midMesh.position.copy(p);
+        // if (visualize) scene.add(midMesh);
+      
+        return p;
+    }
+
+    private getTranslatedContour( contour: Vector2[], transX: number = 0, transY: number = 0){
+        const transContour = [];
+        for( let i = 0; i < contour.length; i++ ){
+          let vec = contour[i].clone()
+                              .add( new Vector2(transX, transY));
+          // vec.x += transX;
+          // vec.y += transY;
+          transContour.push(vec);
+        }
+        return transContour;
+    }
+    
+    private getPerimeter(contour: Vector2[]){
+        let perimeter = 0;
+        for( let i = 0; i < contour.length - 1; i++ )
+            perimeter += Math.round(contour[i].distanceTo(contour[i+1]));
+        
+        return perimeter;
+    }
+    
+    private getRecSurface(contour: Vector2[]){
+        return contour[0].distanceTo(contour[1]) * contour[1].distanceTo(contour[2]);
+    }
+    
+    private getRecVolume(area: number, floorHeight: number){
+        return area * floorHeight;
+    }
+
+    private drawAxes(bbox: Box3, visualize= true) {
+        const matAxis = new LineBasicMaterial( {color: 0xff9900, linewidth: 2} );
+        const midGeom = new SphereGeometry( 0.2, 32, 16 ); 
+      
+      
+        //* opp pints to bbox max min 
+        const p1 = new Vector3(bbox.min.x, bbox.min.y, bbox.max.z);
+        const p2 = new Vector3(bbox.max.x, bbox.min.y, bbox.min.z);
+      
+        let p1Mesh = new Mesh( midGeom, matAxis );
+        let p2Mesh = new Mesh( midGeom, matAxis );
+      
+        p1Mesh.position.copy(p1);
+        p2Mesh.position.copy(p2);
+      
+        // if (visualize) scene.add(p1Mesh);
+        // if (visualize) scene.add(p2Mesh);
+      
+        //* axis min max bbox
+        const l1_geom = new BufferGeometry().setFromPoints([bbox.min, bbox.max]);
+        const l1 = new Line(l1_geom, matAxis);
+        const l1_ = new Line3(bbox.min, bbox.max);
+        // const l1 = new Line(l1_, matAxis);
+        // if (visualize) scene.add(l1)
+      
+        //* axis opp min max
+        const l2_geom = new BufferGeometry().setFromPoints([p1, p2]);
+        const l2 = new Line(l2_geom, matAxis);
+        const l2_ = new Line3(p1, p2);
+      
+        // if (visualize) scene.add(l2)
+      
+        //* straight axis 1
+        const midMinZ = bbox.min.clone().add(p1).divideScalar(2);
+        const midMaxZ = bbox.max.clone().add(p2).divideScalar(2);
+        const midMinZ_Mesh = new Mesh( midGeom, matAxis );
+        const midMaxZ_Mesh = new Mesh( midGeom, matAxis );
+        midMinZ_Mesh.position.copy(midMinZ);
+        midMaxZ_Mesh.position.copy(midMaxZ);
+        // if (visualize) scene.add(midMinZ_Mesh)
+        // if (visualize) scene.add(midMaxZ_Mesh)
+      
+        //* straight axis 2
+        const _midMinZ = bbox.min.clone().add(p2).divideScalar(2);
+        const _midMaxZ = bbox.max.clone().add(p1).divideScalar(2);
+        const _midMinZ_Mesh = new Mesh( midGeom, matAxis );
+        const _midMaxZ_Mesh = new Mesh( midGeom, matAxis );
+        _midMinZ_Mesh.position.copy(_midMinZ);
+        _midMaxZ_Mesh.position.copy(_midMaxZ);
+        // if (visualize) scene.add(_midMinZ_Mesh)
+        // if (visualize) scene.add(_midMaxZ_Mesh)
+      
+        //* axis min max bbox
+        const _l1_geom = new BufferGeometry().setFromPoints([midMinZ, midMaxZ]);
+        const _l1 = new Line(_l1_geom, matAxis);
+        const _l1_ = new Line3(midMinZ, midMaxZ);
+        // if (visualize) scene.add(_l1)
+      
+        //* axis opp min max
+        const _l2_geom = new BufferGeometry().setFromPoints([_midMinZ, _midMaxZ]);
+        const _l2 = new Line(_l2_geom, matAxis);
+        const _l2_ = new Line3(_midMinZ, _midMaxZ);
+        // if (visualize) scene.add(_l2)
+      
+        return [l1_, l2_, _l1_, _l2_]
+    }
+    
+    private checkTwoShapeIntersect(object1: any,object2: any){
+        //TODO: check vetices whether they're inside site shape or not
+        /**
+         * This function check if two object3d intersect or not
+         * @param {THREE.Object3D} object1
+         * @param {THREE.Object3D} object2
+         * @returns {Boolean} 
+        */ 
+      
+        // Check for intersection using bounding box intersection test
+        let bBox1 = new Box3().setFromObject(object1);
+        let bBox2 = new Box3().setFromObject(object2);
+      
+        const intersection = bBox1.intersectsBox(bBox2);
+        // const intersection = mesh1.geometry.boundingBox.intersectsBox(mesh2.geometry.boundingBox);
+      
+        if (intersection) { // The shape geometries intersect.
+            return true
+        } else { // The shape geometries do not intersect.
+            return false
+        }
+    }
+
+    private generatePodium(meshes: Mesh[], width: number, height: number, depth: number, matrix: Matrix4, nFloor: number, floorHeight: number){
+        const geomF = new BoxGeometry( width, height, depth ); 
+        const matF = new MeshPhongMaterial( {color: constants.SLAB_COLOR, side: DoubleSide} );
+        
+        const geomS = new BoxGeometry( width, height, floorHeight ); 
+        const matS = new MeshPhongMaterial( {color: constants.SPACE_COLOR, side: DoubleSide, transparent: true, opacity: 0.8} );
+        let hF = depth;
+        let hS = (floorHeight + hF)/2 + hF;
+      
+        const floorMeshes = []
+        const spaceMeshes = []
+        const roofV = []
+        const setX = new Set();
+        const setY = new Set();
+      
+        for( let i=0; i < nFloor; i++ ){
+          //* Podium floors
+          let podium_slab = new Mesh( geomF, matF );
+          podium_slab.applyMatrix4(matrix)
+          podium_slab.translateZ(-hF)
+          podium_slab.updateMatrixWorld()
+      
+          let sg = podium_slab.geometry.clone().toNonIndexed()
+      
+        //   SLAB_GEOMETRIES.push( sg ); //TODO: merge then addd to scene
+          meshes.push(podium_slab);
+          // scene.add(podium_slab); 
+          hF += depth + floorHeight
+      
+          //* Podium spaces
+          let podium_space = new Mesh( geomS, matS );
+          podium_space.applyMatrix4(matrix)
+          podium_space.translateZ(-hS)
+          podium_space.updateMatrixWorld()
+          
+          let spg = podium_space.geometry.clone().toNonIndexed()
+      
+        //   SPACE_GEOMETRIES.push(spg); //TODO: merge then addd to scene
+          meshes.push(podium_space);
+          // scene.add(podium_space); 
+          hS += depth + floorHeight
+      
+          //* Add podium roof
+          if( i == nFloor - 1 ){
+            let roof = new Mesh( geomF, matF );
+            roof.applyMatrix4(matrix)
+            roof.translateZ(-hF)
+            roof.updateMatrixWorld()
+            roof.updateMatrix()
+            hF += depth/2
+      
+            // roof.geometry.computeBoundingBox()
+            // let box = new Box3().setFromObject( roof );
+            // let bBox = visualizeBBox(box, true)
+            for ( let y=0; y<roof.geometry.index.count; y++ ){
+              let v3 = new Vector3().fromBufferAttribute(roof.geometry.attributes.position, y);
+              roofV.push(v3)
+            }
+            const m = roofV.map( v=>{
+              if (v.x) setX.add(v.x)
+              if (v.y) setY.add(v.y)
+      
+            })
+            let rs = roof.geometry.clone().toNonIndexed()
+            // SLAB_GEOMETRIES.push( rs );
+            meshes.push(roof);
+            // scene.add(roof); //TODO: merge then add to scene
+          }
+        }
+        
+        //* Roof points
+        const topP = []
+        const shapeP = []
+        const x = Array.from(setX)
+        const y = Array.from(setY)
+      
+        for( let a=0; a < x.length; a++ ){
+          for( let b=0; b < y.length; b++ ){
+            topP.push(new Vector3(x[a] as number, y[b] as number, -hF ))
+            shapeP.push(new Vector2(x[a] as number, y[b] as number))
+          }
+        }
+      
+        const sortedCountour = [shapeP[2], shapeP[3], shapeP[1], shapeP[0], shapeP[2]];
+      
+        // topPodium = hF
+        return {height: hF, top_positions: topP, top_contour: sortedCountour}
+      
+    }
+    
+    private generateTowerSlabs(meshes: Mesh[], shape: Shape, stHeight: number, floorHeight: number, nFloor: number, matrix: Matrix4){
+        const geometry = new ExtrudeGeometry( shape, this.extrudeSettings );
+        const material = new MeshPhongMaterial( { color: constants.SLAB_COLOR } );
+        // geometry.scale( scale.x, scale.y, scale.z);
+        let dist = stHeight + floorHeight;
+        for( let i = 0; i < nFloor; i++){
+            let slab_mesh = new Mesh( geometry, material ) ;
+            slab_mesh.translateZ(-dist)
+            slab_mesh.applyMatrix4(matrix)
+            // SLAB_GEOMETRIES.push( slab_mesh.geometry.clone() ); //TODO: merge then addd to scene
+            meshes.push(slab_mesh);
+            // scene.add(slab_mesh)
+            dist += floorHeight
+        }
+    }
+    
+    private generateTowerSpaces(meshes: Mesh[], shape: Shape, extrudeSettings: any,  stHeight: number, floorHeight: number, nFloor: number, matrix: Matrix4){
+        const geometry = new ExtrudeGeometry( shape, extrudeSettings );
+        const material = new MeshPhongMaterial( { color: constants.SPACE_COLOR, side: DoubleSide, transparent: true, opacity: 0.8} );
+        // geometry.scale( scale.x, scale.y, scale.z);
+        // const shape_contour = [];
+        // shape.curves.forEach( curve => {
+        //   shape_contour.push(curve.v1)
+        //   shape_contour.push(curve.v2)
+        // });
+        // spaces_contour.push({contour: shape.extractPoints().shape, num_floors: nFloor}) //!!!!!!!!!!!!!!!!
+        
+        let dist = stHeight + extrudeSettings.depth;
+        for( let i = 0; i < nFloor; i++){ //nFloor
+            let space_mesh = new Mesh( geometry, material ) ;
+            space_mesh.translateZ(-dist)
+            space_mesh.applyMatrix4(matrix)
+            // SPACE_GEOMETRIES.push(space_mesh.geometry.clone()); //TODO: merge then addd to scene
+            meshes.push(space_mesh);
+            // scene.add(space_mesh)
+            dist += floorHeight + extrudeSettings.depth
+        }
+    }
+
+    private getShapesforTypeB(_contour: any[], paramA: number, paramB: number){
+        const geom = new SphereGeometry( 0.5, 32, 16 ); 
+        const mat = new MeshBasicMaterial( { color: 0xff0000 } ); 
+    
+        const _a = new Line3(_contour[0],_contour[1]);
+        const _b = new Line3(_contour[1],_contour[2]);
+        const _c = new Line3(_contour[1],_contour[2]);
+        const _d = new Line3(_contour[1],_contour[2]);
+      
+        const pt_a = new Vector3()
+        const pt_b = new Vector3()
+        const pt_c = new Vector3()
+        const pt_d = new Vector3()
+      
+        _a.at(0.5, pt_a)
+        _b.at(paramA, pt_b) // this is the one that controls the 
+        _c.at(0.5, pt_c)
+        _d.at(1-paramB, pt_d)
+      
+        const pt_ab = new Vector2(pt_b.x, pt_a.y)
+        const pt_b0 = new Vector2(pt_b.x,_contour[0].y)
+      
+      
+        const first_half = [_contour[0], pt_a, pt_ab, pt_b0, _contour[0]]
+        const _shape = this.formBaseShape(first_half);
+      
+        const pt_x = new Vector2(pt_d.x, pt_a.y)
+      
+        const pt_y = new Vector2(_contour[2].x,pt_x.y)
+        const second_half = [_contour[2], pt_d, pt_x, pt_y, _contour[2]]
+        const _shape2 = this.formBaseShape(second_half);
+    
+        const combined = [_contour[0], pt_a, pt_b0, pt_ab, pt_y, _contour[2], pt_d, pt_x, _contour[0]]
+    
+        return [_shape, _shape2]
+    }
+
+    private createTypeA(meshes: Mesh[], topPodShapeF: Shape, topPodShapeS: Shape, spaceExtrudeSettings, podHeight: number, floorHeight: number, TOWER_FLOORS_NUMBER: number, matrix: Matrix4){
+        this.generateTowerSlabs( meshes, topPodShapeF, podHeight, floorHeight, TOWER_FLOORS_NUMBER, matrix)
+        this.generateTowerSpaces( meshes, topPodShapeS, spaceExtrudeSettings, podHeight, this.extrudeSettings.depth, TOWER_FLOORS_NUMBER, matrix)
+    }
+
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 // TODO: Extusion
 // let hasBBox = false;

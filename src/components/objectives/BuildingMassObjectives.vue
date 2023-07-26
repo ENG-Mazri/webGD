@@ -22,7 +22,7 @@
             </div>
             <div>
                 <n-divider title-placement="left">
-                    Podium vlume
+                    Podium volume
                 </n-divider>
                 <n-space item-style="display: flex;" align="center">
                     <n-checkbox
@@ -61,6 +61,25 @@
             <div>
                 <n-divider title-placement="left">
                     Total building area
+                </n-divider>
+                <n-space item-style="display: flex;" align="center">
+                    <n-checkbox
+                        v-model:checked="isMaxTotalArea"
+                        @click="onMaxTotalArea"
+                        size="small">
+                        Maximize
+                    </n-checkbox>
+                    <n-checkbox
+                        v-model:checked="isMinTotalArea"
+                        @click="onMinTotalArea"
+                        size="small">
+                        Minimize
+                    </n-checkbox>
+                </n-space>
+            </div> 
+            <div> <!-- fix binding data -->
+                <n-divider title-placement="left">
+                    Total facade area
                 </n-divider>
                 <n-space item-style="display: flex;" align="center">
                     <n-checkbox
