@@ -1,6 +1,6 @@
 import {Generator} from './generators/Generator';
 import {Model} from './Model';
-
+import {Mesh} from 'three';
 type Result = {
     values: number[],
     max: number;
@@ -21,6 +21,7 @@ export class GenerationManager {
     private generator: any; //Generator;
     public variants: any[] = [];
     private results = new Map<string,Result>();
+    public model: Mesh;
     // private sortedResults = 
 
     constructor( generator: any,
@@ -46,19 +47,20 @@ export class GenerationManager {
         let transY = 0;
         let pos = 0;
         for( let i = 0; i < this.populations; i++ ){
-            let var_mesh = this.generator.generateVariant(inputs, transX, transY);
+            this.generator.generateVariant(inputs, transX, transY);
             // this.generator.evaluate();
             pos += 1;
-            transX += 100;
+            transX += 150;
             if( pos == 4){
                 pos = 0;
                 transX = 0;
-                transY += 200;
+                transY += 150;
             }
             
             // transY += 100;
-            this.variants.push(var_mesh);
+            // this.variants.push(var_mesh);
         }
+        this.model = this.generator.getModelMesh();
         console.log('[Variants]: ', this.variants);
     }
 

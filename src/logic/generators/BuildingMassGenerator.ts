@@ -24,6 +24,7 @@ import {Mesh,
 import fontJSON from "three/examples/fonts/droid/droid_sans_bold.typeface.json"
 // @ts-ignore
 // import MGWorker from './MassGeneratorWorker?worker&inline';
+import {mergeGeometries} from 'three/examples/jsm/utils/BufferGeometryUtils.js'
 
 /*// TODO: Mass Generation logic
     - generate floor slabs as box
@@ -40,7 +41,7 @@ import fontJSON from "three/examples/fonts/droid/droid_sans_bold.typeface.json"
 
 const constants = {
     SLAB_THICKNESS: 0.2,
-    SLAB_COLOR: 0xa6a6a6,//f2f2f2, //f2f2f2 , //a6a6a6,//737373,
+    SLAB_COLOR: 0xffffff, //a6a6a6,//f2f2f2, //f2f2f2 , //a6a6a6,//737373,
     SPACE_COLOR: 0xb3e6ff,
 }
 
@@ -55,6 +56,16 @@ export class BuildingMassGenerator extends Generator {
         bevelOffset: 0,
         bevelSegments: 0
     };
+
+    private SLAB_GEOMETRIES  = [];
+    private SPACE_GEOMETRIES = [];
+    private LINE_GEOMETRIES  = [];
+    private TEXT_GEOMETRIES  = [];
+    private SITE_GEOMETRIES  = [];
+
+    private LINE_MESHES  = [];
+    private TEXT_MESHES  = [];
+
 
     evaluate(): Model {
         throw new Error("Method not implemented.");
@@ -103,6 +114,8 @@ export class BuildingMassGenerator extends Generator {
 
         const offsetedContour = this.offsetContour( site_offset, contour );
         const CONTOUR = this.getTranslatedContour(offsetedContour, transX, transY);
+        const CONTOUR_ = this.getTranslatedContour(contour, transX, transY);
+        
         const TOTAL_FLOORS_NUMBER = total_floors;
       
         const PODIUM_FLOORS_NUMBER = this.randomIntFromInterval(1, 4);
@@ -125,7 +138,7 @@ export class BuildingMassGenerator extends Generator {
             let l3 = new Line3( new Vector3(current.x, 0, current.y),
                                 new Vector3(incremented.x, 0, incremented.y));
             contourLines.push(line)
-            meshes.push(line)
+            this.LINE_MESHES.push(line)
             contourLines3.push(l3)
 
         }
@@ -134,9 +147,9 @@ export class BuildingMassGenerator extends Generator {
         const origin = new Vector3(0,0,0);
         
         //* Get bbox of contour
-        const shape = this.formBaseShape(CONTOUR);
+        const shape = this.formBaseShape(CONTOUR_);
         const geom = new ExtrudeGeometry( shape, this.extrudeSettings ); // try using buffergeometry instead
-        const shape_mat = new MeshPhongMaterial( { color: 0x00cc99, opacity: 0.2, transparent: true } );
+        const shape_mat = new MeshPhongMaterial( { color: 0x00cc99, opacity: 0.4, transparent: true } );
         let site_mesh = new Mesh( geom, shape_mat );
         site_mesh.rotation.set(Math.PI/2,0, 0);
         
@@ -147,12 +160,17 @@ export class BuildingMassGenerator extends Generator {
         site_mesh.applyMatrix4(matrix);
         site_mesh.updateMatrix();
         site_mesh.updateMatrixWorld();
+        site_mesh.receiveShadow = true;
+        let g_site = geom.clone();
+        g_site.rotateX(Math.PI/2)
+        g_site.applyMatrix4(matrix)
+        this.SITE_GEOMETRIES.push(g_site)
 
         let bbox = new Box3().setFromObject(site_mesh)
 
         site_mesh.geometry.computeBoundingBox();
         // scene.add(site_mesh); -----------------> add site_mesh
-        meshes.push(site_mesh)
+        // meshes.push(site_mesh)
         
         
         //* COMPUTED INPUTS
@@ -203,7 +221,7 @@ export class BuildingMassGenerator extends Generator {
 
         let topPodium = 0; // the highest point on the podium
 
-        const pod = this.generatePodium(meshes, PODIUM_WIDTH, PODIUM_LENGTH , this.extrudeSettings.depth, podiumBase.matrix , PODIUM_FLOORS_NUMBER, podium_floor_height)
+        const pod = this.generatePodium(PODIUM_WIDTH, PODIUM_LENGTH , this.extrudeSettings.depth, podiumBase.matrix , PODIUM_FLOORS_NUMBER, podium_floor_height)
         // console.log(`Top podium is at: ${topPodium}`)
         // console.log('Podium: ', pod)
         
@@ -213,16 +231,15 @@ export class BuildingMassGenerator extends Generator {
         const topPodShapeF = this.formBaseShape(contourF);
         const topPodShapeS = this.formBaseShape(contourS);
 
-        this.createTypeA(meshes, topPodShapeF,topPodShapeS, spaceExtrudeSettings, pod.height, tower_floor_height, TOWER_FLOORS_NUMBER, podiumBase.matrix) ;
+        let rndBool = Math.random() < 0.5;
+        if(rndBool)
+          this.createTypeB(tower_floor_height, pod, spaceExtrudeSettings, podiumBase)
+        else
+          this.createTypeA(topPodShapeF,topPodShapeS, spaceExtrudeSettings, pod.height, tower_floor_height, TOWER_FLOORS_NUMBER, podiumBase.matrix) ;
         
 
         const outputs = {area: 232, volume: 1986, height: 100};
-        const text_meshes = this.createText(outputs, CONTOUR[0].x - 5 , CONTOUR[0].y);
-
-        const main = new Mesh();
-        main.children = [...meshes, ...text_meshes];
-        
-        return main
+        this.TEXT_MESHES.push( ...this.createText(outputs, CONTOUR[0].x - 5 , CONTOUR[0].y) );
     }
 
     private createText( results: any, offsetX = 1, offsetY = 1 ): Mesh[]{
@@ -476,7 +493,7 @@ export class BuildingMassGenerator extends Generator {
         }
     }
 
-    private generatePodium(meshes: Mesh[], width: number, height: number, depth: number, matrix: Matrix4, nFloor: number, floorHeight: number){
+    private generatePodium(width: number, height: number, depth: number, matrix: Matrix4, nFloor: number, floorHeight: number){
         const geomF = new BoxGeometry( width, height, depth ); 
         const matF = new MeshPhongMaterial( {color: constants.SLAB_COLOR, side: DoubleSide} );
         
@@ -499,9 +516,11 @@ export class BuildingMassGenerator extends Generator {
           podium_slab.updateMatrixWorld()
       
           let sg = podium_slab.geometry.clone().toNonIndexed()
+          sg.translate(0,0,-hF)
+          sg.applyMatrix4(matrix);
       
-        //   SLAB_GEOMETRIES.push( sg ); //TODO: merge then addd to scene
-          meshes.push(podium_slab);
+          this.SLAB_GEOMETRIES.push( sg ); //TODO: merge then addd to scene
+          // MESHES.push(podium_slab);
           // scene.add(podium_slab); 
           hF += depth + floorHeight
       
@@ -512,9 +531,11 @@ export class BuildingMassGenerator extends Generator {
           podium_space.updateMatrixWorld()
           
           let spg = podium_space.geometry.clone().toNonIndexed()
+          spg.translate(0,0,-hS)
+          spg.applyMatrix4(matrix);
       
-        //   SPACE_GEOMETRIES.push(spg); //TODO: merge then addd to scene
-          meshes.push(podium_space);
+          this.SPACE_GEOMETRIES.push(spg); //TODO: merge then addd to scene
+          // MESHES.push(podium_space);
           // scene.add(podium_space); 
           hS += depth + floorHeight
       
@@ -540,8 +561,10 @@ export class BuildingMassGenerator extends Generator {
       
             })
             let rs = roof.geometry.clone().toNonIndexed()
-            // SLAB_GEOMETRIES.push( rs );
-            meshes.push(roof);
+            rs.translate(0,0,-hF)
+            rs.applyMatrix4(matrix);
+            this.SLAB_GEOMETRIES.push( rs );
+            // MESHES.push(roof);
             // scene.add(roof); //TODO: merge then add to scene
           }
         }
@@ -558,31 +581,34 @@ export class BuildingMassGenerator extends Generator {
             shapeP.push(new Vector2(x[a] as number, y[b] as number))
           }
         }
+
       
         const sortedCountour = [shapeP[2], shapeP[3], shapeP[1], shapeP[0], shapeP[2]];
       
-        // topPodium = hF
         return {height: hF, top_positions: topP, top_contour: sortedCountour}
       
     }
     
-    private generateTowerSlabs(meshes: Mesh[], shape: Shape, stHeight: number, floorHeight: number, nFloor: number, matrix: Matrix4){
+    private generateTowerSlabs(shape: Shape, stHeight: number, floorHeight: number, nFloor: number, matrix: Matrix4){
         const geometry = new ExtrudeGeometry( shape, this.extrudeSettings );
         const material = new MeshPhongMaterial( { color: constants.SLAB_COLOR } );
         // geometry.scale( scale.x, scale.y, scale.z);
         let dist = stHeight + floorHeight;
         for( let i = 0; i < nFloor; i++){
-            let slab_mesh = new Mesh( geometry, material ) ;
-            slab_mesh.translateZ(-dist)
-            slab_mesh.applyMatrix4(matrix)
-            // SLAB_GEOMETRIES.push( slab_mesh.geometry.clone() ); //TODO: merge then addd to scene
-            meshes.push(slab_mesh);
-            // scene.add(slab_mesh)
-            dist += floorHeight
+          let slab_mesh = new Mesh( geometry, material ) ;
+          slab_mesh.translateZ(-dist)
+          slab_mesh.applyMatrix4(matrix)
+          let g = geometry.clone()
+          g.translate(0,0,-dist)
+          g.applyMatrix4(matrix);
+          this.SLAB_GEOMETRIES.push( g ); //TODO: merge then addd to scene
+          // MESHES.push(slab_mesh);
+          // scene.add(slab_mesh)
+          dist += floorHeight
         }
     }
     
-    private generateTowerSpaces(meshes: Mesh[], shape: Shape, extrudeSettings: any,  stHeight: number, floorHeight: number, nFloor: number, matrix: Matrix4){
+    private generateTowerSpaces(shape: Shape, extrudeSettings: any,  stHeight: number, floorHeight: number, nFloor: number, matrix: Matrix4){
         const geometry = new ExtrudeGeometry( shape, extrudeSettings );
         const material = new MeshPhongMaterial( { color: constants.SPACE_COLOR, side: DoubleSide, transparent: true, opacity: 0.8} );
         // geometry.scale( scale.x, scale.y, scale.z);
@@ -595,13 +621,17 @@ export class BuildingMassGenerator extends Generator {
         
         let dist = stHeight + extrudeSettings.depth;
         for( let i = 0; i < nFloor; i++){ //nFloor
-            let space_mesh = new Mesh( geometry, material ) ;
-            space_mesh.translateZ(-dist)
-            space_mesh.applyMatrix4(matrix)
-            // SPACE_GEOMETRIES.push(space_mesh.geometry.clone()); //TODO: merge then addd to scene
-            meshes.push(space_mesh);
-            // scene.add(space_mesh)
-            dist += floorHeight + extrudeSettings.depth
+          let space_mesh = new Mesh( geometry, material ) ;
+          space_mesh.translateZ(-dist)
+          space_mesh.applyMatrix4(matrix)
+          space_mesh.updateMatrix()
+          let g = geometry.clone()
+          g.translate(0,0,-dist)
+          g.applyMatrix4(matrix);
+          this.SPACE_GEOMETRIES.push(g); //TODO: merge then addd to scene
+          // MESHES.push(space_mesh);
+          // scene.add(space_mesh)
+          dist += floorHeight + extrudeSettings.depth
         }
     }
 
@@ -642,9 +672,57 @@ export class BuildingMassGenerator extends Generator {
         return [_shape, _shape2]
     }
 
-    private createTypeA(meshes: Mesh[], topPodShapeF: Shape, topPodShapeS: Shape, spaceExtrudeSettings, podHeight: number, floorHeight: number, TOWER_FLOORS_NUMBER: number, matrix: Matrix4){
-        this.generateTowerSlabs( meshes, topPodShapeF, podHeight, floorHeight, TOWER_FLOORS_NUMBER, matrix)
-        this.generateTowerSpaces( meshes, topPodShapeS, spaceExtrudeSettings, podHeight, this.extrudeSettings.depth, TOWER_FLOORS_NUMBER, matrix)
+    private createTypeA(topPodShapeF: Shape, topPodShapeS: Shape, spaceExtrudeSettings, podHeight: number, floorHeight: number, TOWER_FLOORS_NUMBER: number, matrix: Matrix4){
+        this.generateTowerSlabs( topPodShapeF, podHeight, floorHeight, TOWER_FLOORS_NUMBER, matrix)
+        this.generateTowerSpaces(topPodShapeS, spaceExtrudeSettings, podHeight, this.extrudeSettings.depth, TOWER_FLOORS_NUMBER, matrix)
+    }
+
+    private createTypeB(TOWER_FLOOR_HEIGHT: number, podium: any, spaceExtrudeSettings: any, podiumBase: Mesh){
+  
+      //TODO: Generate mass - Tower type B
+      const _contourF = this.offsetContour( 2, podium.top_contour);
+      const _contourS = this.offsetContour( 2.3, podium.top_contour);
+    
+      const _shapeF = this.getShapesforTypeB(_contourF, 0.6, 0.9)
+      const _shapeS = this.getShapesforTypeB(_contourS, 0.6, 0.9)
+    
+      const towerFloorsRnd1 = this.randomIntFromInterval(8, 16);
+      const towerFloorsRnd2 = this.randomIntFromInterval(8, 16);
+    
+      this.generateTowerSlabs( _shapeF[0], podium.height, TOWER_FLOOR_HEIGHT,         towerFloorsRnd1, podiumBase.matrix);
+      this.generateTowerSpaces( _shapeS[0], spaceExtrudeSettings, podium.height, this.extrudeSettings.depth, towerFloorsRnd1, podiumBase.matrix);
+      this.generateTowerSlabs( _shapeF[1], podium.height, TOWER_FLOOR_HEIGHT,         towerFloorsRnd2, podiumBase.matrix);
+      this.generateTowerSpaces( _shapeS[1], spaceExtrudeSettings, podium.height, this.extrudeSettings.depth, towerFloorsRnd2, podiumBase.matrix);
+   
+    }
+
+    public getModelMesh(){
+      const MERGED_SLAB_GEOMETRIES  = mergeGeometries( this.SLAB_GEOMETRIES );
+      const MERGED_SPACE_GEOMETRIES = mergeGeometries( this.SPACE_GEOMETRIES );
+      const MERGED_SITE_GEOMETRIES = mergeGeometries( this.SITE_GEOMETRIES );
+
+
+      const SLAB_MATERIAL = new MeshPhongMaterial( { color: constants.SLAB_COLOR } );
+      const SPACE_MATERIAL = new MeshPhongMaterial( { color: constants.SPACE_COLOR } );
+      const SITE_MATERIAL = new MeshPhongMaterial( { color: 0x00cc99, opacity: 0.2, transparent: true } );
+
+
+      const SLAB_MESH = new Mesh( MERGED_SLAB_GEOMETRIES, SLAB_MATERIAL );
+      const SPACE_MESH = new Mesh( MERGED_SPACE_GEOMETRIES, SPACE_MATERIAL );
+      const SITE_MESH = new Mesh( MERGED_SITE_GEOMETRIES, SITE_MATERIAL );
+    
+      SLAB_MESH.name = 'slab_mesh';
+      SPACE_MESH.name = 'space_mesh';
+      SITE_MESH.name = 'site_mesh';
+      
+      SLAB_MESH.castShadow = true ;
+      SPACE_MESH.castShadow = true ;
+      SITE_MESH.receiveShadow = true ;
+
+      const main = new Mesh();
+      main.children = [SLAB_MESH, SPACE_MESH, SITE_MESH, ...this.LINE_MESHES, ...this.TEXT_MESHES];
+      main.name = 'model';
+      return main
     }
 
 }

@@ -279,10 +279,10 @@ export default defineComponent({
       const bldMassGen = new BuildingMassGenerator();
       // const model_mesh = bldMassGen.generateVariant(mock_inputs);
 
-      const genManager = new GenerationManager(bldMassGen, 'randomize', [], 7)
+      const genManager = new GenerationManager(bldMassGen, 'randomize', [], 5)
       genManager.populate(mock_inputs);
-      // console.log('[Mass mesh]', model_mesh)
-      new Viewer(canvas, genManager.variants)
+      console.log('[Mass mesh]', genManager.model)
+      new Viewer(canvas, [genManager.model])
 
 
       // }

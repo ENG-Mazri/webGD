@@ -42,28 +42,50 @@ export class Viewer {
 
         const lightColor = 0xffffff;
 
-        const ambientLight = new THREE.AmbientLight(lightColor, 0.7);
+        const ambientLight = new THREE.AmbientLight(lightColor, 0.5);
         scene.add(ambientLight);
 
-        const directionalLight = new THREE.DirectionalLight(lightColor, 0.8);
-        directionalLight.position.set(0, 10, 0);
-        directionalLight.target.position.set(-5, 0, 0);
-        scene.add(directionalLight);
-        scene.add(directionalLight.target);
+        const sunlight = new THREE.DirectionalLight();
+        sunlight.intensity = 0.5;
+        sunlight.position.set(100, 100, 100);
+        scene.add(sunlight);
+        sunlight.castShadow = true;
+        sunlight.shadow.camera.top = 200;
+        sunlight.shadow.camera.bottom = - 200;
+        sunlight.shadow.camera.left = - 200;
+        sunlight.shadow.camera.right = 200;
+        sunlight.shadow.camera.near = 1;
+        sunlight.shadow.camera.far = 1000;
 
         // // const threeCanvas = document.getElementById("three-canvas") as HTMLElement;
+        // const renderer = new THREE.WebGLRenderer({
+        //     canvas,
+        //     alpha: true,
+        //     antialias: true,
+        //     logarithmicDepthBuffer:true
+        // });
+
+        // renderer.setSize(size.width, size.height);
+        // renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        // renderer.outputColorSpace = THREE.SRGBColorSpace;
+        // renderer.shadowMap.enabled = true;
+        // renderer.shadowMap.type = THREE.PCFSoftShadowMap;
         const renderer = new THREE.WebGLRenderer({
-            canvas,
+            canvas: canvas,
             alpha: true,
             antialias: true,
             logarithmicDepthBuffer:true
-        });
-
+          });
+        
         renderer.setSize(size.width, size.height);
-        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-        // renderer.outputEncoding = THREE.sRGBEncoding;
+        renderer.setPixelRatio( Math.min(window.devicePixelRatio, 2) );
+        renderer.outputColorSpace = THREE.SRGBColorSpace;
         renderer.shadowMap.enabled = true;
-        const renderTarget = new THREE.WebGLRenderTarget(size.width,
+        renderer.shadowMap.type = THREE.PCFShadowMap;
+
+
+        const renderTarget = new THREE.WebGLRenderTarget(
+                size.width,
                 size.height,
                 {samples: 3}
             )
@@ -105,24 +127,47 @@ export class Viewer {
         // const geometry = new THREE.BoxGeometry( inputs.width, inputs.length, inputs.height ); 
         // const material = new THREE.MeshPhongMaterial( {color: 0x9ca884, transparent: true, opacity: 0.5} ); 
         // const mesh = new THREE.Mesh( geometry, material ); 
+
+        // meshes.forEach((model)=>{
+        //     // console.log(mesh)
+        //     scene.traverse((child) =>{
+        //         console.log(child)
+        //         if (child.isMesh) {
+        //           child.castShadow = true;
+        //         }
+        //      });
+        //     // mesh.castShadow = true
+        // })
+
+
         for( let i=0; i < meshes.length; i++ )
             scene.add( meshes[i] );
 
+        // scene.traverse((child: THREE.Object3D) =>{
+        //     console.log(child)
+        //     if (child instanceof Mesh) {
+        //         child.castShadow = true;
+        //         // child.receiveShadow = true;
+        //     }
+        // });
         // geometry.computeBoundingSphere()
 
         // const radius = geometry.boundingSphere.radius;
         // const cog = mesh.localToWorld(geometry.boundingSphere.center.clone());
         // camera.position.set( cog.x, cog.y * 3, cog.z + 1.1*radius/Math.tan(fov*Math.PI/360));
         // camera.position.set(24, 13, 30)
-
+        // console.log("[GPU memory]: ", renderer.info.render.)
+        
+        
         //* rendering
         const animate = () => {
             controls.update();
-            renderer.render(scene, camera);
-            // composer.render()
+            // renderer.render(scene, camera);
+            composer.render()
             requestAnimationFrame(animate);
             // console.log("Cam: ", camera.position);
             // console.log("Target: ", controls.target)
+            
         };
         animate();
 
@@ -131,8 +176,10 @@ export class Viewer {
             size.height = window.innerHeight;
             camera.aspect = size.width / size.height;
             camera.updateProjectionMatrix();
-            renderer.setSize(size.width, size.height);
-            // composer.setSize( size.width, size.height );
+            // renderer.setSize(size.width, size.height);
+            composer.setSize( size.width, size.height );
+            console.log("[Render calls]: ", renderer.info.render.calls)
+            
         });
     }
 
