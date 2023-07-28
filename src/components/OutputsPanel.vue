@@ -41,7 +41,8 @@ import { Viewer } from '../logic/Viewer';
 import { BoxGeometry, Mesh, MeshPhongMaterial, Vector2 } from 'three';
 import {BuildingMassGenerator} from '../logic/generators/BuildingMassGenerator';
 import {GenerationManager} from '../logic/GenerationManager';
-
+//@ts-ignore
+// import * as GeneratorWorker from '../logic/generators/MassGeneratorWorker';
 
 export default defineComponent({
   components:{
@@ -82,8 +83,20 @@ export default defineComponent({
   },
   mounted() {
     console.log("[Study available]: ", this.hasStudy);
+    // const genWorker = new GeneratorWorker();
+    // const genWorker = new Worker('../MassGeneratorWorker.ts')
+    // genWorker.postMessage({type: 'process'})
 
     let hasStudy = JSON.parse(localStorage.getItem('gd_hasStudy') as any);
+
+    const worker = new Worker(new URL('../workers/GeneratorWorker.js', import.meta.url));
+
+    // const startWorker = () => {
+      worker.postMessage(10);
+      worker.onmessage = (event) => {
+        console.log('[Worker: test]', event.data);
+      };
+    // };
 
 
     if(hasStudy) {
@@ -241,6 +254,8 @@ export default defineComponent({
     },
     buildViewer() {
       this.hasViewer = true;
+
+
       // let resultsData = JSON.parse(localStorage.getItem('gd_study') as any);
 
       // const gens = resultsData.length;
@@ -270,18 +285,21 @@ export default defineComponent({
         new Vector2(0, 0)
       ];
       
-      const mock_inputs = {site_offset: {type: 'constant', value: 0},
+      const mock_inputs = {
+                          site_offset: {type: 'constant', value: 0},
                           contour: mock_contour,
                           total_floors: {type: 'variable', value: {min: 19, max: 29 }},
                           tower_floor_height: {type: 'constant', value: 3},
                           podium_floor_height: {type: 'constant', value: 4}
                         }
+
       const bldMassGen = new BuildingMassGenerator();
       // const model_mesh = bldMassGen.generateVariant(mock_inputs);
 
-      const genManager = new GenerationManager(bldMassGen, 'randomize', [], 5)
+      const genManager = new GenerationManager(bldMassGen, 'randomize', [], 1)
       genManager.populate(mock_inputs);
       console.log('[Mass mesh]', genManager.model)
+      //* Run viewer instance 
       new Viewer(canvas, [genManager.model])
 
 

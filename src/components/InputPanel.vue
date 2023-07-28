@@ -165,6 +165,38 @@
             </n-tooltip>      
         </div>
     </div>
+    <n-modal v-model:show="isProcessing">
+        <n-card
+        style="width: 600px"
+        title="Generating..."
+        :bordered="false"
+        size="huge"
+        role="dialog"
+        aria-modal="true"
+        >
+        <!-- <template #header-extra>
+            Generating started...
+        </template> -->
+        <n-space justify="space-around" size="large">
+            <n-progress type="circle" :percentage="67" />
+            <n-divider vertical />
+            <n-space vertical>
+                <n-text>
+                    Generator:  {{ genFunction }}
+                </n-text>
+                <n-text>
+                    Strategy:  {{ strategy }}
+                </n-text>
+                <n-text>
+                    Populations:  {{ populations }}
+                </n-text>
+                <n-text>
+                    Generations:  {{ generations }}
+                </n-text>
+            </n-space>
+        </n-space>
+        </n-card>
+    </n-modal>
 
 </template>
 
@@ -245,7 +277,8 @@ export default defineComponent({
             color: null,
             outputSet: [],
             selectedVarData: {},
-            name:0
+            name:0,
+            isProcessing: false
         }
     },
     setup () {
@@ -327,6 +360,7 @@ export default defineComponent({
             }
             console.log('[Inputs]: ', inputs)
             console.log('[Store]: ', this.store.design)
+            this.isProcessing = true;
 
 
             //TODO: just for now, the contour is hardcoded

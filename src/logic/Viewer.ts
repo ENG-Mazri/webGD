@@ -32,7 +32,7 @@ export class Viewer {
         const fov = 45;
         const aspect = 2; 
         const near = 0.1;
-        const far = 1000;
+        const far = 2000;
         const camera = new THREE.PerspectiveCamera(fov, aspect, near, far);
 
         // camera.position.set(40, 15, 45);
@@ -162,8 +162,8 @@ export class Viewer {
         //* rendering
         const animate = () => {
             controls.update();
-            // renderer.render(scene, camera);
-            composer.render()
+            renderer.render(scene, camera);
+            // composer.render()
             requestAnimationFrame(animate);
             // console.log("Cam: ", camera.position);
             // console.log("Target: ", controls.target)
@@ -176,8 +176,8 @@ export class Viewer {
             size.height = window.innerHeight;
             camera.aspect = size.width / size.height;
             camera.updateProjectionMatrix();
-            // renderer.setSize(size.width, size.height);
-            composer.setSize( size.width, size.height );
+            renderer.setSize(size.width, size.height);
+            // composer.setSize( size.width, size.height );
             console.log("[Render calls]: ", renderer.info.render.calls)
             
         });

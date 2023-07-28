@@ -12,11 +12,14 @@ import PrimeVue from 'primevue/config';
 // const mg = new MassGenerator();
 // console.log()
 
+// import VueWorker from 'vue-worker';
 
 
 const app = createApp(App);
 app.use(naive);
 app.use(PrimeVue);
+// app.use(VueWorker);
+
 
 import Button from "primevue/button"
 import TabView from "primevue/tabview"
