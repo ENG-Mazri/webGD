@@ -44,30 +44,10 @@ export class GenerationManager {
 
     process(){}
 
-    public populate(inputs: any) {
+    public populate(inputs: any, options: any) {
         if( this.populations == 0 || this.generations == 0 ) return;
 
-        let transX = 0;
-        let transY = 0;
-        let pos = 0;
-        for( let i = 0; i < this.populations; i++ ){
-            this.generator.generateVariant(inputs, transX, transY);
-            // this.generator.evaluate();
-            pos += 1;
-            transX += 150;
-            if( pos == 4){
-                pos = 0;
-                transX = 0;
-                transY += 150;
-            }
-            
-            // transY += 100;
-            // this.variants.push(var_mesh);
-        }
-        let model = this.generator.getModelMesh();
-        this.model = model;
-        this.getGlbFromGeneration(model, uuidv4())
-        console.log('[Variants]: ', this.variants);
+        this.generator.generateVariant(inputs, options.transX, options.transY);
     }
 
     private getResults() {
@@ -114,20 +94,28 @@ export class GenerationManager {
 
     private runMatingPool() {}
 
-    private getGlbFromGeneration( generationModel:Mesh, generationModelId: string ){
+    public async getGlbFromGeneration( generationModel:Mesh, generationModelId: string ){
         const gltfExporter = new GLTFExporter();
+        let data: Blob;
+        gltfExporter.parse( generationModel, async (glb) => {
+                data = new Blob([new Uint8Array( await glb as ArrayBuffer, 0, glb.byteLength)]);
+                // let _data = btoa(
+                //     new Uint8Array(glb as ArrayBuffer)
+                //       .reduce((data, byte) => data + String.fromCharCode(byte), '')
+                //   );
+                // await IDB.saveDataAsync( data, 'glb');
+                await IDB.saveDataAsync( data, 'glb');
 
-        gltfExporter.parse( generationModel, async (gltf)=>{
-                await IDB.saveDataAsync( JSON.stringify(gltf) , 'gltf');
-                console.log('[GLTF]: ', gltf)
+                console.log('[GenerationManager:Glb]: ', data)
 
                 // localStorage.setItem(`gd_glb-${generationModelId}`, JSON.stringify(gltf) )
             },
             (err: ErrorEvent)=>{
                 console.log('[Error]: ', err)
             },
-            { binary: false }
+            { binary: true }
         )
+
     }
 
 }

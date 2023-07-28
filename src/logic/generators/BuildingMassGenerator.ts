@@ -217,7 +217,7 @@ export class BuildingMassGenerator extends Generator {
           } 
         }
 
-        console.log(`Found base position and orientation after: ${times} times`)
+        // console.log(`Found base position and orientation after: ${times} times`)
 
         let topPodium = 0; // the highest point on the podium
 
@@ -263,7 +263,7 @@ export class BuildingMassGenerator extends Generator {
           let txtMesh = new Mesh( text, txtMaterial ) ;
         
           txtMesh.rotation.set(-Math.PI/2, 0, -Math.PI/2);
-          console.log('[Offset x]:', offsetX)
+          // console.log('[Offset x]:', offsetX)
           txtMesh.translateY(offsetX - pos)
           txtMesh.translateX(offsetY)
       

@@ -169,15 +169,17 @@
     <n-modal v-model:show="isProcessing"><!-- Progress modal -->
         <n-card
             style="width: 600px"
-            title="Generating..."
+            title="Design space explorer"
             :bordered="false"
             size="huge"
             role="dialog"
             aria-modal="true"
         >
-        <!-- <template #header-extra>
-            Generating started...
-        </template> -->
+        <template v-if="genProgress == 100" #header-extra>
+            <n-text type="primary">
+                Generation completed!
+            </n-text>
+        </template>
         <n-space vertical align="center">
             <n-space justify="space-around" size="large">
                 <n-progress type="circle" color="#a2588f" :percentage="genProgress" />
@@ -197,7 +199,7 @@
                     </n-text>
                 </n-space>
             </n-space>
-            <n-button v-if="genProgress == 100" color="#00cc99">
+            <n-button v-if="genProgress == 100" color="#00cc99" @click="closeModal">
                 Close
             </n-button>
         </n-space>
@@ -286,7 +288,7 @@ export default defineComponent({
             selectedVarData: {},
             name:0,
             isProcessing: false,
-            genProgress: 100
+            genProgress: 0
         }
     },
     setup () {
@@ -373,9 +375,19 @@ export default defineComponent({
             const worker = new Worker(new URL('../workers/GeneratorWorker.js', import.meta.url));
 
 
-            worker.postMessage({type: 'onProcess'});
+            worker.postMessage({ type: 'onProcess',
+                                 populations: this.populations
+                                });
             worker.onmessage = (event) => {
-            console.log('[Worker: test]', event.data);
+                if(event.data.type == 'onProgress') this.genProgress = Math.round( event.data.progress * 100 / this.populations  );
+
+                if(event.data.type == 'onFinished'){
+                    this.genProgress = 100;
+
+                    const canvas = document.getElementById('three_canvas');
+                    new Viewer(canvas, [])
+                } 
+            // console.log('[Worker: test]', event.data);
             };
 
 
@@ -559,6 +571,9 @@ export default defineComponent({
             this.$emit('test_eventy', this.strategies);
             await IDB.clearStorageAsync();
 
+        },
+        closeModal(){
+            this.isProcessing = false;
         }
     }
 })
@@ -577,7 +592,7 @@ h3{
     position: absolute;
     left: 5px;
     top: 35px;
-    width: 17%;
+    width: 20%; /*17*/
     background-color: #efefef;
     margin: 3px;
     padding: 5px;

@@ -263,6 +263,7 @@ export default defineComponent({
       // for ( let i=0; i < 1; i++) {
       let canvas = document.createElement("canvas");
       canvas.classList.add("result_canvas");
+      canvas.id = "three_canvas"
       threeContainer.appendChild(canvas);
 
       //*Building Mass Generator testings
@@ -330,7 +331,7 @@ export default defineComponent({
   left: 300px;
   top: 35px;
   width: 77%;
-  height: 620px;
+  height: 90%;
   margin: 3px;
   padding: 5px;
   display: flex;
@@ -363,7 +364,7 @@ export default defineComponent({
 }
 
 .outputsPanel_main{
-  /* height: 75%; */
+  height: 75% !important;
 }
 
 .carousel-img {

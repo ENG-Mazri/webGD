@@ -6,10 +6,13 @@ import { SAOPass } from 'three/examples/jsm/postprocessing/SAOPass.js';
 import { ShaderPass } from 'three/examples/jsm/postprocessing/ShaderPass.js';
 import { GammaCorrectionShader } from 'three/examples/jsm/shaders/GammaCorrectionShader.js';
 import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
+import {GLTFLoader} from "three/examples/jsm/loaders/GLTFLoader.js";
+import {IDB} from '../IDB'
+
 
 export class Viewer {
 
-    private scene: Screen;
+    private scene: Scene;
     private canvas: HTMLElement;
     private renderer: WebGLRenderer;
     private camera: Camera;
@@ -20,8 +23,8 @@ export class Viewer {
         this.init(canvas, meshes)
     }
 
-    init(canvas: HTMLElement, meshes: Mesh[]) {
-        const scene = new THREE.Scene();
+    async init(canvas: HTMLElement, meshes: Mesh[]) {
+        const scene = new Scene();
 
         const size = {
             width: window.innerWidth,
@@ -120,6 +123,55 @@ export class Viewer {
         // controls.target.set(0,0,0)
         controls.target.set(30, 24, 23)
 
+        //TODO: GLTF LOADER
+        const loader = new GLTFLoader();
+
+        // const glb = await IDB.getDataByKeyAsync('glb');
+        const blob = await IDB.getDataByKeyAsync('glb')
+        console.log('[Viewer:Blob] ', blob)
+        // .then( async (blob)=>{
+            // let url = await URL.createObjectURL(blob as Blob)
+            // loader.load(
+            //     url,
+            //     ( gltf ) => {
+            //         console.log(gltf)
+            //         scene.add( gltf.scene )
+            //     },
+            //     ( xhr ) => {        
+            //         console.log( ( xhr.loaded / xhr.total * 100 ) + '% loaded' );       
+            //     },
+            //     ( error ) => {
+            //         console.log( 'An error happened' );
+            //     }
+            // );
+            
+        // });
+
+        // const buffer = new TextEncoder().encode( glb ).buffer;
+        // console.log('[Viewer:Buffer] ', buffer)
+
+        // const array = new Uint8Array(buffer);
+
+
+        // loader.parse(
+        //     array.buffer,
+        //     '',
+        //     ( gltf ) => {
+        //         // console.log(gltf)
+        //         scene.add( gltf.scene );
+        
+        //         // gltf.animations; // Array<THREE.AnimationClip>
+        //         // gltf.scene; // THREE.Group
+        //         // gltf.scenes; // Array<THREE.Group>
+        //         // gltf.cameras; // Array<THREE.Camera>
+        //         // gltf.asset; // Object
+        
+        //     },
+        //     ( error ) => {
+        //         console.log( 'An error happened', error );
+        //     }
+        // );
+
 
         //* shape
         // const inputs = data.inputs;
@@ -140,8 +192,8 @@ export class Viewer {
         // })
 
 
-        for( let i=0; i < meshes.length; i++ )
-            scene.add( meshes[i] );
+        // for( let i=0; i < meshes.length; i++ )
+        //     scene.add( meshes[i] );
 
         // scene.traverse((child: THREE.Object3D) =>{
         //     console.log(child)
