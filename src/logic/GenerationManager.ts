@@ -1,6 +1,10 @@
 import {Generator} from './generators/Generator';
 import {Model} from './Model';
 import {Mesh} from 'three';
+import {GLTFExporter} from 'three/examples/jsm/exporters/GLTFExporter.js'
+import { v4 as uuidv4 } from 'uuid';
+import {IDB} from '../IDB'
+
 type Result = {
     values: number[],
     max: number;
@@ -60,7 +64,9 @@ export class GenerationManager {
             // transY += 100;
             // this.variants.push(var_mesh);
         }
-        this.model = this.generator.getModelMesh();
+        let model = this.generator.getModelMesh();
+        this.model = model;
+        this.getGlbFromGeneration(model, uuidv4())
         console.log('[Variants]: ', this.variants);
     }
 
@@ -107,6 +113,22 @@ export class GenerationManager {
     }
 
     private runMatingPool() {}
+
+    private getGlbFromGeneration( generationModel:Mesh, generationModelId: string ){
+        const gltfExporter = new GLTFExporter();
+
+        gltfExporter.parse( generationModel, async (gltf)=>{
+                await IDB.saveDataAsync( JSON.stringify(gltf) , 'gltf');
+                console.log('[GLTF]: ', gltf)
+
+                // localStorage.setItem(`gd_glb-${generationModelId}`, JSON.stringify(gltf) )
+            },
+            (err: ErrorEvent)=>{
+                console.log('[Error]: ', err)
+            },
+            { binary: false }
+        )
+    }
 
 }
 

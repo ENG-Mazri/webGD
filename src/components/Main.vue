@@ -1,9 +1,12 @@
 <template>
-  <InputPanel @test_eventy="testFunc"
-              :hasStudy="hasStudy"
-              @generate_finished="hasStudy = true" />
-  <OutputsPanel :msg="mockData" :hasStudy="hasStudy"/>
-  <!-- <VarResultPanel/> -->
+  <n-space>
+    <InputPanel @test_eventy="testFunc"
+                :hasStudy="hasStudy"
+                @generate_finished="hasStudy = true" />
+    <OutputsPanel :msg="mockData" :hasStudy="hasStudy"/>
+    <!-- <VarResultPanel/> -->
+
+  </n-space>
   <p id="app_stamp">Design space explorer - 2023</p>
 </template>
 
@@ -14,7 +17,7 @@ import OutputsPanel from './OutputsPanel.vue';
 import {useDesign} from '../store/design';
 import { Viewer } from '../logic/Viewer';
 import VarResultPanel from '../components/Rsult3DGallery.vue'
-
+import {IDB} from '../IDB'
 
 export default defineComponent({
   name: 'Main',
@@ -31,7 +34,10 @@ export default defineComponent({
       hasStudy: false
     }
   },
-  mounted() {
+  async mounted() {
+
+    await IDB.clearStorageAsync();
+
     this.store = useDesign();
     let resultsData = JSON.parse(localStorage.getItem('gd_study') as any);
     if( !resultsData || resultsData.length > 0) this.hasStudy = true;

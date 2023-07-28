@@ -1,9 +1,9 @@
 <template>
-  <div class="d3Panel" ref="$wrapper" @showResultEvent="visualizeResult">
-    <n-card style="margin-bottom: 16px" class="d3Panel_main" justify-content="space-evenly">
+  <div class="outputsPanel" ref="$wrapper" @showResultEvent="visualizeResult">
+    <n-card class="outputsPanel_main" justify-content="space-evenly">
       <n-tabs @click="tabChange" type="line" animated justify-content="space-around" :disabled="hasTabs" default-value="3D space" tab-style="color: #a2588f; font-size: 16px !important;">
         <n-tab-pane name="Scatterplot chart" tab="Scatterplot chart">
-          <div class="d3Panel_main" id="d3Panel_main">
+          <div id="outputsPanel_main">
             <svg id="d3Svg"></svg>
           </div>
         </n-tab-pane>
@@ -88,15 +88,6 @@ export default defineComponent({
     // genWorker.postMessage({type: 'process'})
 
     let hasStudy = JSON.parse(localStorage.getItem('gd_hasStudy') as any);
-
-    const worker = new Worker(new URL('../workers/GeneratorWorker.js', import.meta.url));
-
-    // const startWorker = () => {
-      worker.postMessage(10);
-      worker.onmessage = (event) => {
-        console.log('[Worker: test]', event.data);
-      };
-    // };
 
 
     if(hasStudy) {
@@ -255,7 +246,6 @@ export default defineComponent({
     buildViewer() {
       this.hasViewer = true;
 
-
       // let resultsData = JSON.parse(localStorage.getItem('gd_study') as any);
 
       // const gens = resultsData.length;
@@ -293,14 +283,14 @@ export default defineComponent({
                           podium_floor_height: {type: 'constant', value: 4}
                         }
 
-      const bldMassGen = new BuildingMassGenerator();
-      // const model_mesh = bldMassGen.generateVariant(mock_inputs);
+      // const bldMassGen = new BuildingMassGenerator();
+      // // const model_mesh = bldMassGen.generateVariant(mock_inputs);
 
-      const genManager = new GenerationManager(bldMassGen, 'randomize', [], 1)
-      genManager.populate(mock_inputs);
-      console.log('[Mass mesh]', genManager.model)
-      //* Run viewer instance 
-      new Viewer(canvas, [genManager.model])
+      // const genManager = new GenerationManager(bldMassGen, 'randomize', [], 1)
+      // genManager.populate(mock_inputs);
+      // console.log('[Mass mesh]', genManager.model)
+      // //* Run viewer instance 
+      // new Viewer(canvas, [genManager.model])
 
 
       // }
@@ -308,6 +298,7 @@ export default defineComponent({
     buildTable(){
       const GD_results = JSON.parse(localStorage.getItem('gd_result'));
       const GD_study = JSON.parse(localStorage.getItem('gd_study'));
+
 
       if( GD_results && this.hasStudy ){
         const keys = Object.keys(GD_results);
@@ -334,11 +325,11 @@ export default defineComponent({
 </script>
 
 <style >
-.d3Panel{
+.outputsPanel{
   position: absolute;
   left: 300px;
   top: 35px;
-  width: 700px;
+  width: 77%;
   height: 620px;
   margin: 3px;
   padding: 5px;
@@ -359,7 +350,7 @@ export default defineComponent({
 
 }
 
-.d3Panel_footer{
+.outputsPanel_footer{
   /*background-color: #efefef;*/
   /* height: 25%;
   text-align: left;
@@ -367,12 +358,12 @@ export default defineComponent({
 
 }
 
-.d3Panel_footer > * {
+.outputsPanel_footer > * {
   /* margin: 5px 10px; */
 }
 
-.d3Panel_main{
-  height: 75%;
+.outputsPanel_main{
+  /* height: 75%; */
 }
 
 .carousel-img {
@@ -389,7 +380,7 @@ export default defineComponent({
 }
 
 .n-tabs-pane-wrapper{
-  height: 700px !important;
+  /* height: 700px !important; */
 }
 
 .n-card{

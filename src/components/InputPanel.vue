@@ -165,35 +165,41 @@
             </n-tooltip>      
         </div>
     </div>
-    <n-modal v-model:show="isProcessing">
+
+    <n-modal v-model:show="isProcessing"><!-- Progress modal -->
         <n-card
-        style="width: 600px"
-        title="Generating..."
-        :bordered="false"
-        size="huge"
-        role="dialog"
-        aria-modal="true"
+            style="width: 600px"
+            title="Generating..."
+            :bordered="false"
+            size="huge"
+            role="dialog"
+            aria-modal="true"
         >
         <!-- <template #header-extra>
             Generating started...
         </template> -->
-        <n-space justify="space-around" size="large">
-            <n-progress type="circle" :percentage="67" />
-            <n-divider vertical />
-            <n-space vertical>
-                <n-text>
-                    Generator:  {{ genFunction }}
-                </n-text>
-                <n-text>
-                    Strategy:  {{ strategy }}
-                </n-text>
-                <n-text>
-                    Populations:  {{ populations }}
-                </n-text>
-                <n-text>
-                    Generations:  {{ generations }}
-                </n-text>
+        <n-space vertical align="center">
+            <n-space justify="space-around" size="large">
+                <n-progress type="circle" color="#a2588f" :percentage="genProgress" />
+                <n-divider vertical />
+                <n-space vertical>
+                    <n-text>
+                        Generator: {{ genFunction }}
+                    </n-text>
+                    <n-text>
+                        Strategy: {{ strategy }}
+                    </n-text>
+                    <n-text>
+                        Populations: {{ populations }}
+                    </n-text>
+                    <n-text>
+                        Generations: {{ generations }}
+                    </n-text>
+                </n-space>
             </n-space>
+            <n-button v-if="genProgress == 100" color="#00cc99">
+                Close
+            </n-button>
         </n-space>
         </n-card>
     </n-modal>
@@ -219,6 +225,7 @@ import {Strategy} from '../enums/Strategy'
 import {Generator} from '../enums/Generator'
 import {GenerationManager} from '../logic/GenerationManager'
 import {BuildingMassGenerator} from '../logic/generators/BuildingMassGenerator'
+import {IDB} from '../IDB'
 
 
 
@@ -278,7 +285,8 @@ export default defineComponent({
             outputSet: [],
             selectedVarData: {},
             name:0,
-            isProcessing: false
+            isProcessing: false,
+            genProgress: 100
         }
     },
     setup () {
@@ -361,6 +369,14 @@ export default defineComponent({
             console.log('[Inputs]: ', inputs)
             console.log('[Store]: ', this.store.design)
             this.isProcessing = true;
+
+            const worker = new Worker(new URL('../workers/GeneratorWorker.js', import.meta.url));
+
+
+            worker.postMessage({type: 'onProcess'});
+            worker.onmessage = (event) => {
+            console.log('[Worker: test]', event.data);
+            };
 
 
             //TODO: just for now, the contour is hardcoded
@@ -539,8 +555,10 @@ export default defineComponent({
             
             // this.varViewer();
         },
-        clearData(){
-            this.$emit('test_eventy', this.strategies)
+        async clearData(){
+            this.$emit('test_eventy', this.strategies);
+            await IDB.clearStorageAsync();
+
         }
     }
 })
@@ -559,7 +577,7 @@ h3{
     position: absolute;
     left: 5px;
     top: 35px;
-    width: 250px;
+    width: 17%;
     background-color: #efefef;
     margin: 3px;
     padding: 5px;
