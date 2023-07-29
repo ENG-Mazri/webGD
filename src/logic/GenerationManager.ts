@@ -97,6 +97,7 @@ export class GenerationManager {
     public async getGlbFromGeneration( generationModel:Mesh, generationModelId: string ){
         const gltfExporter = new GLTFExporter();
         let data: Blob;
+        await IDB.clearStorageAsync();
         gltfExporter.parse( generationModel, async (glb) => {
                 data = new Blob([new Uint8Array( await glb as ArrayBuffer, 0, glb.byteLength)]);
                 // let _data = btoa(

@@ -20,10 +20,10 @@ export class Viewer {
 
     constructor( canvas: HTMLElement, meshes: Mesh[], options:any = {} ) {
         this.options = options;
-        this.init(canvas, meshes)
+        // this.init(canvas, meshes)
     }
 
-    async init(canvas: HTMLElement, meshes: Mesh[]) {
+    async init(canvas: HTMLElement, meshes: Mesh[], blob: any) {
         const scene = new Scene();
 
         const size = {
@@ -31,48 +31,43 @@ export class Viewer {
             height: window.innerHeight,
         };
 
-        // console.log(size)
+        //* CAMERA SETTINGS
         const fov = 45;
         const aspect = 2; 
         const near = 0.1;
         const far = 2000;
         const camera = new THREE.PerspectiveCamera(fov, aspect, near, far);
 
-        // camera.position.set(40, 15, 45);
-        camera.position.set(-107, 100, -85);
+        camera.position.set(-220, 228, -124);
         camera.up.set(0, 1, 0);
         camera.lookAt(0, 0, 0);
 
+
+        //* LIGHT SETTINGS
         const lightColor = 0xffffff;
 
-        const ambientLight = new THREE.AmbientLight(lightColor, 0.5);
+        const ambientLight = new THREE.AmbientLight(lightColor, 0.7);
         scene.add(ambientLight);
 
         const sunlight = new THREE.DirectionalLight();
-        sunlight.intensity = 0.5;
-        sunlight.position.set(100, 100, 100);
+        sunlight.intensity = 0.3;
+        sunlight.position.set(1000, 200, 1000);
         scene.add(sunlight);
         sunlight.castShadow = true;
         sunlight.shadow.camera.top = 200;
         sunlight.shadow.camera.bottom = - 200;
         sunlight.shadow.camera.left = - 200;
         sunlight.shadow.camera.right = 200;
-        sunlight.shadow.camera.near = 1;
-        sunlight.shadow.camera.far = 1000;
+        sunlight.shadow.camera.near = 0.1;
+        sunlight.shadow.camera.far = 2000;
 
-        // // const threeCanvas = document.getElementById("three-canvas") as HTMLElement;
-        // const renderer = new THREE.WebGLRenderer({
-        //     canvas,
-        //     alpha: true,
-        //     antialias: true,
-        //     logarithmicDepthBuffer:true
-        // });
+        const light2 = new THREE.DirectionalLight(lightColor, 0.3);
+        light2.color.setHSL(11, 43, 96);
+        light2.position.set(-40, 80, 30);
+        scene.add(light2);
 
-        // renderer.setSize(size.width, size.height);
-        // renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-        // renderer.outputColorSpace = THREE.SRGBColorSpace;
-        // renderer.shadowMap.enabled = true;
-        // renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+
+        //* RENDER SETTINGS
         const renderer = new THREE.WebGLRenderer({
             canvas: canvas,
             alpha: true,
@@ -85,7 +80,6 @@ export class Viewer {
         renderer.outputColorSpace = THREE.SRGBColorSpace;
         renderer.shadowMap.enabled = true;
         renderer.shadowMap.type = THREE.PCFShadowMap;
-
 
         const renderTarget = new THREE.WebGLRenderTarget(
                 size.width,
@@ -119,99 +113,46 @@ export class Viewer {
         // const grid = new THREE.GridHelper(50, 30);
         // scene.add(grid);
 
+        //* CONTROLS SETINGS
         const controls = new OrbitControls(camera, canvas);
         // controls.target.set(0,0,0)
-        controls.target.set(30, 24, 23)
+        controls.target.set(25, 54, 57)
 
-        //TODO: GLTF LOADER
+
+        //* GLTF LOADER
         const loader = new GLTFLoader();
+        let url = URL.createObjectURL(blob as Blob)
+        loader.load(
+            url,
+            ( gltf ) => {
+                console.log('[Viewer:Blob] ', gltf);
+                scene.add( gltf.scene );
+                console.log('[Viewer:Scene] ', scene);
 
-        // const glb = await IDB.getDataByKeyAsync('glb');
-        const blob = await IDB.getDataByKeyAsync('glb')
-        console.log('[Viewer:Blob] ', blob)
-        // .then( async (blob)=>{
-            // let url = await URL.createObjectURL(blob as Blob)
-            // loader.load(
-            //     url,
-            //     ( gltf ) => {
-            //         console.log(gltf)
-            //         scene.add( gltf.scene )
-            //     },
-            //     ( xhr ) => {        
-            //         console.log( ( xhr.loaded / xhr.total * 100 ) + '% loaded' );       
-            //     },
-            //     ( error ) => {
-            //         console.log( 'An error happened' );
-            //     }
-            // );
-            
-        // });
+                scene.traverse((child: THREE.Object3D) =>{
+                    // console.log(child)
 
-        // const buffer = new TextEncoder().encode( glb ).buffer;
-        // console.log('[Viewer:Buffer] ', buffer)
-
-        // const array = new Uint8Array(buffer);
-
-
-        // loader.parse(
-        //     array.buffer,
-        //     '',
-        //     ( gltf ) => {
-        //         // console.log(gltf)
-        //         scene.add( gltf.scene );
-        
-        //         // gltf.animations; // Array<THREE.AnimationClip>
-        //         // gltf.scene; // THREE.Group
-        //         // gltf.scenes; // Array<THREE.Group>
-        //         // gltf.cameras; // Array<THREE.Camera>
-        //         // gltf.asset; // Object
-        
-        //     },
-        //     ( error ) => {
-        //         console.log( 'An error happened', error );
-        //     }
-        // );
-
-
-        //* shape
-        // const inputs = data.inputs;
-        // console.log(inputs)0x9ca884 0xa2588f
-        // const geometry = new THREE.BoxGeometry( inputs.width, inputs.length, inputs.height ); 
-        // const material = new THREE.MeshPhongMaterial( {color: 0x9ca884, transparent: true, opacity: 0.5} ); 
-        // const mesh = new THREE.Mesh( geometry, material ); 
-
-        // meshes.forEach((model)=>{
-        //     // console.log(mesh)
-        //     scene.traverse((child) =>{
-        //         console.log(child)
-        //         if (child.isMesh) {
-        //           child.castShadow = true;
-        //         }
-        //      });
-        //     // mesh.castShadow = true
-        // })
-
-
-        // for( let i=0; i < meshes.length; i++ )
-        //     scene.add( meshes[i] );
-
-        // scene.traverse((child: THREE.Object3D) =>{
-        //     console.log(child)
-        //     if (child instanceof Mesh) {
-        //         child.castShadow = true;
-        //         // child.receiveShadow = true;
-        //     }
-        // });
-        // geometry.computeBoundingSphere()
-
-        // const radius = geometry.boundingSphere.radius;
-        // const cog = mesh.localToWorld(geometry.boundingSphere.center.clone());
-        // camera.position.set( cog.x, cog.y * 3, cog.z + 1.1*radius/Math.tan(fov*Math.PI/360));
-        // camera.position.set(24, 13, 30)
-        // console.log("[GPU memory]: ", renderer.info.render.)
+                    if (child.name == 'site_mesh') {
+                        child.receiveShadow = true;
+                        child.castShadow = true;
+                    }
+                    
+                    else if (child.name == 'slab_mesh' || child.name == 'space_mesh') {
+                        // child.receiveShadow = true;
+                        child.castShadow = true;
+                    }
+                });
+            },
+            ( xhr ) => {        
+                // console.log( ( xhr.loaded / xhr.total * 100 ) + '% loaded' );       
+            },
+            ( error ) => {
+                console.log( 'An error happened', error );
+            }
+        );
         
         
-        //* rendering
+        //*RENDERING
         const animate = () => {
             controls.update();
             renderer.render(scene, camera);

@@ -36,7 +36,7 @@ export default defineComponent({
   },
   async mounted() {
 
-    await IDB.clearStorageAsync();
+    // await IDB.clearStorageAsync();
 
     this.store = useDesign();
     let resultsData = JSON.parse(localStorage.getItem('gd_study') as any);

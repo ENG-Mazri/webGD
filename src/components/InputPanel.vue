@@ -169,7 +169,7 @@
     <n-modal v-model:show="isProcessing"><!-- Progress modal -->
         <n-card
             style="width: 600px"
-            title="Design space explorer"
+            title="Design Space Explorer"
             :bordered="false"
             size="huge"
             role="dialog"
@@ -301,7 +301,7 @@ export default defineComponent({
         // }
     },
     created (){},
-    mounted() {
+    async mounted() {
         this.store = useDesign();
         const GD_d3 = JSON.parse(localStorage.getItem('gd_d3') as any);
         const GD_results = JSON.parse(localStorage.getItem('gd_result') as any);
@@ -320,6 +320,21 @@ export default defineComponent({
                                                     [],
                                                     this.populations);
         console.log('[Gen Manager]: ', genManager)
+        this.$nextTick( async ()=>{
+
+            const canvas = document.getElementById('three_canvas');
+            let v = new Viewer(canvas, []);
+    
+            const blob = await IDB.getDataByKeyAsync('glb');
+            // console.log('[Viewer:Blob onMount] ', blob)
+            
+            if(blob){
+                console.log('[Viewer:Blob onMount] ', blob, canvas)
+                await v.init(canvas, [], blob)
+            }
+        })
+
+
 
         // window.addEventListener("show_chart", (e) => {
         //     console.log("Listen show chart")
@@ -361,7 +376,7 @@ export default defineComponent({
             }
             console.log(this.store.design)
         },
-        runTest() {
+        async runTest() {
             const inputs = {
                 strategy: this.strategy,
                 generator: this.genFunction,
@@ -378,14 +393,27 @@ export default defineComponent({
             worker.postMessage({ type: 'onProcess',
                                  populations: this.populations
                                 });
-            worker.onmessage = (event) => {
+            worker.onmessage = async (event) => {
                 if(event.data.type == 'onProgress') this.genProgress = Math.round( event.data.progress * 100 / this.populations  );
 
                 if(event.data.type == 'onFinished'){
-                    this.genProgress = 100;
-
                     const canvas = document.getElementById('three_canvas');
-                    new Viewer(canvas, [])
+                    let v = new Viewer(canvas, []);
+
+                    this.genProgress = 100;
+                    // let blob: any;
+                    let glbStatus = 0;
+                    let interval = setInterval( async ()=>{
+                        const blob = await IDB.getDataByKeyAsync('glb');
+                        if(blob){
+                            clearInterval(interval);
+                            console.log('[Viewer:Blob] ', blob)
+                            await v.init(canvas, [], blob)
+
+                        }
+                    }, 500)
+
+     
                 } 
             // console.log('[Worker: test]', event.data);
             };
@@ -661,6 +689,11 @@ h3{
 #scatter:hover{
   fill: rgb(162, 88, 143);
   cursor: pointer
+}
+
+.n-divider--vertical{
+    height:100% !important;
+    width: 1px !important
 }
 
 
