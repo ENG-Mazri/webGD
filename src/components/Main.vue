@@ -1,9 +1,9 @@
 <template>
   <n-space>
-    <InputPanel @test_eventy="testFunc"
+    <InputsPanel @test_eventy="testFunc"
                 :hasStudy="hasStudy"
                 @generate_finished="hasStudy = true" />
-    <OutputsPanel :msg="mockData" :hasStudy="hasStudy"/>
+    <OutputsBoard :msg="mockData" :hasStudy="hasStudy"/>
     <!-- <VarResultPanel/> -->
 
   </n-space>
@@ -12,8 +12,8 @@
 
 <script lang="ts">
 import { defineComponent } from 'vue';
-import InputPanel from './InputPanel.vue';
-import OutputsPanel from './OutputsPanel.vue';
+import InputsPanel from './InputsPanel.vue';
+import OutputsBoard from './OutputsBoard.vue';
 import {useDesign} from '../store/design';
 import { Viewer } from '../logic/Viewer';
 import VarResultPanel from '../components/Rsult3DGallery.vue'
@@ -22,7 +22,7 @@ import {IDB} from '../IDB'
 export default defineComponent({
   name: 'Main',
   components: {
-    InputPanel, OutputsPanel, VarResultPanel
+    InputsPanel, OutputsBoard, VarResultPanel
   },
   props: {
     msg: String,

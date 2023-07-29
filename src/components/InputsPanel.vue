@@ -1,108 +1,113 @@
 <template>
     <div class='panel'>
-        <n-collapse class='panel-collapse'> <!-- Function -->
-            <template #arrow>
-                <n-icon>
-                    <functionsIcon/>
-                </n-icon>
-            </template>
-
-            <n-collapse-item title="Generation functions" name="1">
-                <n-select id='generator' v-model:value="genFunction" :options="generationFunctions" default-value="Building mass generator" placeholder='Input types'/>
-                <n-button text color="#9cabb4" @click="showModal = true">
-                    <template #icon>
+        <n-collapse class='panel-collapse' default-expanded-names="2"> <!-- Function -->
+            <n-collapse-item title="Inputs" name="1" style="margin: 0px 2px;"><!-- Inputs -->
+                <template #arrow>
+                    <n-icon>
+                        <inputIcon/>
+                    </n-icon>
+                </template>
+                <n-collapse class='panel-collapse'> <!-- Generators -->
+                    <template #arrow>
                         <n-icon>
-                        <helpIcon />
+                            <functionsIcon/>
                         </n-icon>
                     </template>
-                    Function's information
-                </n-button>
-                <n-modal v-model:show="showModal">
-                    <n-card
-                        style="width: 600px"
-                        title="Informations"
-                        :bordered="false"
-                        size="huge"
-                        role="dialog"
-                        aria-modal="true"
-                    >
-                        <template #header-extra>
-                            Function's usage
-                        </template>
-                    </n-card>
-                </n-modal>
+    
+                    <n-collapse-item title="Generators" name="1">
+                        <n-select id='generator' v-model:value="genFunction" :options="generationFunctions" default-value="Building mass" placeholder='Input types'/>
+                        <n-button text color="#9cabb4" @click="showModal = true">
+                            <template #icon>
+                                <n-icon>
+                                <helpIcon />
+                                </n-icon>
+                            </template>
+                            Function's information
+                        </n-button>
+                        <n-modal v-model:show="showModal">
+                            <n-card
+                                style="width: 600px"
+                                title="Informations"
+                                :bordered="false"
+                                size="huge"
+                                role="dialog"
+                                aria-modal="true"
+                            >
+                                <template #header-extra>
+                                    Function's usage
+                                </template>
+                            </n-card>
+                        </n-modal>
+                    </n-collapse-item>
+                </n-collapse>
+                <n-collapse class='panel-collapse'> <!-- Strategy -->
+                <template #arrow>
+                        <n-icon>
+                            <strategyIcon/>
+                        </n-icon>
+                    </template>
+                    <n-collapse-item title="Strategy" name="1">
+                        <n-select id='input_type' :options="strategies" v-model:value="strategy" placeholder='Input types'/>
+                    </n-collapse-item>
+                </n-collapse>
+                <n-collapse class='panel-collapse'> <!-- Variables -->
+                    <template #arrow>
+                        <n-icon>
+                            <variableIcon/>
+                        </n-icon>
+                    </template>
+                    <n-collapse-item title="Variables" name="1">
+                        <!-- <InputVue :function="genFunction"/> -->
+                        <BoxInputVue v-if="genFunction == 'Box generator'" :function="strategy"/>
+                        <BuildingMassInputVue v-if="genFunction == 'Building mass generator'" :function="strategy"/>
+                    </n-collapse-item>
+                </n-collapse>
+                <n-collapse v-if="strategy == 'Optimize'" class='panel-collapse'><!-- Objectives -->
+                <template #arrow>
+                        <n-icon>
+                            <goalIcon/>
+                        </n-icon>
+                    </template>
+                    <n-collapse-item title="Objectives" name="1">
+                        <BoxObjectives v-if="genFunction == 'Box generator'" :function="strategy"/>
+                        <BuildingMassObjectives v-if="genFunction == 'Building mass generator'" :function="strategy"/>
+                    </n-collapse-item>
+                </n-collapse>
+                <n-collapse class='panel-collapse'> <!-- Design Options -->
+                <template #arrow>
+                        <n-icon>
+                            <optionsIcon/>
+                        </n-icon>
+                    </template>
+                    <n-collapse-item title="Design options" name="1">
+                        <n-input-number clearable :precision="0" min="1" max="50"  v-model:value="populations" placeholder='Populations' >
+                            <template #prefix>
+                                Populations
+                            </template>    
+                        </n-input-number>
+                        <n-input-number :disabled="strategy !== 'Optimize'" clearable :precision="0" min="1" max="10"  v-model:value="generations" placeholder='Generations' >
+                            <template #prefix>
+                                Generations
+                            </template>    
+                        </n-input-number>
+                        <!-- <n-input-number clearable :precision="0" placeholder='Seed'/> -->
+                    </n-collapse-item>
+                </n-collapse>
             </n-collapse-item>
-        </n-collapse>
-        <n-collapse class='panel-collapse'> <!-- Strategy -->
-           <template #arrow>
-                <n-icon>
-                    <strategyIcon/>
-                </n-icon>
-            </template>
-            <n-collapse-item title="Strategy" name="1">
-                <n-select id='input_type' :options="strategies" v-model:value="strategy" placeholder='Input types'/>
+            <n-collapse-item title="Outputs" name="2" style="margin: 0px 2px;"><!-- Outputs -->
+                <template #arrow>
+                    <n-icon>
+                        <outputIcon/>
+                    </n-icon>
+                </template>
+                <OutputsPanel/>
             </n-collapse-item>
-        </n-collapse>
-        <n-collapse class='panel-collapse'> <!-- Inputs -->
-            <template #arrow>
-                <n-icon>
-                    <inputIcon/>
-                </n-icon>
-            </template>
-            <n-collapse-item title="Inputs" name="1">
-                <!-- <InputVue :function="genFunction"/> -->
-                <BoxInputVue v-if="genFunction == 'Box generator'" :function="strategy"/>
-                <BuildingMassInputVue v-if="genFunction == 'Building mass generator'" :function="strategy"/>
-            </n-collapse-item>
-        </n-collapse>
-        <n-collapse v-if="strategy == 'Optimize'" class='panel-collapse'> <!-- Objectives -->
-           <template #arrow>
-                <n-icon>
-                    <objectivesIcon/>
-                </n-icon>
-            </template>
-            <n-collapse-item title="Objectives" name="1">
-                <BoxObjectives v-if="genFunction == 'Box generator'" :function="strategy"/>
-                <BuildingMassObjectives v-if="genFunction == 'Building mass generator'" :function="strategy"/>
-            </n-collapse-item>
-        </n-collapse>
-        <n-collapse class='panel-collapse'> <!-- Design Options -->
-           <template #arrow>
-                <n-icon>
-                    <optionsIcon/>
-                </n-icon>
-            </template>
-            <n-collapse-item title="Design options" name="1">
-                <n-input-number clearable :precision="0" min="1" max="50"  v-model:value="populations" placeholder='Populations' >
-                    <template #prefix>
-                        Populations
-                    </template>    
-                </n-input-number>
-                <n-input-number :disabled="strategy !== 'Optimize'" clearable :precision="0" min="1" max="10"  v-model:value="generations" placeholder='Generations' >
-                    <template #prefix>
-                        Generations
-                    </template>    
-                </n-input-number>
-                <!-- <n-input-number clearable :precision="0" placeholder='Seed'/> -->
-            </n-collapse-item>
-        </n-collapse>
-        <n-collapse class='panel-collapse' v-if="showOutputs" default-expanded-names="9"> <!-- Outputs -->
-            <template #arrow>
-                <n-icon>
-                    <outputIcon/>
-                </n-icon>
-            </template>
-            <n-collapse-item title="Output settings" name="9">
-                <OutputSettingsVue :outputOptions="outputSet"/>
-            </n-collapse-item>
-        </n-collapse>
-        <n-collapse class='panel-collapse settings'> <!-- Project settings -->
-            <template #arrow>
-                <n-icon>
-                    <settingsIcon/>
-                </n-icon>
-            </template>
-            <n-collapse-item title="Project settings" name="1" >
+            <n-collapse-item title="Project settings" name="3" style="margin: 0px 2px;"><!-- Project settings -->
+                <template #arrow>
+                    <n-icon>
+                        <settingsIcon/>
+                    </n-icon>
+                </template>
                 <div class='project_settings'>
                     <n-button text>Export result .xlsx</n-button>
                     <n-button text>Export result .zip</n-button>
@@ -164,6 +169,7 @@
                 Clear results
             </n-tooltip>      
         </div>
+        
     </div>
 
     <n-modal v-model:show="isProcessing"><!-- Progress modal -->
@@ -209,8 +215,24 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, ref } from 'vue';
-import { OptionsOutline as optionsIcon , EnterOutline as inputIcon, Flash as testIcon, LogoTableau as resultIcon, BarChartSharp as statsIcon, ConstructOutline as functionsIcon, TrophyOutline as objectivesIcon, SettingsOutline as settingsIcon, HelpCircleOutline as helpIcon, FlaskOutline as strategyIcon, LogOutOutline as outputIcon, TrashBinOutline as clearIcon} from '@vicons/ionicons5';
+import { defineComponent } from 'vue';
+import {OptionsOutline as optionsIcon ,
+        EnterOutline as inputIcon,
+        Flash as testIcon,
+        LogoTableau as resultIcon,
+        BarChartSharp as statsIcon,
+        ConstructOutline as functionsIcon,
+        TrophyOutline as objectivesIcon,
+        SettingsOutline as settingsIcon,
+        HelpCircleOutline as helpIcon,
+        FlaskOutline as strategyIcon,
+        LogOutOutline as outputIcon,
+        TrashBinOutline as clearIcon,
+        ExtensionPuzzleOutline as variableIcon,
+        Locate as locateIcon,
+        GolfOutline as goalIcon
+    } from '@vicons/ionicons5';
+        
 import InputVue from './Input.vue';
 import OutputSettingsVue from './OutputSettings.vue';
 import BoxInputVue from './inputs/BoxInputs.vue';
@@ -228,6 +250,7 @@ import {Generator} from '../enums/Generator'
 import {GenerationManager} from '../logic/GenerationManager'
 import {BuildingMassGenerator} from '../logic/generators/BuildingMassGenerator'
 import {IDB} from '../IDB'
+import OutputsPanel from './OutputsPanel.vue'
 
 
 
@@ -238,24 +261,24 @@ export default defineComponent({
         functionsIcon, objectivesIcon, settingsIcon, 
         helpIcon, BoxInputVue, BuildingMassInputVue,
         BoxObjectives, BuildingMassObjectives, outputIcon, OutputSettingsVue,
-        clearIcon
+        clearIcon, OutputsPanel, variableIcon, goalIcon, locateIcon
     },
     props: ['hasStudy'],
     data(){
         return {
             generationFunctions: [
                 {
-                    label: 'Box generator',
-                    value: 'Box generator'
+                    label: 'Box',
+                    value: 'Box'
                     
                 },
                 {
-                    label: 'Building mass generator',
-                    value: 'Building mass generator'
+                    label: 'Building mass',
+                    value: 'Building mass'
                 },
                 {
-                    label: 'Floor plan layout generator',
-                    value: 'Floor plan layout generator',
+                    label: 'Floor plan layout',
+                    value: 'Floor plan layout',
                     disable: false
                 }
             ],
@@ -268,17 +291,17 @@ export default defineComponent({
                     label: 'Optimize',
                     value: 'Optimize'
                 },
-                {
-                    label: 'Cross product',
-                    value: 'Cross product'
-                }
+                // {
+                //     label: 'Cross product',
+                //     value: 'Cross product'
+                // }
             ],
             strategy: "Randomize",
             generations: 1 ,
             populations: 1 ,
             store: '' as any,
             showModal: false,
-            genFunction: 'Building mass generator',
+            genFunction: 'Building mass',
             showOutputs: false,
             x_axis: null,
             y_axis: null,
