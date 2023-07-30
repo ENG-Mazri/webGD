@@ -30,7 +30,7 @@
                     Total floors number
                 </n-divider>
                 <n-space align="center" justify="space-between" inline>
-                    <n-switch v-model:value="fixed_bld_height" :rail-style="railStyle">
+                    <n-switch v-model:value="fixed_total_floors" :rail-style="railStyle">
                         <template #checked>
                         fixed
                         </template>
@@ -38,11 +38,11 @@
                         var
                         </template>
                     </n-switch>
-                    <n-input-number v-if="fixed_bld_height" v-model:value="input_bld_height" class="input" clearable/>
-                    <n-input v-if="!fixed_bld_height"
+                    <n-input-number v-if="fixed_total_floors" v-model:value="input_total_floors" class="input" clearable/>
+                    <n-input v-if="!fixed_total_floors"
                         class="input"
                         id='input_value'
-                        v-model:value="input_bld_height"
+                        v-model:value="input_total_floors"
                         pair
                         separator="-"
                         :placeholder="['Min', 'Max']"
@@ -72,12 +72,12 @@
                         clearable />
                 </n-space>
             </div>
-            <div> <!-- fix this -->
+            <div>
                 <n-divider title-placement="left">
                     Podium floor height (m)
                 </n-divider>
                 <n-space align="center" justify="space-between" inline>
-                    <n-switch v-model:value="fixed_flr_height" :rail-style="railStyle">
+                    <n-switch v-model:value="fixed_pod_height" :rail-style="railStyle">
                         <template #checked>
                         fixed
                         </template>
@@ -85,10 +85,10 @@
                         var
                         </template>
                     </n-switch>
-                    <n-input-number v-if="fixed_flr_height" v-model:value="input_flr_height" clearable/>
-                    <n-input v-if="!fixed_flr_height"
+                    <n-input-number v-if="fixed_pod_height" v-model:value="input_pod_height" clearable/>
+                    <n-input v-if="!fixed_pod_height"
                         id='input_value'
-                        v-model:value="input_flr_height"
+                        v-model:value="input_pod_height"
                         pair
                         separator="-"
                         :placeholder="['Min', 'Max']"
@@ -187,11 +187,13 @@ export default defineComponent({
             input_name: null,
             input_type: 'Sequence',
             input_offset: null,
-            input_bld_height: null,
+            input_pod_height: null,
             input_flr_height: null,
             fixed_offset: true,
-            fixed_bld_height: true,
-            fixed_flr_height: true
+            fixed_pod_height: true,
+            fixed_flr_height: true,
+            input_total_floors: null,
+            fixed_total_floors: true,
             
         }
     },
@@ -201,12 +203,12 @@ export default defineComponent({
         this.store.design[this.function]['strategy'] = this.function;
         this.store.design[this.function]['inputs'] = {};
         //TODO: just for now, the contour is hardcoded
-        this.store.design[this.function]['inputs']['site_boundaries'] = [
+        this.store.design[this.function]['inputs']['contour'] = [
                                                                             new THREE.Vector2(0, 0),
-                                                                            new THREE.Vector2(0,28),
-                                                                            new THREE.Vector2(13,28),
-                                                                            new THREE.Vector2(20,15),
-                                                                            new THREE.Vector2(20,0),
+                                                                            new THREE.Vector2(0,88),
+                                                                            new THREE.Vector2(60,88),
+                                                                            new THREE.Vector2(90,55),
+                                                                            new THREE.Vector2(90,0),
                                                                             new THREE.Vector2(0, 0)
                                                                         ];
         console.log("Function: ", this.store.design)
@@ -216,37 +218,49 @@ export default defineComponent({
         input_offset(){
             let w = this.input_offset;
             if(this.fixed_offset) {
-                this.store.design[this.function]['inputs']['offset'] = {};
-                this.store.design[this.function]['inputs']['offset']['type'] = 'constant';
-                this.store.design[this.function]['inputs']['offset']['value'] = w;
+                this.store.design[this.function]['inputs']['site_offset'] = {};
+                this.store.design[this.function]['inputs']['site_offset']['type'] = 'constant';
+                this.store.design[this.function]['inputs']['site_offset']['value'] = w;
             } else {
-                this.store.design[this.function]['inputs']['offset'] = {};
-                this.store.design[this.function]['inputs']['offset']['type'] = 'variable';
-                this.store.design[this.function]['inputs']['offset']['value'] = [parseInt(w[0]), parseInt(w[1])];
+                this.store.design[this.function]['inputs']['site_offset'] = {};
+                this.store.design[this.function]['inputs']['site_offset']['type'] = 'variable';
+                this.store.design[this.function]['inputs']['site_offset']['value'] = [parseInt(w[0]), parseInt(w[1])];
             }
         },
-        input_bld_height(){
-            let l = this.input_bld_height;
-            if(this.fixed_bld_height) {
-                this.store.design[this.function]['inputs']['bld_height'] = {};
-                this.store.design[this.function]['inputs']['bld_height']['type'] = 'constant';
-                this.store.design[this.function]['inputs']['bld_height']['value'] = l;
+        input_pod_height(){
+            let l = this.input_pod_height;
+            if(this.fixed_pod_height) {
+                this.store.design[this.function]['inputs']['podium_floor_height'] = {};
+                this.store.design[this.function]['inputs']['podium_floor_height']['type'] = 'constant';
+                this.store.design[this.function]['inputs']['podium_floor_height']['value'] = l;
             } else {
-                this.store.design[this.function]['inputs']['bld_height'] = {};
-                this.store.design[this.function]['inputs']['bld_height']['type'] = 'variable';
-                this.store.design[this.function]['inputs']['bld_height']['value'] = [parseInt(l[0]), parseInt(l[1])];
+                this.store.design[this.function]['inputs']['podium_floor_height'] = {};
+                this.store.design[this.function]['inputs']['podium_floor_height']['type'] = 'variable';
+                this.store.design[this.function]['inputs']['podium_floor_height']['value'] = [parseInt(l[0]), parseInt(l[1])];
             }
         },
         input_flr_height(){
             let h = this.input_flr_height;
             if(this.fixed_flr_height) {
-                this.store.design[this.function]['inputs']['flr_height'] = {};
-                this.store.design[this.function]['inputs']['flr_height']['type'] = 'constant';
-                this.store.design[this.function]['inputs']['flr_height']['value'] = h;
+                this.store.design[this.function]['inputs']['tower_floor_height'] = {};
+                this.store.design[this.function]['inputs']['tower_floor_height']['type'] = 'constant';
+                this.store.design[this.function]['inputs']['tower_floor_height']['value'] = h;
             } else {
-                this.store.design[this.function]['inputs']['flr_height'] = {};
-                this.store.design[this.function]['inputs']['flr_height']['type'] = 'variable';
-                this.store.design[this.function]['inputs']['flr_height']['value'] = [parseInt(h[0]), parseInt(h[1])];
+                this.store.design[this.function]['inputs']['tower_floor_height'] = {};
+                this.store.design[this.function]['inputs']['tower_floor_height']['type'] = 'variable';
+                this.store.design[this.function]['inputs']['tower_floor_height']['value'] = [parseInt(h[0]), parseInt(h[1])];
+            }
+        },
+        input_total_floors(){
+            let h = this.input_total_floors;
+            if(this.fixed_total_floors) {
+                this.store.design[this.function]['inputs']['total_floors'] = {};
+                this.store.design[this.function]['inputs']['total_floors']['type'] = 'constant';
+                this.store.design[this.function]['inputs']['total_floors']['value'] = h;
+            } else {
+                this.store.design[this.function]['inputs']['total_floors'] = {};
+                this.store.design[this.function]['inputs']['total_floors']['type'] = 'variable';
+                this.store.design[this.function]['inputs']['total_floors']['value'] = [parseInt(h[0]), parseInt(h[1])];
             }
         },
     },

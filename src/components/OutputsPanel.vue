@@ -5,7 +5,7 @@
                 <outputIcon/>
             </n-icon>
         </template>
-        <n-collapse-item title="Scatterplot chart settings" name="1">
+        <n-collapse-item title="Chart settings" name="1">
             <template #arrow>
                 <n-icon>
                     <statsIcon/>
@@ -28,6 +28,7 @@
                     <viewerIcon/>
                 </n-icon>
             </template>
+            <n-select id='generator' :options="generationList" default-value="Generation 1" placeholder=''/>
         </n-collapse-item>
     </n-collapse>
 </template>
@@ -43,7 +44,7 @@ import {useDesign} from '../store/design';
 import {TestAlgorithm} from '../logic/testAlgorithm';
 import * as d3 from "d3";
 import { useMessage } from 'naive-ui'
-import {event} from '../events/index'
+// import {event} from '../events/index'
 import { Viewer } from '../logic/Viewer'
 import BoxObjectives from './objectives/BoxObjectives.vue'
 import BuildingMassObjectives from './objectives/BuildingMassObjectives.vue'
@@ -52,7 +53,6 @@ import {Generator} from '../enums/Generator'
 import {GenerationManager} from '../logic/GenerationManager'
 import {BuildingMassGenerator} from '../logic/generators/BuildingMassGenerator'
 import {IDB} from '../IDB'
-
 
 
 export default defineComponent({
@@ -72,7 +72,7 @@ export default defineComponent({
             populations: 1 ,
             store: '' as any,
             showModal: false,
-            genFunction: 'Building mass generator',
+            genFunction: 'Building mass',
             showOutputs: false,
             x_axis: null,
             y_axis: null,
@@ -82,7 +82,8 @@ export default defineComponent({
             selectedVarData: {},
             name:0,
             isProcessing: false,
-            genProgress: 0
+            genProgress: 0,
+            generationList: [ {label:'Generation 1', value: 'Generation 1' }, {label:'Generation 2', value: 'Generation 2' } ]
         }
     },
     setup () {

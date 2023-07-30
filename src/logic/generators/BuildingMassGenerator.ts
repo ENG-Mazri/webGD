@@ -89,17 +89,22 @@ export class BuildingMassGenerator extends Generator {
     }
 
     private getInputs(inputs: any){
-        const site_offset = inputs.site_offset.type == 'constant' ? inputs.site_offset.value : this.randomIntFromInterval(inputs.site_offset.value.min, inputs.site_offset.value.max);
-        const total_floors = inputs.total_floors.type == 'constant' ? inputs.total_floors.value : this.randomIntFromInterval(inputs.total_floors.value.min, inputs.total_floors.value.max);
-        const tower_floor_height = inputs.tower_floor_height.type == 'constant' ? inputs.tower_floor_height.value : this.randomIntFromInterval(inputs.tower_floor_height.value.min, inputs.tower_floor_height.value.max);
-        const podium_floor_height = inputs.podium_floor_height.type == 'constant' ? inputs.podium_floor_height.value : this.randomIntFromInterval(inputs.podium_floor_height.value.min, inputs.podium_floor_height.value.max);
+        const contour = inputs.contour.map((v: any)=> new Vector2(v.x, v.y) );
+        
+        console.log('[Generator: inputs] ', contour);
+        const site_offset = inputs.site_offset.type == 'constant' ? inputs.site_offset.value : this.randomIntFromInterval(inputs.site_offset.value[0], inputs.site_offset.value[1]);
+        const total_floors = inputs.total_floors.type == 'constant' ? inputs.total_floors.value : this.randomIntFromInterval(inputs.total_floors.value[0], inputs.total_floors.value[1]);
+        const tower_floor_height = inputs.tower_floor_height.type == 'constant' ? inputs.tower_floor_height.value : this.randomIntFromInterval(inputs.tower_floor_height.value[0], inputs.tower_floor_height.value[1]);
+        const podium_floor_height = inputs.podium_floor_height.type == 'constant' ? inputs.podium_floor_height.value : this.randomIntFromInterval(inputs.podium_floor_height.value[0], inputs.podium_floor_height.value[1]);
 
-        return {site_offset, contour: inputs.contour, total_floors, tower_floor_height, podium_floor_height}
+
+        return {site_offset, contour, total_floors, tower_floor_height, podium_floor_height}
     }
 
     public generateVariant(inputs: any, transX: number = 0, transY: number= 0){
         const {site_offset, contour, total_floors, tower_floor_height, podium_floor_height} = this.getInputs(inputs);
 
+        console.log('[Generator: inputs] ', inputs)
         const meshes = [];
 
         const spaceExtrudeSettings = {

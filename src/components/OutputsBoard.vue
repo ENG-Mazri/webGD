@@ -27,10 +27,8 @@
         </n-tab-pane>
       </n-tabs>
     </n-card>
-  </div>
-    
+  </div> 
 </template>
-
 <script lang="ts">
 import { defineComponent } from 'vue';
 import * as d3 from "d3";

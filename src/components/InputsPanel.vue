@@ -1,7 +1,7 @@
 <template>
     <div class='panel'>
-        <n-collapse class='panel-collapse' default-expanded-names="2"> <!-- Function -->
-            <n-collapse-item title="Inputs" name="1" style="margin: 0px 2px;"><!-- Inputs -->
+        <n-collapse class='panel-collapse' default-expanded-names="1"> <!-- Function -->
+            <n-collapse-item class="parent_panels" title="Inputs" name="1" style="margin: 0px 2px;" default-expanded-names="3"><!-- Inputs -->
                 <template #arrow>
                     <n-icon>
                         <inputIcon/>
@@ -50,7 +50,7 @@
                         <n-select id='input_type' :options="strategies" v-model:value="strategy" placeholder='Input types'/>
                     </n-collapse-item>
                 </n-collapse>
-                <n-collapse class='panel-collapse'> <!-- Variables -->
+                <n-collapse class='panel-collapse' name="3"> <!-- Variables -->
                     <template #arrow>
                         <n-icon>
                             <variableIcon/>
@@ -58,8 +58,8 @@
                     </template>
                     <n-collapse-item title="Variables" name="1">
                         <!-- <InputVue :function="genFunction"/> -->
-                        <BoxInputVue v-if="genFunction == 'Box generator'" :function="strategy"/>
-                        <BuildingMassInputVue v-if="genFunction == 'Building mass generator'" :function="strategy"/>
+                        <BoxInputVue v-if="genFunction == 'Box'" :function="strategy"/>
+                        <BuildingMassInputVue v-if="genFunction == 'Building mass'" :function="strategy"/>
                     </n-collapse-item>
                 </n-collapse>
                 <n-collapse v-if="strategy == 'Optimize'" class='panel-collapse'><!-- Objectives -->
@@ -94,7 +94,7 @@
                     </n-collapse-item>
                 </n-collapse>
             </n-collapse-item>
-            <n-collapse-item title="Outputs" name="2" style="margin: 0px 2px;"><!-- Outputs -->
+            <n-collapse-item v-if="hasStudy" class="parent_panels" title="Outputs" name="2" style="margin: 0px 2px;"><!-- Outputs -->
                 <template #arrow>
                     <n-icon>
                         <outputIcon/>
@@ -102,7 +102,7 @@
                 </template>
                 <OutputsPanel/>
             </n-collapse-item>
-            <n-collapse-item title="Project settings" name="3" style="margin: 0px 2px;"><!-- Project settings -->
+            <n-collapse-item class="parent_panels" title="Project settings" name="3" style="margin: 0px 2px;"><!-- Project settings -->
                 <template #arrow>
                     <n-icon>
                         <settingsIcon/>
@@ -138,7 +138,7 @@
                 </template>
                 Generate
             </n-tooltip>
-            <n-tooltip trigger="hover" placement="bottom">
+            <!-- <n-tooltip trigger="hover" placement="bottom">
                 <template #trigger>
                     <n-button  @click='test' quaternary>
                         <n-icon >
@@ -157,7 +157,7 @@
                     </n-button>
                 </template>
                 Update chart
-            </n-tooltip>      
+            </n-tooltip>       -->
             <n-tooltip trigger="hover" placement="bottom">
                 <template #trigger>
                     <n-button  @click="clearData" quaternary>
@@ -169,7 +169,6 @@
                 Clear results
             </n-tooltip>      
         </div>
-        
     </div>
 
     <n-modal v-model:show="isProcessing"><!-- Progress modal -->
@@ -231,17 +230,15 @@ import {OptionsOutline as optionsIcon ,
         ExtensionPuzzleOutline as variableIcon,
         Locate as locateIcon,
         GolfOutline as goalIcon
-    } from '@vicons/ionicons5';
-        
+       } from '@vicons/ionicons5';
 import InputVue from './Input.vue';
 import OutputSettingsVue from './OutputSettings.vue';
 import BoxInputVue from './inputs/BoxInputs.vue';
 import BuildingMassInputVue from './inputs/BuildingMassInputs.vue';
 import {useDesign} from '../store/design';
-import {TestAlgorithm} from '../logic/testAlgorithm';
 import * as d3 from "d3";
 import { useMessage } from 'naive-ui'
-import {event} from '../events/index'
+import {GDEvents} from '../events/index'
 import { Viewer } from '../logic/Viewer'
 import BoxObjectives from './objectives/BoxObjectives.vue'
 import BuildingMassObjectives from './objectives/BuildingMassObjectives.vue'
@@ -251,8 +248,6 @@ import {GenerationManager} from '../logic/GenerationManager'
 import {BuildingMassGenerator} from '../logic/generators/BuildingMassGenerator'
 import {IDB} from '../IDB'
 import OutputsPanel from './OutputsPanel.vue'
-
-
 
 export default defineComponent({
     components: {
@@ -400,26 +395,46 @@ export default defineComponent({
             console.log(this.store.design)
         },
         async runTest() {
-            const inputs = {
-                strategy: this.strategy,
-                generator: this.genFunction,
-                generations: this.generations,
-                populations: this.populations,
-            }
+            //TODO:  try getting inputs from child component 
+            const inputs = this.store.design[this.strategy].inputs;
+            
+            console.log('[Panel: run test]', this.store.design);
+            //* SET INPUTS IN LOCAL STORAGE
+            // localStorage.setItem( 'gd_currentInputs', JSON.stringify( this.store.design[this.strategy].inputs ) );
+            // const inputs = {
+            //     strategy: this.strategy,
+            //     generator: this.genFunction,
+            //     generations: this.generations,
+            //     populations: this.populations,
+            // }
             console.log('[Inputs]: ', inputs)
             console.log('[Store]: ', this.store.design)
             this.isProcessing = true;
+
+            if(!document.getElementById('three_canvas')){
+
+                const threeContainer = document.getElementById('gallery_container') as HTMLElement;
+                while (threeContainer.firstChild) {
+                threeContainer.removeChild(threeContainer.lastChild as ChildNode);
+                }
+                let canvas = document.createElement("canvas");
+                canvas.classList.add("result_canvas");
+                canvas.id = "three_canvas"
+                threeContainer.appendChild(canvas);
+            }
 
             const worker = new Worker(new URL('../workers/GeneratorWorker.js', import.meta.url));
 
 
             worker.postMessage({ type: 'onProcess',
-                                 populations: this.populations
+                                 populations: this.populations,
+                                 inputs: JSON.stringify(inputs)
                                 });
             worker.onmessage = async (event) => {
                 if(event.data.type == 'onProgress') this.genProgress = Math.round( event.data.progress * 100 / this.populations  );
 
                 if(event.data.type == 'onFinished'){
+                    this.$emit(GDEvents.Generation_completed)
                     const canvas = document.getElementById('three_canvas');
                     let v = new Viewer(canvas, []);
 
@@ -435,10 +450,7 @@ export default defineComponent({
 
                         }
                     }, 500)
-
-     
                 } 
-            // console.log('[Worker: test]', event.data);
             };
 
 
@@ -619,8 +631,15 @@ export default defineComponent({
             // this.varViewer();
         },
         async clearData(){
-            this.$emit('test_eventy', this.strategies);
+            // this.$emit('test_eventy', this.strategies);
+            localStorage.setItem('has_study', 'false');
             await IDB.clearStorageAsync();
+            const threeContainer = document.getElementById('gallery_container') as HTMLElement;
+
+            //* Clear all children if any
+            while (threeContainer.firstChild) {
+                threeContainer.removeChild(threeContainer.lastChild as ChildNode);
+            }
 
         },
         closeModal(){
@@ -658,7 +677,7 @@ h3{
 }
 
 .n-collapse-item-arrow{
-    color: #a2588f !important
+    color: #a2588f !important;
 }
 
 .n-collapse-item__header-main{
@@ -666,11 +685,13 @@ h3{
     font-size: 16px !important;
     font-weight: bold !important;
     font-family: 'Chakra Petch', sans-serif !important;
+
 }
 
 .n-collapse-item__content-inner{
     color: #a2588f !important;
     font-family: 'Chakra Petch', sans-serif !important;
+    padding: 0% !important;
 }
 
 .n-button{
@@ -718,7 +739,13 @@ h3{
     height:100% !important;
     width: 1px !important
 }
+.n-collapse-item{
+    margin: 0px 7px !important;
 
+}
 
-
+.parent_panels{
+    font-size: 20px !important;
+    color:black !important;
+}
 </style>

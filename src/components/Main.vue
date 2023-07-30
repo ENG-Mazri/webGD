@@ -2,10 +2,9 @@
   <n-space>
     <InputsPanel @test_eventy="testFunc"
                 :hasStudy="hasStudy"
-                @generate_finished="hasStudy = true" />
+                @generation_completed="updateStudy" />
     <OutputsBoard :msg="mockData" :hasStudy="hasStudy"/>
     <!-- <VarResultPanel/> -->
-
   </n-space>
   <p id="app_stamp">Design space explorer - 2023</p>
 </template>
@@ -34,20 +33,39 @@ export default defineComponent({
       hasStudy: false
     }
   },
+  watch:{
+    hasStudy(){
+      console.log('[Study changed 1] ', this.hasStudy)
+      if(this.hasStudy) localStorage.setItem('has_study', 'true');
+    }
+  },
   async mounted() {
+    let resultsData = JSON.parse(localStorage.getItem('gd_study') as any);
+    if(!resultsData){
+      localStorage.setItem('has_study', 'false');
+      this.hasStudy = false;
+    } else {
+      localStorage.setItem('has_study', 'true');
+      this.hasStudy = true;
+    }
 
     // await IDB.clearStorageAsync();
 
     this.store = useDesign();
-    let resultsData = JSON.parse(localStorage.getItem('gd_study') as any);
-    if( !resultsData || resultsData.length > 0) this.hasStudy = true;
-    else this.hasStudy = false;
+    // let resultsData = JSON.parse(localStorage.getItem('gd_study') as any);
+    // if( !resultsData || resultsData.length > 0) this.hasStudy = true;
+    // else this.hasStudy = false;
 
   },
   methods:{
     testFunc(value){
       this.mockData = value;
       console.log("Parent got test event: ", value)
+    },
+    updateStudy(){
+      this.hasStudy = true;
+      console.log('[Study changed 2] ', this.hasStudy)
+
     }
     // buildViewer() {
     //   let resultsData = JSON.parse(localStorage.getItem('gd_result') as any);
