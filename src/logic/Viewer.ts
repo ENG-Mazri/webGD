@@ -1,6 +1,7 @@
 import { Scene, Camera, WebGLRenderer, Mesh } from 'three';
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
+import { TrackballControls } from 'three/examples/jsm/controls/TrackballControls.js';
 import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js';
 import { SAOPass } from 'three/examples/jsm/postprocessing/SAOPass.js';
 import { ShaderPass } from 'three/examples/jsm/postprocessing/ShaderPass.js';
@@ -35,7 +36,7 @@ export class Viewer {
         const fov = 45;
         const aspect = 2; 
         const near = 0.1;
-        const far = 2000;
+        const far = 3000;
         const camera = new THREE.PerspectiveCamera(fov, aspect, near, far);
 
         camera.position.set(-220, 228, -124);
@@ -115,8 +116,16 @@ export class Viewer {
 
         //* CONTROLS SETINGS
         const controls = new OrbitControls(camera, canvas);
+        const controls2 = new TrackballControls(camera, canvas);
         // controls.target.set(0,0,0)
-        controls.target.set(25, 54, 57)
+        controls.target.set(25, 54, 57);
+        controls.enableZoom = false;
+        // controls.enablePan = true
+
+        controls2.noPan = true;
+        controls2.noRotate = true;
+        controls2.noZoom = false;
+        controls2.zoomSpeed = 1.5;
 
 
         //* GLTF LOADER
@@ -155,9 +164,12 @@ export class Viewer {
         //*RENDERING
         //TODO: try tweaking render pass settings
         const animate = () => {
+            const target = controls.target;
             controls.update();
-            renderer.render(scene, camera);
-            // composer.render()
+            controls2.target.copy(target);
+            controls2.update()
+            // renderer.render(scene, camera);
+            composer.render()
             requestAnimationFrame(animate);
             // console.log("Cam: ", camera.position);
             // console.log("Target: ", controls.target)
@@ -170,8 +182,8 @@ export class Viewer {
             size.height = window.innerHeight;
             camera.aspect = size.width / size.height;
             camera.updateProjectionMatrix();
-            renderer.setSize(size.width, size.height);
-            // composer.setSize( size.width, size.height );
+            // renderer.setSize(size.width, size.height);
+            composer.setSize( size.width, size.height );
             console.log("[Render calls]: ", renderer.info.render.calls)
             
         });
