@@ -56,7 +56,9 @@ onmessage = async (event) => {
     }
 
     let model = bldMassGen.getModelMesh();
+    
     genManager.model = model;
+
     await genManager.getGlbFromGeneration(model, uuidv4()).then(()=>{
       postMessage({type: 'onFinished'});
 

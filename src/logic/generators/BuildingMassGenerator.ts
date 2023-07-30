@@ -19,6 +19,7 @@ import {Mesh,
         LineBasicMaterial,
         Shape,
         ExtrudeGeometry } from 'three';
+import {ShapeUtils} from 'three/src/extras/ShapeUtils.js';
 
 // @ts-ignore
 import fontJSON from "three/examples/fonts/droid/droid_sans_bold.typeface.json"
@@ -65,11 +66,6 @@ export class BuildingMassGenerator extends Generator {
 
   private LINE_MESHES  = [];
   private TEXT_MESHES  = [];
-
-
-  evaluate(): Model {
-      throw new Error("Method not implemented.");
-  }
 
   constructor(){
       super()
@@ -123,6 +119,9 @@ export class BuildingMassGenerator extends Generator {
     const mat = new LineBasicMaterial( {color: 0x00b386, linewidth: 2} );
     const contourLines = []; // add this to scene
     const contourLines3 = [];
+    let towerContour: Vector2[] = [];
+    let towerType: string;
+    let space_shapes = [];
 
 
     for( let i=0; i < CONTOUR.length - 1; i++ ){
@@ -232,34 +231,43 @@ export class BuildingMassGenerator extends Generator {
 
     let rndBool = Math.random() < 0.5;
     if(rndBool)
-      this.createTypeB(tower_floor_height, pod, spaceExtrudeSettings, podiumBase)
+      this.createTypeB(tower_floor_height, pod, spaceExtrudeSettings, podiumBase, space_shapes)
     else
-      this.createTypeA(topPodShapeF,topPodShapeS, spaceExtrudeSettings, pod.height, tower_floor_height, TOWER_FLOORS_NUMBER, podiumBase.matrix) ;
+      this.createTypeA(topPodShapeF,topPodShapeS, spaceExtrudeSettings, pod.height, tower_floor_height, TOWER_FLOORS_NUMBER, podiumBase.matrix, space_shapes);
     
 
-    const outputs = {area: 232, volume: 1986, height: 100};
-    this.TEXT_MESHES.push( ...this.createText(outputs, CONTOUR[0].x - 5 , CONTOUR[0].y) );
+    //TODO: create a text entity for each generator
+    const totalGeometry  = mergeGeometries( [...this.SLAB_GEOMETRIES, ...this.SPACE_GEOMETRIES] );
+
+    const results = this.evaluate( CONTOUR, pod, totalGeometry, space_shapes as any, tower_floor_height, spaceExtrudeSettings.depth, PODIUM_FLOORS_NUMBER);
+
+    const text = [  `Exterior area: ${results.exteriorArea} m2`,
+                    `Podium volume: ${results.podiumVolume} m3`,
+                    `Tower volume: ${results.towerVolume} m3`,
+                    `Total building area: ${results.totalBuildingArea} m2`,
+                    `Total facade area: ${results.facadeArea} m2`
+                  ];
+
+    this.TEXT_MESHES.push( ...this.createText( text, CONTOUR[0].x - 5 , CONTOUR[0].y) );
 }
 
-private createText( results: any, offsetX = 1, offsetY = 1 ): Mesh[]{
+private createText( text: string[], offsetX = 1, offsetY = 1 ): Mesh[]{
     const loader = new FontLoader();
     const parsedFont = loader.parse(fontJSON)
     
     const txtMaterial = new MeshPhongMaterial( { color: 0x404040 } );
-    const str = [ `Exterior area: ${results.area} m2`,
-                  `Volume: ${results.volume} m3`,
-                  `Building height: ${results.height} m`
-                ]
+
     const text_meshes = [];
     let pos = 0;
-    for ( let i=0; i < str.length; i++){
-      let text = new TextGeometry( str[i], {
+
+    for ( let i=0; i < text.length; i++){
+      let text_geom = new TextGeometry( text[i], {
         font: parsedFont,
         size: 1.5,
         height: 0.01,
       });
     
-      let txtMesh = new Mesh( text, txtMaterial ) ;
+      let txtMesh = new Mesh( text_geom, txtMaterial ) ;
     
       txtMesh.rotation.set(-Math.PI/2, 0, -Math.PI/2);
       // console.log('[Offset x]:', offsetX)
@@ -268,8 +276,9 @@ private createText( results: any, offsetX = 1, offsetY = 1 ): Mesh[]{
   
       txtMesh.updateMatrix();
       text_meshes.push( txtMesh );
-      pos += 2.5
+      pos += 2.5;
     }
+
     return text_meshes;
   }
 
@@ -607,7 +616,7 @@ private createText( results: any, offsetX = 1, offsetY = 1 ): Mesh[]{
       }
   }
   
-  private generateTowerSpaces(shape: Shape, extrudeSettings: any,  stHeight: number, floorHeight: number, nFloor: number, matrix: Matrix4){
+  private generateTowerSpaces(shape: Shape, extrudeSettings: any,  stHeight: number, floorHeight: number, nFloor: number, matrix: Matrix4, spaces_contour: any[]){
       const geometry = new ExtrudeGeometry( shape, extrudeSettings );
       const material = new MeshPhongMaterial( { color: constants.SPACE_COLOR, side: DoubleSide, transparent: true, opacity: 0.8} );
       // geometry.scale( scale.x, scale.y, scale.z);
@@ -616,7 +625,7 @@ private createText( results: any, offsetX = 1, offsetY = 1 ): Mesh[]{
       //   shape_contour.push(curve.v1)
       //   shape_contour.push(curve.v2)
       // });
-      // spaces_contour.push({contour: shape.extractPoints().shape, num_floors: nFloor}) //!!!!!!!!!!!!!!!!
+      spaces_contour.push({contour: shape.extractPoints(1).shape, num_floors: nFloor})
       
       let dist = stHeight + extrudeSettings.depth;
       for( let i = 0; i < nFloor; i++){ //nFloor
@@ -667,16 +676,17 @@ private createText( results: any, offsetX = 1, offsetY = 1 ): Mesh[]{
       const _shape2 = this.formBaseShape(second_half);
   
       const combined = [_contour[0], pt_a, pt_b0, pt_ab, pt_y, _contour[2], pt_d, pt_x, _contour[0]]
+      
   
       return [_shape, _shape2]
   }
 
-  private createTypeA(topPodShapeF: Shape, topPodShapeS: Shape, spaceExtrudeSettings, podHeight: number, floorHeight: number, TOWER_FLOORS_NUMBER: number, matrix: Matrix4){
+  private createTypeA(topPodShapeF: Shape, topPodShapeS: Shape, spaceExtrudeSettings: any, podHeight: number, floorHeight: number, TOWER_FLOORS_NUMBER: number, matrix: Matrix4, space_shapes: any[]){
       this.generateTowerSlabs( topPodShapeF, podHeight, floorHeight, TOWER_FLOORS_NUMBER, matrix)
-      this.generateTowerSpaces(topPodShapeS, spaceExtrudeSettings, podHeight, this.extrudeSettings.depth, TOWER_FLOORS_NUMBER, matrix)
+      this.generateTowerSpaces(topPodShapeS, spaceExtrudeSettings, podHeight, this.extrudeSettings.depth, TOWER_FLOORS_NUMBER, matrix, space_shapes)
   }
 
-  private createTypeB(TOWER_FLOOR_HEIGHT: number, podium: any, spaceExtrudeSettings: any, podiumBase: Mesh){
+  private createTypeB(TOWER_FLOOR_HEIGHT: number, podium: any, spaceExtrudeSettings: any, podiumBase: Mesh, space_shapes: any[]){
 
     //TODO: Generate mass - Tower type B
     const _contourF = this.offsetContour( 2, podium.top_contour);
@@ -689,10 +699,47 @@ private createText( results: any, offsetX = 1, offsetY = 1 ): Mesh[]{
     const towerFloorsRnd2 = this.randomIntFromInterval(8, 16);
   
     this.generateTowerSlabs( _shapeF[0], podium.height, TOWER_FLOOR_HEIGHT,         towerFloorsRnd1, podiumBase.matrix);
-    this.generateTowerSpaces( _shapeS[0], spaceExtrudeSettings, podium.height, this.extrudeSettings.depth, towerFloorsRnd1, podiumBase.matrix);
+    this.generateTowerSpaces( _shapeS[0], spaceExtrudeSettings, podium.height, this.extrudeSettings.depth, towerFloorsRnd1, podiumBase.matrix, space_shapes);
     this.generateTowerSlabs( _shapeF[1], podium.height, TOWER_FLOOR_HEIGHT,         towerFloorsRnd2, podiumBase.matrix);
-    this.generateTowerSpaces( _shapeS[1], spaceExtrudeSettings, podium.height, this.extrudeSettings.depth, towerFloorsRnd2, podiumBase.matrix);
+    this.generateTowerSpaces( _shapeS[1], spaceExtrudeSettings, podium.height, this.extrudeSettings.depth, towerFloorsRnd2, podiumBase.matrix, space_shapes);
   
+  }
+
+  private getBufferGeometryVolume(geometry: BufferGeometry) {
+    if (!geometry.isBufferGeometry) {
+      console.log("'geometry' must be an indexed or non-indexed buffer geometry");
+      return 0;
+    }
+    let isIndexed = geometry.index !== null;
+    let position = geometry.attributes.position;
+    let sum = 0;
+    let p1 = new Vector3(),
+        p2 = new Vector3(),
+        p3 = new Vector3();
+    if (!isIndexed) {
+      let faces = position.count / 3;
+      for (let i = 0; i < faces; i++) {
+        p1.fromBufferAttribute(position, i * 3 + 0);
+        p2.fromBufferAttribute(position, i * 3 + 1);
+        p3.fromBufferAttribute(position, i * 3 + 2);
+        sum += this.signedVolumeOfTriangle(p1, p2, p3);
+      }
+    }
+    else {
+      let index = geometry.index;
+      let faces = index.count / 3;
+      for (let i = 0; i < faces; i++){
+        p1.fromBufferAttribute(position, index.array[i * 3 + 0]);
+        p2.fromBufferAttribute(position, index.array[i * 3 + 1]);
+        p3.fromBufferAttribute(position, index.array[i * 3 + 2]);
+        sum += this.signedVolumeOfTriangle(p1, p2, p3);
+      }
+    }
+    return sum;
+  }
+
+  private signedVolumeOfTriangle(p1: any, p2: any, p3: any) {
+    return p1.dot(p2.cross(p3)) / 6.0;
   }
 
   public getModelMesh(){
@@ -723,6 +770,115 @@ private createText( results: any, offsetX = 1, offsetY = 1 ): Mesh[]{
     main.name = 'model';
     return main
   }
+
+  public evaluate(contour: Vector2[], podium: any, totalGeometry: BufferGeometry, towerShapes: [], towerFloorHeight: number, podiumFloorHeight: number, podiumFloorsCount: number){
+    // contour in arguments is sites contour
+    const site_area: number = Math.abs(ShapeUtils.area(contour)); 
+    const base_area: number = Math.abs(ShapeUtils.area(podium.top_contour)); 
+    const free_area = (site_area - base_area);
+    const podium_volume = this.getRecVolume(this.getRecSurface(podium.top_contour), podiumFloorHeight) * podiumFloorsCount;
+    const total_volume = this.getBufferGeometryVolume(totalGeometry);
+    const tower_volume = total_volume - podium_volume;
+    const {towerFacadeArea, towerTotalArea} = this.evaluateTower( towerShapes, towerFloorHeight );
+    const {podiumFacadeArea, podiumTotalArea} = this.evaluatePodium(podium.top_contour, podiumFloorHeight, podiumFloorsCount);
+    console.log('[Generator: Facade area] ', podiumFacadeArea , towerFacadeArea);
+    console.log('[Generator: Total area] ', podiumTotalArea , towerTotalArea);
+
+
+    return {
+      exteriorArea: Math.round(free_area),
+      podiumVolume: Math.round(podium_volume),
+      towerVolume: Math.round(tower_volume),
+      totalBuildingArea: Math.round( podiumTotalArea + towerTotalArea),
+      facadeArea: Math.round( podiumFacadeArea + towerFacadeArea)
+    }
+  }
+
+  public evaluateTower( shapes: any[], towerFloorHeight: number ){
+    let total_facade_area = 0;
+    let total_area = 0
+    let type = shapes.length == 1 ? 'Type_a' : 'Type_b';
+
+    if(shapes.length == 0 ) return {};
+
+    switch (type) {
+
+      case 'Type_a':
+        let contour_a = shapes[0].contour;
+        let dist1_a = contour_a[0].distanceTo(contour_a[1]);
+        let dist2_a = contour_a[1].distanceTo(contour_a[2]);
+        let floor_facade_area = (dist1_a * towerFloorHeight) * 2 + (dist2_a * towerFloorHeight) * 2;
+        total_facade_area = shapes[0].num_floors * floor_facade_area;
+        total_area = (dist1_a * dist2_a) * shapes[0].num_floors; 
+        break;
+
+      case 'Type_b':
+        let contour1_b = shapes[0].contour;
+        let contour2_b = shapes[1].contour;
+        let h1 = shapes[0].num_floors;
+        let h2 = shapes[1].num_floors;
+        
+        let shortest_shape: any, longest_shape: any;
+
+        if( h1 < h2 ){
+          shortest_shape = shapes[0];
+          longest_shape = shapes[1];
+        } else {
+          shortest_shape = shapes[1];
+          longest_shape = shapes[0];
+        }
+
+        let dif = longest_shape.num_floors - shortest_shape.num_floors;
+        let length_1: number, width_1: number, length_2: number, width_2: number;
+
+        let a = shortest_shape.contour[0].distanceTo(shortest_shape.contour[1]);
+        let b = shortest_shape.contour[1].distanceTo(shortest_shape.contour[2]);
+
+        let c = longest_shape.contour[0].distanceTo(longest_shape.contour[1]);
+        let d = longest_shape.contour[1].distanceTo(longest_shape.contour[2]);
+
+        if( a > b ){
+          length_1 = a;
+          width_1 = b;
+        }
+
+        if( c > d ){
+          length_2 = c;
+          width_2 = d;
+        }
+
+        const inter_dist = Math.abs(length_1 - length_2);
+        let area_1 = (length_1 * towerFloorHeight) + ((width_1 * towerFloorHeight) * 2) + ((length_1 - inter_dist) * towerFloorHeight);
+        let area_2 = (length_2 * towerFloorHeight) + ((width_2 * towerFloorHeight) * 2) + ((length_2 - inter_dist) * towerFloorHeight);
+        let add_area = ((length_2 * towerFloorHeight) * 2) + ((width_2 * towerFloorHeight) * 2);
+        
+        total_facade_area = (area_1 * shortest_shape.num_floors) + (area_2 * shortest_shape.num_floors) + (add_area * dif);
+
+        total_area = ((length_1 *  width_1) * shortest_shape.num_floors) + ((length_2 *  width_2) * longest_shape.num_floors);
+
+        break;
+      default:
+        break;
+    }
+
+
+    
+    return {towerFacadeArea: total_facade_area,
+            towerTotalArea: total_area
+      };
+  }
+
+  public evaluatePodium( contour: any[], podiumFloorHeight: number, podiumFloorsCount: number ){
+    let dist1= contour[0].distanceTo(contour[1]);
+    let dist2 = contour[1].distanceTo(contour[2]);
+    let facade_area = ( (dist1 * podiumFloorHeight) * 2 + (dist2 * podiumFloorHeight) * 2 ) * podiumFloorsCount;
+    return {
+      podiumFacadeArea: facade_area,
+      podiumTotalArea: (dist1 * dist2 ) * podiumFloorsCount
+    };
+  }
+
+
 
 }
 

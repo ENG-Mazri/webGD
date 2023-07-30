@@ -69,8 +69,8 @@
                         </n-icon>
                     </template>
                     <n-collapse-item title="Objectives" name="1">
-                        <BoxObjectives v-if="genFunction == 'Box generator'" :function="strategy"/>
-                        <BuildingMassObjectives v-if="genFunction == 'Building mass generator'" :function="strategy"/>
+                        <BoxObjectives v-if="genFunction == 'Box'" :function="strategy"/>
+                        <BuildingMassObjectives v-if="genFunction == 'Building mass'" :function="strategy"/>
                     </n-collapse-item>
                 </n-collapse>
                 <n-collapse class='panel-collapse'> <!-- Design Options -->
@@ -682,7 +682,7 @@ h3{
 }
 
 .n-collapse-item__header-main{
-    color: #a2588f !important;
+    color: #15304b !important;
     font-size: 16px !important;
     font-weight: bold !important;
     font-family: 'Chakra Petch', sans-serif !important;

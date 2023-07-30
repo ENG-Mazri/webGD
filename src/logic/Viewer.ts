@@ -153,6 +153,7 @@ export class Viewer {
         
         
         //*RENDERING
+        //TODO: try tweaking render pass settings
         const animate = () => {
             controls.update();
             renderer.render(scene, camera);

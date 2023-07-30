@@ -77,20 +77,20 @@
                     </n-checkbox>
                 </n-space>
             </div> 
-            <div> <!-- fix binding data -->
+            <div>
                 <n-divider title-placement="left">
                     Total facade area
                 </n-divider>
                 <n-space item-style="display: flex;" align="center">
                     <n-checkbox
-                        v-model:checked="isMaxTotalArea"
-                        @click="onMaxTotalArea"
+                        v-model:checked="isMaxFacadeArea"
+                        @click="onMaxFacadeArea"
                         size="small">
                         Maximize
                     </n-checkbox>
                     <n-checkbox
-                        v-model:checked="isMinTotalArea"
-                        @click="onMinTotalArea"
+                        v-model:checked="isMinFacadeArea"
+                        @click="onMinFacadeArea"
                         size="small">
                         Minimize
                     </n-checkbox>
@@ -149,18 +149,17 @@ export default defineComponent({
             isMinPVolume: false,
             isMaxTotalArea: false,
             isMinTotalArea: false,
+            isMaxFacadeArea: false,
+            isMinFacadeArea: false,
             disabled: true,
             value: '',
             extArea: null,
             towerVolume: null,
             podiumVolume: null,
-            totalArea: null
+            totalArea: null,
+            facadeArea: null
             
         }
-    },
-    updated(){
-        console.log("[Bld mass - objectives]: ");
-
     },
     mounted() {
         this.store = useDesign();
@@ -237,6 +236,20 @@ export default defineComponent({
                 this.isMaxTotalArea = false;
                 this.totalArea = 'Min'
             } else this.totalArea = null
+            this.save();
+        },
+        onMaxFacadeArea() {
+            if (this.isMaxFacadeArea){
+                this.isMinFacadeArea = false;
+                this.facadeArea = 'Max'
+            } else this.facadeArea = null
+            this.save();
+        },
+        onMinFacadeArea() {
+            if (this.isMinFacadeArea){
+                this.isMaxFacadeArea = false;
+                this.facadeArea = 'Min'
+            } else this.facadeArea = null
             this.save();
         },
         save(){
