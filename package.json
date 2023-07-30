@@ -1,5 +1,5 @@
 {
-  "name": "Generative design application",
+  "name": "app",
   "version": "0.1.0",
   "private": true,
   "scripts": {
@@ -13,9 +13,16 @@
     "d3": "^7.8.4",
     "d3-selection": "^3.0.0",
     "pinia": "^2.0.36",
+    "primevue": "^3.29.1",
+    "svg-parser": "^2.0.4",
+    "svg-path-interpolator": "^0.3.0",
+    "svg-path-tools": "^1.0.0",
+    "svgson": "^5.2.1",
     "three": "^0.152.2",
     "uuid": "^9.0.0",
-    "vue": "^3.2.13"
+    "vite-plugin-chunk-split": "^0.4.7",
+    "vue": "^3.2.13",
+    "vue-worker": "^1.2.1"
   },
   "devDependencies": {
     "@vue/cli-plugin-babel": "~5.0.0",

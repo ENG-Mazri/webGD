@@ -8,17 +8,17 @@
                 <n-space align="center" justify="space-between" inline>
                     <n-switch v-model:value="fixed_width" :rail-style="railStyle">
                         <template #checked>
-                        fixed
+                        static
                         </template>
                         <template #unchecked>
                         var
                         </template>
                     </n-switch>
-                    <n-input-number v-if="fixed_width" class="input" clearable/>
+                    <n-input-number v-if="fixed_width" v-model:value="input_width" class="input" clearable/>
                     <n-input v-if="!fixed_width"
                         class="input"
                         id='input_value'
-                        v-model:value="input_data"
+                        v-model:value="input_width"
                         pair
                         separator="-"
                         :placeholder="['Min', 'Max']"
@@ -32,17 +32,17 @@
                 <n-space align="center" justify="space-between" inline>
                     <n-switch v-model:value="fixed_height" :rail-style="railStyle">
                         <template #checked>
-                        fixed
+                        static
                         </template>
                         <template #unchecked>
                         var
                         </template>
                     </n-switch>
-                    <n-input-number v-if="fixed_height" class="input" clearable/>
+                    <n-input-number v-if="fixed_height" v-model:value="input_height" class="input" clearable/>
                     <n-input v-if="!fixed_height"
                         class="input"
                         id='input_value'
-                        v-model:value="input_data"
+                        v-model:value="input_height"
                         pair
                         separator="-"
                         :placeholder="['Min', 'Max']"
@@ -56,16 +56,16 @@
                 <n-space align="center" justify="space-between" inline>
                     <n-switch v-model:value="fixed_length" :rail-style="railStyle">
                         <template #checked>
-                        fixed
+                        static
                         </template>
                         <template #unchecked>
                         var
                         </template>
                     </n-switch>
-                    <n-input-number v-if="fixed_length" clearable/>
+                    <n-input-number v-if="fixed_length" v-model:value="input_length" clearable/>
                     <n-input v-if="!fixed_length"
                         id='input_value'
-                        v-model:value="input_data"
+                        v-model:value="input_length"
                         pair
                         separator="-"
                         :placeholder="['Min', 'Max']"
@@ -78,7 +78,8 @@
 
 <script lang="ts">
 import { CSSProperties, defineComponent, ref } from 'vue';
-import {useDesign} from '../store/design'
+import {useDesign} from '../../store/design'
+import { BoxInputType } from '../../types/InputTypes'
 // import { } from '@vicons/ionicons5';
 
 export default defineComponent({
@@ -87,80 +88,91 @@ export default defineComponent({
         function: String
     },
     setup () {
-    return {
-      railStyle: ({
-        focused,
-        checked
-      }: {
-        focused: boolean
-        checked: boolean
-      }) => {
-        const style: CSSProperties = {}
-        if (checked) {
-          style.background = '#a2588f'
-           if (focused) {
-            style.boxShadow = '0 0 0 2px #d0305040'
-          }
+        return {
+        railStyle: ({
+            focused,
+            checked
+        }: {
+            focused: boolean
+            checked: boolean
+        }) => {
+            const style: CSSProperties = {}
+            if (checked) {
+            style.background = '#a2588f'
+            if (focused) {
+                style.boxShadow = '0 0 0 2px #d0305040'
+            }
 
-        } else {
-          style.background = '#153048'
-           if (focused) {
-            style.boxShadow = '0 0 0 2px #2080f040'
-          }
+            } else {
+            style.background = '#153048'
+            if (focused) {
+                style.boxShadow = '0 0 0 2px #2080f040'
+            }
+            }
+            return style
         }
-        return style
-      }
-    }
-  },
+        }
+    },
     data() {
         return {
-            inputTypes: [
-                // {
-                //     label: 'Discrete',
-                //     value: 'Discrete'
-                // },
-                // {
-                //     label: 'Continuous',
-                //     value: 'Continuous'
-                // },
-                {
-                    label: 'Sequence',
-                    value: 'Sequence'
-                },
-                {
-                    label: 'Fixed',
-                    value: 'Fixed'
-                },
-                {
-                    label: 'File',
-                    value: 'File'
-                }
-            ],
             store: '' as any,
             input_name: null,
             input_type: 'Sequence',
             input_data: null,
             fixed_width: true,
             fixed_height: true,
-            fixed_length: true
+            fixed_length: true,
+            input_width: null,
+            input_length: null,
+            input_height: null,
             
         }
     },
     mounted() {
         this.store = useDesign();
-        console.log("Function: ", this.function)
+        this.store.design[this.function] = {};
+        this.store.design[this.function]['strategy'] = this.function;
+        this.store.design[this.function]['inputs'] = {};
+        console.log("Function: ", this.store.design)
 
     },
     watch: {
-        // input_type() {
-        //     console.log("Input Type: ", this.input_type)
-        // },
-        // input_name() {
-        //     console.log("Input Type: ", this.input_name)
-        // },
-        // input_data() {
-        //     console.log("Input Type: ", this.input_data)
-        // }
+        input_width(){
+            let w = this.input_width;
+            if(this.fixed_width) {
+                this.store.design[this.function]['inputs']['width'] = {};
+                this.store.design[this.function]['inputs']['width']['type'] = 'static';
+                this.store.design[this.function]['inputs']['width']['value'] = w;
+            } else {
+                this.store.design[this.function]['inputs']['width'] = {};
+                this.store.design[this.function]['inputs']['width']['type'] = 'variable';
+                this.store.design[this.function]['inputs']['width']['value'] = [parseInt(w[0]), parseInt(w[1])];
+            }
+        },
+        input_length(){
+            let l = this.input_length;
+            if(this.fixed_length) {
+                this.store.design[this.function]['inputs']['length'] = {};
+                this.store.design[this.function]['inputs']['length']['type'] = 'static';
+                this.store.design[this.function]['inputs']['length']['value'] = l;
+            } else {
+                this.store.design[this.function]['inputs']['length'] = {};
+                this.store.design[this.function]['inputs']['length']['type'] = 'variable';
+                this.store.design[this.function]['inputs']['length']['value'] = [parseInt(l[0]), parseInt(l[1])];
+            }
+        },
+        input_height(){
+            let h = this.input_height;
+            if(this.fixed_height) {
+                this.store.design[this.function]['inputs']['height'] = {};
+                this.store.design[this.function]['inputs']['height']['type'] = 'static';
+                this.store.design[this.function]['inputs']['height']['value'] = h;
+            } else {
+                this.store.design[this.function]['inputs']['height'] = {};
+                this.store.design[this.function]['inputs']['height']['type'] = 'variable';
+                this.store.design[this.function]['inputs']['height']['value'] = [parseInt(h[0]), parseInt(h[1])];
+            }
+        },
     },
     methods: {
         saveInput() {
@@ -191,28 +203,12 @@ export default defineComponent({
 
 }
 
-/* .input{
-    justify-content:space-around !important;
-    position: relative !important;
-    width: 100% !important;
-    width: 40% !important;
-    align-items: center !important;
-    flex-flow:row !important;
-    margin-right:  0px !important;
-} */
-
-/* .input{
-    position: relative !important;
-    width: 70% !important;
-    flex-flow:row !important;
-} */
-
-
 .input_label{
     color: white !important;
     left:0px;
     margin: 1px;
 }
+
 .n-divider{
     margin: 0px !important
 }

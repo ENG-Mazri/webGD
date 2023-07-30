@@ -16,4 +16,10 @@
 //     }
 // }
 
-export const event = new Event("generation_completed");
+export const Generation_completed = new Event("generation_completed");
+export const show_chart_event = new Event("show_chart");
+export const glb_event = new Event("glb_set");
+export enum GDEvents {
+    Generation_completed = "onGenCompleted",
+    Generation_visual_set = "onGenVisualSet",
+}

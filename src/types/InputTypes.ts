@@ -1,19 +1,19 @@
 import { Color } from 'three';
 
-export type BoxGeneratorInput = {
+export type BoxInputType = {
     width: number;
     height: number;
     length: number;
-    color: Color | undefined; 
+    // color: Color | undefined; 
 }
 
-export type MassGeneratorInput = {
+export type BuildingMassInputType = {
     siteWidth: number;
     siteLength: number;
     siteOffset: number;
     buildingHeight: number;
     floorHeight: number;
-    color: Color | undefined;
+    // color: Color | undefined;
 }
 
-export type LayoutGeneratorInput = {}
+export type LayoutInputType = {}
