@@ -94,7 +94,7 @@ export class BuildingMassGenerator extends Generator {
     return {site_offset, contour, total_floors, tower_floor_height, podium_floor_height}
   }
 
-  public generateVariant(inputs: any, transX: number = 0, transY: number= 0){
+  public generateVariant(inputs: any, transX: number = 0, transY: number= 0, index: number){
     const {site_offset, contour, total_floors, tower_floor_height, podium_floor_height} = this.getInputs(inputs);
 
     const spaceExtrudeSettings = {
@@ -237,11 +237,14 @@ export class BuildingMassGenerator extends Generator {
     
 
     //TODO: create a text entity for each generator
+    console.log('[Generator: variant]', index)
+
     const totalGeometry  = mergeGeometries( [...this.SLAB_GEOMETRIES, ...this.SPACE_GEOMETRIES] );
 
     const results = this.evaluate( CONTOUR, pod, totalGeometry, space_shapes as any, tower_floor_height, spaceExtrudeSettings.depth, PODIUM_FLOORS_NUMBER);
-
-    const text = [  `Exterior area: ${results.exteriorArea} m2`,
+    
+    const text = [  `Variant number: ${index}`,
+                    `Exterior area: ${results.exteriorArea} m2`,
                     `Podium volume: ${results.podiumVolume} m3`,
                     `Tower volume: ${results.towerVolume} m3`,
                     `Total building area: ${results.totalBuildingArea} m2`,
@@ -840,17 +843,25 @@ private createText( text: string[], offsetX = 1, offsetY = 1 ): Mesh[]{
         if( a > b ){
           length_1 = a;
           width_1 = b;
+        }else{
+          length_1 = b;
+          width_1 = a;
         }
 
         if( c > d ){
           length_2 = c;
           width_2 = d;
+        }else{
+          length_2 = d;
+          width_2 = c;
         }
+        console.log('[Generator: Type B] ', a,b,c,d);
 
         const inter_dist = Math.abs(length_1 - length_2);
         let area_1 = (length_1 * towerFloorHeight) + ((width_1 * towerFloorHeight) * 2) + ((length_1 - inter_dist) * towerFloorHeight);
         let area_2 = (length_2 * towerFloorHeight) + ((width_2 * towerFloorHeight) * 2) + ((length_2 - inter_dist) * towerFloorHeight);
         let add_area = ((length_2 * towerFloorHeight) * 2) + ((width_2 * towerFloorHeight) * 2);
+        console.log('[Generator: Type B areas] ', area_1, area_2, add_area);
         
         total_facade_area = (area_1 * shortest_shape.num_floors) + (area_2 * shortest_shape.num_floors) + (add_area * dif);
 

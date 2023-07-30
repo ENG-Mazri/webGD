@@ -8,7 +8,7 @@
                 <n-space align="center" justify="space-between" inline>
                     <n-switch v-model:value="fixed_offset" :rail-style="railStyle">
                         <template #checked>
-                        fixed
+                        const
                         </template>
                         <template #unchecked>
                         var
@@ -32,7 +32,7 @@
                 <n-space align="center" justify="space-between" inline>
                     <n-switch v-model:value="fixed_total_floors" :rail-style="railStyle">
                         <template #checked>
-                        fixed
+                        const
                         </template>
                         <template #unchecked>
                         var
@@ -56,7 +56,7 @@
                 <n-space align="center" justify="space-between" inline>
                     <n-switch v-model:value="fixed_flr_height" :rail-style="railStyle">
                         <template #checked>
-                        fixed
+                        const
                         </template>
                         <template #unchecked>
                         var
@@ -79,7 +79,7 @@
                 <n-space align="center" justify="space-between" inline>
                     <n-switch v-model:value="fixed_pod_height" :rail-style="railStyle">
                         <template #checked>
-                        fixed
+                        const
                         </template>
                         <template #unchecked>
                         var

@@ -44,10 +44,10 @@ export class GenerationManager {
 
     process(){}
 
-    public populate(inputs: any, options: any) {
+    public populate(inputs: any, options: any, index: number) {
         if( this.populations == 0 || this.generations == 0 ) return;
 
-        this.generator.generateVariant(inputs, options.transX, options.transY);
+        this.generator.generateVariant(inputs, options.transX, options.transY, index);
     }
 
     private getResults() {

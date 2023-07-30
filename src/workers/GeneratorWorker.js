@@ -39,7 +39,7 @@ onmessage = async (event) => {
     let pos = 0;
 
     for( let i = 0; i < event.data.populations; i++ ){
-      genManager.populate( inputs, {transX, transY});
+      genManager.populate( inputs, {transX, transY}, i);
         // this.generator.evaluate();
         pos += 1;
         transX += 150;
@@ -56,7 +56,7 @@ onmessage = async (event) => {
     }
 
     let model = bldMassGen.getModelMesh();
-    
+
     genManager.model = model;
 
     await genManager.getGlbFromGeneration(model, uuidv4()).then(()=>{
