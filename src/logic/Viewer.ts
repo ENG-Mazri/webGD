@@ -125,9 +125,9 @@ export class Viewer {
         loader.load(
             url,
             ( gltf ) => {
-                console.log('[Viewer:Blob] ', gltf);
+                // console.log('[Viewer:Blob] ', gltf);
                 scene.add( gltf.scene );
-                console.log('[Viewer:Scene] ', scene);
+                // console.log('[Viewer:Scene] ', scene);
 
                 scene.traverse((child: THREE.Object3D) =>{
                     // console.log(child)

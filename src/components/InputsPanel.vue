@@ -407,8 +407,8 @@ export default defineComponent({
             //     generations: this.generations,
             //     populations: this.populations,
             // }
-            console.log('[Inputs]: ', inputs)
-            console.log('[Store]: ', this.store.design)
+            // console.log('[Inputs]: ', inputs)
+            // console.log('[Store]: ', this.store.design)
             this.isProcessing = true;
 
             if(!document.getElementById('three_canvas')){
@@ -430,6 +430,7 @@ export default defineComponent({
                                  populations: this.populations,
                                  inputs: JSON.stringify(inputs)
                                 });
+
             worker.onmessage = async (event) => {
                 if(event.data.type == 'onProgress') this.genProgress = Math.round( event.data.progress * 100 / this.populations  );
 
@@ -445,7 +446,7 @@ export default defineComponent({
                         const blob = await IDB.getDataByKeyAsync('glb');
                         if(blob){
                             clearInterval(interval);
-                            console.log('[Viewer:Blob] ', blob)
+                            // console.log('[Viewer:Blob] ', blob)
                             await v.init(canvas, [], blob)
 
                         }

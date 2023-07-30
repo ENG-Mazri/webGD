@@ -33,7 +33,7 @@ onmessage = async (event) => {
     // const model_mesh = bldMassGen.generateVariant(mock_inputs);
   
     const genManager = new GenerationManager(bldMassGen, strategy, [], populations)
-    console.log('[WORKER: inputs] ', inputs);
+    // console.log('[WORKER: inputs] ', inputs);
     let transX = 0;
     let transY = 0;
     let pos = 0;
