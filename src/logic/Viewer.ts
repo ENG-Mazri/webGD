@@ -120,12 +120,28 @@ export class Viewer {
         // controls.target.set(0,0,0)
         controls.target.set(25, 54, 57);
         controls.enableZoom = false;
+        
+        // controls.minDistance = -Infinity;
+        // controls.minZoom = -Infinity;
+
+        console.log('[VIewer: controls] ', controls)
+        controls.maxDistance = 1000;
         // controls.enablePan = true
 
         controls2.noPan = true;
         controls2.noRotate = true;
         controls2.noZoom = false;
         controls2.zoomSpeed = 1.5;
+
+        //* HELPERS
+        // const grid = new THREE.GridHelper(200, 200);
+        // grid.position.setY(-1)
+        // scene.add(grid);
+
+        // const axes = new THREE.AxesHelper(2);
+        // // axes.material.depthTest = false;
+        // axes.renderOrder = 1;
+        // scene.add(axes);
 
 
         //* GLTF LOADER
@@ -138,18 +154,36 @@ export class Viewer {
                 scene.add( gltf.scene );
                 // console.log('[Viewer:Scene] ', scene);
 
-                scene.traverse((child: THREE.Object3D) =>{
+                scene.traverse((child: any) =>{
                     // console.log(child)
 
                     if (child.name == 'site_mesh') {
                         child.receiveShadow = true;
                         child.castShadow = true;
+                        // child.material.transparent = true;
+                        // child.material.opacity = 0.1;
+                        // child.material.color = new THREE.Color(0xa6a6a6)
+
                     }
                     
                     else if (child.name == 'slab_mesh' || child.name == 'space_mesh') {
                         // child.receiveShadow = true;
+                        // console.log('[Viewer: mesh] ', child)
+                        // child.material.transparent = true;
+                        // child.material.opacity = 0.1;
+                        // child.material.color = new THREE.Color(0xa6a6a6)
+
                         child.castShadow = true;
                     }
+                    // else if (child.name == 'slab_mesh' || child.name == 'space_mesh') {
+                    //     // child.receiveShadow = true;
+                    //     // console.log('[Viewer: mesh] ', child)
+                    //     child.material.transparent = true;
+                    //     child.material.opacity = 0.3;
+                    //     child.material.color = new THREE.Color(0xff0000)
+
+                    //     child.castShadow = true;
+                    // }
                 });
             },
             ( xhr ) => {        
@@ -168,8 +202,8 @@ export class Viewer {
             controls.update();
             controls2.target.copy(target);
             controls2.update()
-            // renderer.render(scene, camera);
-            composer.render()
+            renderer.render(scene, camera);
+            // composer.render()
             requestAnimationFrame(animate);
             // console.log("Cam: ", camera.position);
             // console.log("Target: ", controls.target)
@@ -182,8 +216,8 @@ export class Viewer {
             size.height = window.innerHeight;
             camera.aspect = size.width / size.height;
             camera.updateProjectionMatrix();
-            // renderer.setSize(size.width, size.height);
-            composer.setSize( size.width, size.height );
+            renderer.setSize(size.width, size.height);
+            // composer.setSize( size.width, size.height );
             console.log("[Render calls]: ", renderer.info.render.calls)
             
         });

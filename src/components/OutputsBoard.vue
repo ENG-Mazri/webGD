@@ -1,7 +1,7 @@
 <template>
   <div class="outputsBoard" ref="$wrapper" @showResultEvent="visualizeResult">
     <n-card class="outputsPanel_main" justify-content="space-evenly">
-      <n-tabs @click="tabChange" type="line" animated justify-content="space-around" :disabled="hasTabs" default-value="3D space" tab-style="color: #a2588f; font-size: 16px !important;">
+      <n-tabs @click="tabChange" type="line" animated justify-content="space-around" :disabled="hasTabs" default-value="Scatterplot chart" tab-style="color: #a2588f; font-size: 16px !important;">
         <n-tab-pane name="Scatterplot chart" tab="Scatterplot chart">
           <div id="outputsPanel_main">
             <svg id="d3Svg"></svg>
@@ -88,21 +88,27 @@ export default defineComponent({
     let hasStudy = JSON.parse(localStorage.getItem('gd_hasStudy') as any);
 
 
-    if(hasStudy) {
-      this.visualizeResult();
-      this.buildTable();
-      this.buildViewer();
-      console.log("D3 panel mounted has study")
-    }
+    // if(hasStudy) {
+    //   this.visualizeResult();
+    //   this.buildTable();
+    //   this.buildViewer();
+    //   console.log("D3 panel mounted has study")
+    // }
 
-    this.buildViewer();
+    this.buildTable();
+    // console.log("[TABLE DATA]: ", this.columns)
 
-      // const GD_d3 = JSON.parse(localStorage.getItem('gd_d3') as any);
-      // if ( GD_d3 && Object.keys(GD_d3).length > 0 ) {
-      //   window.dispatchEvent(show_chart_event)
-      //   console.log("Dispatch show chart")
+    // this.buildViewer();
 
-      // }
+    this.visualizeResult();
+
+
+    // const GD_d3 = JSON.parse(localStorage.getItem('gd_d3') as any);
+    // if ( GD_d3 && Object.keys(GD_d3).length > 0 ) {
+    //   window.dispatchEvent(show_chart_event)
+    //   console.log("Dispatch show chart")
+
+    // }
   },
   methods: {
     visualizeResult(){
@@ -118,12 +124,64 @@ export default defineComponent({
 
       const g = svg.append("g");
 
-      const GD_results = JSON.parse(localStorage.getItem('gd_result') as any);
-      if( !GD_results || GD_results.length == 0){
-          window?.$message.error('No data to visualize')
-          return;
+      // const GD_results = JSON.parse(localStorage.getItem('gd_result') as any);
+      // if( !GD_results || GD_results.length == 0){
+      //     window?.$message.error('No data to visualize')
+      //     return;
+      // }
+      // const GD_d3 = JSON.parse(localStorage.getItem('gd_d3') as any);
+      
+      //TODO: new way - create update data method after generation finished
+      
+      const objectives = [
+        {
+          evaluatorName: "Exterior area",
+          goal: "max"
+        },
+        {
+          evaluatorName: "Podium volume",
+          goal: "min"
+        },
+        {
+          evaluatorName: "Tower volume",
+          goal: "undefined"
+        },
+        {
+          evaluatorName: "Total building area",
+          goal: "undefined"
+        },
+        {
+          evaluatorName: "Total facade area",
+          goal: "undefined"
+        },
+      ];
+
+      const evaluatorsNames = []
+      for (let i = 0; i < objectives.length; i++) {
+
+        for ( let [key, value] of Object.entries(objectives[i]))
+          if(key == 'evaluatorName') evaluatorsNames.push(value);
       }
-      const GD_d3 = JSON.parse(localStorage.getItem('gd_d3') as any);
+      const GD_d3 = {
+        x_axis: evaluatorsNames[0],
+        y_axis: evaluatorsNames[1],
+        size: evaluatorsNames[2],
+        color: evaluatorsNames[3]
+      };
+      // localStorage.setItem('gd_d3', JSON.stringify(axisMetrics) );
+      // get results arrays by ovaluator 
+      const GD_results = {
+          "Exterior area": [10,15,20,25,30,35,40],
+          "Podium volume": [110,115,120,125,130,135,140],
+          "Tower volume": [100,150,200,250,300,350,400],
+          "Total building area": [10,15,20,25,30,35,40],
+          "Total facade area": [10,15,20,25,30,35,40]
+        }
+
+
+        
+
+      // console.log("[TEST: axis]", Object.keys(this.data[0]));
 
   
       const padding = 60;
@@ -143,25 +201,26 @@ export default defineComponent({
                         .domain([0, maxSize as number])
                         .range([0, 10]);
 
-      const GD_data = JSON.parse(localStorage.getItem('gd_study') as any);
+      // const GD_data = JSON.parse(localStorage.getItem('gd_study') as any);
+      const GD_data = this.data
 
 
       svg.selectAll("circle")
           .data([...GD_data])
           .enter()
           .append("circle")
-          .attr("cx", (d) => xScale(d.outputs[GD_d3['x_axis']]))
-          .attr("cy",(d) => yScale(d.outputs[GD_d3['y_axis']]))
-          .attr("r", (d) => sizeScale(d.outputs[GD_d3['size']]))
+          .attr("cx", (d) => xScale(d[GD_d3['x_axis']]))
+          .attr("cy",(d) => yScale(d[GD_d3['y_axis']]))
+          .attr("r", (d) => sizeScale(d[GD_d3['size']]))
           .attr("id", "scatter")
           .attr('fill', 'rgba(162, 88, 143, 0.3)')
           .on("click", (d) => {
             console.log("CLICKED", d.target.__data__);              
             this.showVarData(d.target.__data__);
           })
-          .append("title")
-          .attr('class', 'svg_tooltip')
-          .text((d) => `Width: ${d.inputs.width}\nLength: ${d.inputs.length}\nHeight: ${d.inputs.height}`)
+          // .append("title")
+          // .attr('class', 'svg_tooltip')
+          // .text((d) => `Width: ${d.inputs.width}\nLength: ${d.inputs.length}\nHeight: ${d.inputs.height}`)
 
       const xAxis = d3.axisBottom(xScale);
       const yAxis = d3.axisLeft(yScale);
@@ -298,26 +357,110 @@ export default defineComponent({
       const GD_results = JSON.parse(localStorage.getItem('gd_result'));
       const GD_study = JSON.parse(localStorage.getItem('gd_study'));
 
-
-      if( GD_results && this.hasStudy ){
-        const keys = Object.keys(GD_results);
-        for( let i = 0; i < keys.length; i++ )
-          this.columns.push({title: keys[i], key: keys[i]})
-
-        for( let i = 0; i < GD_study.length; i++ ) {
-          let outs = Object.keys(GD_study[i].outputs);
-          let data = {};
-
-          for( let j = 0; j < outs.length; j++ ){
-            data[keys[j]] = GD_study[i].outputs[keys[j]];
-          }
-          // data['sorter'] = (row1, row2) => row1[data['key']] - row2[data['key']]
-          this.data.push(data);
+      const mock_table_data = [
+        {
+          "Generation": 1,
+          "Variant": 0,
+          "Exterior area": 10,
+          "Podium volume": 110,
+          "Tower volume": 100,
+          "Total building area": 10,
+          "Total facade area": 10
+        },
+        {
+          "Generation": 1,
+          "Variant": 1,
+          "Exterior area": 15,
+          "Podium volume": 150,
+          "Tower volume": 150,
+          "Total building area": 15,
+          "Total facade area": 15
+        },
+        {
+          "Generation": 1,
+          "Variant": 2,
+          "Exterior area": 20,
+          "Podium volume": 120,
+          "Tower volume": 200,
+          "Total building area": 20,
+          "Total facade area": 20
+        },
+        {
+          "Generation": 1,
+          "Variant": 3,
+          "Exterior area": 25,
+          "Podium volume": 125,
+          "Tower volume": 250,
+          "Total building area": 25,
+          "Total facade area": 25
+        },
+        {
+          "Generation": 1,
+          "Variant": 4,
+          "Exterior area": 30,
+          "Podium volume": 130,
+          "Tower volume": 300,
+          "Total building area": 30,
+          "Total facade area": 30
+        },
+        {
+          "Generation": 1,
+          "Variant": 5,
+          "Exterior area": 35,
+          "Podium volume": 135,
+          "Tower volume": 350,
+          "Total building area":35,
+          "Total facade area": 35
+        },
+        {
+          "Generation": 1,
+          "Variant": 6,
+          "Exterior area": 40,
+          "Podium volume": 140,
+          "Tower volume": 400,
+          "Total building area": 40,
+          "Total facade area": 40
         }
-        // console.log(this.data);
+      ]
 
-        // this.buildViewer();
-      }
+
+      const mock_columns = mock_table_data[0]
+      const keys = Object.keys(mock_columns);
+      for( let i = 0; i < keys.length; i++ )
+        this.columns.push({title: keys[i], key: keys[i]})
+
+      this.data = mock_table_data
+
+      // for( let i = 0; i < mock_table_data.length; i++ ) {
+      //   let outs = Object.keys(mock_table_data[i].outputs);
+      //   let data = {};
+
+      //   for( let j = 0; j < outs.length; j++ ){
+      //     data[keys[j]] = mock_table_data[i].outputs[keys[j]];
+      //   }
+      //   this.data.push(data);
+      // }
+
+
+      // if( GD_results && this.hasStudy ){
+      //   const keys = Object.keys(GD_results);
+      //   for( let i = 0; i < keys.length; i++ )
+      //     this.columns.push({title: keys[i], key: keys[i]})
+
+      //   for( let i = 0; i < GD_study.length; i++ ) {
+      //     let outs = Object.keys(GD_study[i].outputs);
+      //     let data = {};
+
+      //     for( let j = 0; j < outs.length; j++ ){
+      //       data[keys[j]] = GD_study[i].outputs[keys[j]];
+      //     }
+      //     // data['sorter'] = (row1, row2) => row1[data['key']] - row2[data['key']]
+      //     this.data.push(data);
+      //   }
+      //   // console.log(this.data);
+
+      //   // this.buildViewer();
+      // }
     }
   }
 });
