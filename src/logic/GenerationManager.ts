@@ -26,6 +26,9 @@ export class GenerationManager {
     public variants: any[] = [];
     private results = new Map<string,Result>();
     public model: Mesh;
+    private varsData: any[] = [];
+    private objectives: any[] = [];
+    private resultsByEvaluator = new Map<string, number[]>(); 
     // private sortedResults = 
 
     constructor( generator: any,
@@ -38,16 +41,38 @@ export class GenerationManager {
         this.generations = generations;
         this.generator = generator;
         this.strategy = strategy;
+
+        for (let i = 0; i < generator.objectives.length; i++)
+            this.resultsByEvaluator.set(generator.objectives[i], []);
+
+        // console.log('[GenManager: results]', this.resultsByEvaluator)
     }
 
     init(){}
 
     process(){}
 
+    public getResultsByEvaluator(){
+        return this.resultsByEvaluator;
+    }
+
+    public getVarsData(){
+        return this.varsData;
+    }
+
     public populate(inputs: any, options: any, index: number) {
         if( this.populations == 0 || this.generations == 0 ) return;
 
-        this.generator.generateVariant(inputs, options.transX, options.transY, index);
+        let varData = this.generator.generateVariant(inputs, options.transX, options.transY, index);
+        
+        this.varsData.push(varData);
+
+        for ( let [key, value] of Object.entries(varData.outputs)){
+            this.resultsByEvaluator.get(key).push(value as number);
+
+        }
+        // console.log('[GenManager: output]', this.resultsByEvaluator)
+
     }
 
     private getResults() {

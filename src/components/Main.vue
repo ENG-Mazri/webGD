@@ -142,8 +142,8 @@ h3{
 #logo{
   position: absolute;
   bottom: 30px;
-  left: 20px;
-  width: 150px;
+  left: 11px;
+  width: 178px;
 }
 
 /* .dfwe{

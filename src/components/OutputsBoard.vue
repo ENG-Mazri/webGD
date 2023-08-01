@@ -1,7 +1,7 @@
 <template>
   <div class="outputsBoard" ref="$wrapper" @showResultEvent="visualizeResult">
     <n-card class="outputsPanel_main" justify-content="space-evenly">
-      <n-tabs @update:value="handleUpdateValue" type="line" animated justify-content="space-around" :disabled="hasTabs" default-value="3D visual" tab-style="color: #a2588f; font-size: 16px !important;">
+      <n-tabs @update:value="handleUpdateValue" type="line" animated justify-content="space-around" :disabled="hasTabs" default-value="Scatterplot chart" tab-style="color: #a2588f; font-size: 16px !important;">
         <n-tab-pane name="Scatterplot chart" tab="Scatterplot chart">
           <div id="outputsPanel_main">
             <svg id="d3Svg"></svg>
@@ -95,10 +95,10 @@ export default defineComponent({
     //   console.log("D3 panel mounted has study")
     // }
 
-    // this.buildTable();
+    this.buildTable();
     // console.log("[TABLE DATA]: ", this.columns)
 
-    this.buildViewer();
+    // this.buildViewer();
 
     // this.visualizeResult();
 
@@ -115,121 +115,128 @@ export default defineComponent({
       const w = 700;
       const h = 500;
 
-      const svg = d3.select("#d3Svg").attr("width", w).attr("height", h);
-      const _svg = document.getElementById('d3Svg') as HTMLElement;
+      this.$nextTick(()=>{
+        const _svg = document.getElementById('d3Svg') as HTMLElement;
+        const svg = d3.select("#d3Svg").attr("width", w).attr("height", h);
 
-      if (_svg && _svg.lastChild)
+
+        if (_svg && _svg.lastChild)
           while (_svg.lastChild)
               _svg.removeChild(_svg.lastChild);
 
-      const g = svg.append("g");
+        const g = svg.append("g");
 
-      // const GD_results = JSON.parse(localStorage.getItem('gd_result') as any);
-      // if( !GD_results || GD_results.length == 0){
-      //     window?.$message.error('No data to visualize')
-      //     return;
-      // }
-      // const GD_d3 = JSON.parse(localStorage.getItem('gd_d3') as any);
+        // const GD_results = JSON.parse(localStorage.getItem('gd_result') as any);
+        // if( !GD_results || GD_results.length == 0){
+        //     window?.$message.error('No data to visualize')
+        //     return;
+        // }
+        // const GD_d3 = JSON.parse(localStorage.getItem('gd_d3') as any);
+        
+        //TODO: new way - create update data method after generation finished
+        
+        const objectives = [
+          {
+            evaluatorName: "Exterior area",
+            goal: "max"
+          },
+          {
+            evaluatorName: "Podium volume",
+            goal: "min"
+          },
+          {
+            evaluatorName: "Tower volume",
+            goal: "undefined"
+          },
+          {
+            evaluatorName: "Total building area",
+            goal: "undefined"
+          },
+          {
+            evaluatorName: "Total facade area",
+            goal: "undefined"
+          },
+        ];
+
+        // const gd_resultsByEvaluator = []
+
+        const gd_resultsByEvaluator = JSON.parse(localStorage.getItem('gd_resultsByEvaluator') as any);
+        // for (let i = 0; i < objectives.length; i++) {
+
+        //   for ( let [key, value] of Object.entries(objectives[i]))
+        //     if(key == 'evaluatorName') gd_resultsByEvaluator.push(value);
+        // }
+
+        const GD_d3 = {
+          x_axis: Object.keys(gd_resultsByEvaluator)[0],
+          y_axis: Object.keys(gd_resultsByEvaluator)[1],
+          size: Object.keys(gd_resultsByEvaluator)[2],
+          color: Object.keys(gd_resultsByEvaluator)[3]
+        };
+        // localStorage.setItem('gd_d3', JSON.stringify(axisMetrics) );
+        // get results arrays by ovaluator 
+        // const gd_resultsByEvaluator = {
+        //     "Exterior area": [10,15,20,25,30,35,40],
+        //     "Podium volume": [110,115,120,125,130,135,140],
+        //     "Tower volume": [100,150,200,250,300,350,400],
+        //     "Total building area": [10,15,20,25,30,35,40],
+        //     "Total facade area": [10,15,20,25,30,35,40]
+        //   }
+
+        console.log("[TEST: axis]", GD_d3);
+
+        const padding = 50;
+        const maxX = d3.max( [ ...gd_resultsByEvaluator[GD_d3['x_axis']] ], (d,i) => d);
+        const maxY = d3.max( [ ...gd_resultsByEvaluator[GD_d3['y_axis']] ], (d,i) => d);
+        const maxSize = d3.max( [...gd_resultsByEvaluator[GD_d3['size']] ], (d,i) => d);
+
+        const xScale = d3.scaleLinear()
+                          .domain([0, maxX as number])
+                          .range([padding, w - padding]);
+
+        const yScale = d3.scaleLinear()
+                          .domain([0, maxY as number])
+                          .range([h - padding, padding]);
+
+        const sizeScale = d3.scaleLinear()
+                          .domain([0, maxSize as number])
+                          .range([0, 10]);
+
+        // const GD_data = JSON.parse(localStorage.getItem('gd_study') as any);
+        const GD_data = JSON.parse(localStorage.getItem('gd_varsData') as any);
+
+
+        svg.selectAll("circle")
+            .data([...GD_data])
+            .enter()
+            .append("circle")
+            .attr("cx", (d) => xScale(d.outputs[GD_d3['x_axis']]))
+            .attr("cy",(d) => yScale(d.outputs[GD_d3['y_axis']]))
+            .attr("r", (d) => sizeScale(d.outputs[GD_d3['size']]))
+            .attr("id", "scatter")
+            .attr('fill', 'rgba(162, 88, 143, 0.3)')
+            .on("click", (d) => {
+              console.log("CLICKED", d.target.__data__);              
+              // this.showVarData(d.target.__data__);
+            })
+            .append("title")
+            .attr('class', 'svg_tooltip')
+            .text((d) => `Width: ${d.outputs[GD_d3['x_axis']]}`)
+
+        const xAxis = d3.axisBottom(xScale);
+        const yAxis = d3.axisLeft(yScale);
+
+        svg.append("g")
+            .attr("transform", `translate(0, ${(h - padding)})`)
+            .call(xAxis);
+
+        svg.append("g")
+            .attr("transform", `translate(${(padding)}, 0)`)
+            .call(yAxis); 
+
+      })
+
       
-      //TODO: new way - create update data method after generation finished
-      
-      const objectives = [
-        {
-          evaluatorName: "Exterior area",
-          goal: "max"
-        },
-        {
-          evaluatorName: "Podium volume",
-          goal: "min"
-        },
-        {
-          evaluatorName: "Tower volume",
-          goal: "undefined"
-        },
-        {
-          evaluatorName: "Total building area",
-          goal: "undefined"
-        },
-        {
-          evaluatorName: "Total facade area",
-          goal: "undefined"
-        },
-      ];
-
-      const evaluatorsNames = []
-      for (let i = 0; i < objectives.length; i++) {
-
-        for ( let [key, value] of Object.entries(objectives[i]))
-          if(key == 'evaluatorName') evaluatorsNames.push(value);
-      }
-      const GD_d3 = {
-        x_axis: evaluatorsNames[0],
-        y_axis: evaluatorsNames[1],
-        size: evaluatorsNames[2],
-        color: evaluatorsNames[3]
-      };
-      // localStorage.setItem('gd_d3', JSON.stringify(axisMetrics) );
-      // get results arrays by ovaluator 
-      const GD_results = {
-          "Exterior area": [10,15,20,25,30,35,40],
-          "Podium volume": [110,115,120,125,130,135,140],
-          "Tower volume": [100,150,200,250,300,350,400],
-          "Total building area": [10,15,20,25,30,35,40],
-          "Total facade area": [10,15,20,25,30,35,40]
-        }
-
-      // console.log("[TEST: axis]", Object.keys(this.data[0]));
-
-  
-      const padding = 50;
-      const maxX = d3.max( [ ...GD_results[GD_d3['x_axis']] ], (d,i) => d);
-      const maxY = d3.max( [ ...GD_results[GD_d3['y_axis']] ], (d,i) => d);
-      const maxSize = d3.max( [...GD_results[GD_d3['size']] ], (d,i) => d);
-
-      const xScale = d3.scaleLinear()
-                        .domain([0, maxX as number])
-                        .range([padding, w - padding]);
-
-      const yScale = d3.scaleLinear()
-                        .domain([0, maxY as number])
-                        .range([h - padding, padding]);
-
-      const sizeScale = d3.scaleLinear()
-                        .domain([0, maxSize as number])
-                        .range([0, 10]);
-
-      // const GD_data = JSON.parse(localStorage.getItem('gd_study') as any);
-      const GD_data = this.data
-
-
-      svg.selectAll("circle")
-          .data([...GD_data])
-          .enter()
-          .append("circle")
-          .attr("cx", (d) => xScale(d[GD_d3['x_axis']]))
-          .attr("cy",(d) => yScale(d[GD_d3['y_axis']]))
-          .attr("r", (d) => sizeScale(d[GD_d3['size']]))
-          .attr("id", "scatter")
-          .attr('fill', 'rgba(162, 88, 143, 0.3)')
-          .on("click", (d) => {
-            console.log("CLICKED", d.target.__data__);              
-            this.showVarData(d.target.__data__);
-          })
-          // .append("title")
-          // .attr('class', 'svg_tooltip')
-          // .text((d) => `Width: ${d.inputs.width}\nLength: ${d.inputs.length}\nHeight: ${d.inputs.height}`)
-
-      const xAxis = d3.axisBottom(xScale);
-      const yAxis = d3.axisLeft(yScale);
-
-      svg.append("g")
-          .attr("transform", `translate(0, ${(h - padding)})`)
-          .call(xAxis);
-
-      svg.append("g")
-          .attr("transform", `translate(${(padding)}, 0)`)
-          .call(yAxis); 
-
     },
     varViewer() {
       // let resultsData = JSON.parse(localStorage.getItem('gd_study') as any);
@@ -308,22 +315,36 @@ export default defineComponent({
       // let resultsData = JSON.parse(localStorage.getItem('gd_study') as any);
 
       // const gens = resultsData.length;
-      const threeContainer = document.getElementById('gallery_container') as HTMLElement;
+      this.$nextTick(()=>{
+        const threeContainer = document.getElementById('gallery_container') as HTMLElement;
+        while (threeContainer.firstChild) {
+          threeContainer.removeChild(threeContainer.lastChild as ChildNode);
+        }
+        
+        let canvas = document.createElement("canvas");
+        canvas.classList.add("result_canvas");
+        canvas.id = "three_canvas"
+        threeContainer.appendChild(canvas);
+        let v = new Viewer(canvas, []);
+        let interval = setInterval( async ()=>{
+            const blob = await IDB.getDataByKeyAsync('glb');
+            if(blob){
+                clearInterval(interval);
+                // console.log('[Viewer:Blob] ', blob)
+                await v.init(canvas, [], blob)
 
+            }
+        }, 100)
+
+      })
       // console.log("[Generations]: ", gens);
       //* Clear all children if any
-      while (threeContainer.firstChild) {
-        threeContainer.removeChild(threeContainer.lastChild as ChildNode);
-      }
-      
+
       // const data = {inputs: {width: 20, height: 30, length: 80}};
       // const canvas = document.getElementById("three-canvas") as HTMLElement;
       // const viewer = new Viewer(canvas, data);
       // for ( let i=0; i < 1; i++) {
-      let canvas = document.createElement("canvas");
-      canvas.classList.add("result_canvas");
-      canvas.id = "three_canvas"
-      threeContainer.appendChild(canvas);
+
 
       //*Building Mass Generator testings
       const mock_contour = [
@@ -351,16 +372,7 @@ export default defineComponent({
       // console.log('[Mass mesh]', genManager.model)
       // //* Run viewer instance 
       // new Viewer(canvas, [genManager.model])
-      let v = new Viewer(canvas, []);
-      let interval = setInterval( async ()=>{
-          const blob = await IDB.getDataByKeyAsync('glb');
-          if(blob){
-              clearInterval(interval);
-              // console.log('[Viewer:Blob] ', blob)
-              await v.init(canvas, [], blob)
 
-          }
-      }, 100)
     },
     buildTable(){
       const GD_results = JSON.parse(localStorage.getItem('gd_result'));
@@ -433,23 +445,44 @@ export default defineComponent({
         }
       ]
 
+      const GD_data = JSON.parse(localStorage.getItem('gd_varsData') as any);
       
-      const mock_columns = mock_table_data[0]
-      const keys = Object.keys(mock_columns);
-      for( let i = 0; i < keys.length; i++ )
-        this.columns.push({title: keys[i], key: keys[i]})
+      // const mock_columns = mock_table_data[0]
+      // const keys = Object.keys(mock_columns);
 
-      this.data = mock_table_data
+      // for( let i = 0; i < keys.length; i++ )
+      //   this.columns.push({title: keys[i], key: keys[i]})
 
-      // for( let i = 0; i < mock_table_data.length; i++ ) {
-      //   let outs = Object.keys(mock_table_data[i].outputs);
-      //   let data = {};
+      // this.data = mock_table_data
+      this.columns = [
+        {title: 'Generation №', key: 'generation'},
+        {title: 'Variant №', key: 'variant'},  
+        {title: 'Exterior area', key: 'exteriorArea'},
+        {title: 'Podium volume', key: 'podiumVolume'},
+        {title: 'Tower volume', key: 'towerVolume'},
+        {title: 'Total building area', key: 'totalBuildingArea'},
+        {title: 'Facade area', key: 'facadeArea'},
 
-      //   for( let j = 0; j < outs.length; j++ ){
-      //     data[keys[j]] = mock_table_data[i].outputs[keys[j]];
-      //   }
-      //   this.data.push(data);
-      // }
+      ]
+      
+      // const keys = Object.keys(GD_data[0].outputs);
+
+      // for( let i = 0; i < keys.length; i++ )
+      //   this.columns.push({title: keys[i], key: keys[i]})
+
+      
+      for( let i = 0; i < GD_data.length; i++ ) {
+        let outs = Object.keys(GD_data[i].outputs);
+        let data = {};
+
+        for( let j = 0; j < outs.length; j++ ){
+          data[outs[j]] = GD_data[i].outputs[outs[j]];
+        }
+        data['generation'] = GD_data[i].generation;
+        data['variant'] = GD_data[i].varNum;
+
+        this.data.push(data);
+      }
 
 
       // if( GD_results && this.hasStudy ){
@@ -475,10 +508,8 @@ export default defineComponent({
     handleUpdateValue(value: any){
       switch (value) {
         case 'Scatterplot chart':
-          this.$nextTick(()=>{
+
             this.visualizeResult()
-          })
-            
           break;
 
         case 'Data table':

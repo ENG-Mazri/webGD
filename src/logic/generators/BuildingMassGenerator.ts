@@ -25,6 +25,7 @@ import {ShapeUtils} from 'three/src/extras/ShapeUtils.js';
 import fontJSON from "three/examples/fonts/droid/droid_sans_bold.typeface.json"
 // @ts-ignore
 // import MGWorker from './MassGeneratorWorker?worker&inline';
+import { v4 as uuidv4 } from 'uuid';
 import {mergeGeometries} from 'three/examples/jsm/utils/BufferGeometryUtils.js'
 
 /*// TODO: Mass Generation logic
@@ -66,6 +67,14 @@ export class BuildingMassGenerator extends Generator {
 
   private LINE_MESHES  = [];
   private TEXT_MESHES  = [];
+  private generatorName = 'Building mass';
+  public objectives = [
+    'exteriorArea',
+    'podiumVolume',
+    'towerVolume',
+    'totalBuildingArea',
+    'facadeArea'
+  ]
 
   constructor(){
       super()
@@ -106,6 +115,14 @@ export class BuildingMassGenerator extends Generator {
         bevelOffset: 0,
         bevelSegments: 0
     };
+
+    const inputsObj = {
+      site_offset,
+      total_floors,
+      tower_floor_height, 
+      podium_floor_height,
+      contour
+    }
 
     const offsetedContour = this.offsetContour( site_offset, contour );
     const CONTOUR = this.getTranslatedContour(offsetedContour, transX, transY);
@@ -237,7 +254,7 @@ export class BuildingMassGenerator extends Generator {
     
 
     //TODO: create a text entity for each generator
-    console.log('[Generator: variant]', index)
+    // console.log('[Generator: variant]', index)
 
     const totalGeometry  = mergeGeometries( [...this.SLAB_GEOMETRIES, ...this.SPACE_GEOMETRIES] );
 
@@ -252,6 +269,18 @@ export class BuildingMassGenerator extends Generator {
                   ];
 
     this.TEXT_MESHES.push( ...this.createText( text, CONTOUR[0].x - 5 , CONTOUR[0].y) );
+  
+  const varData = {
+    generation: 1,
+    id: uuidv4(),
+    varNum: index, 
+    strategy: 'Radomize',
+    generator: this.generatorName,
+    inputs: inputsObj,
+    otherMetrics: {},
+    outputs: results
+  }
+  return varData;
 }
 
 private createText( text: string[], offsetX = 1, offsetY = 1 ): Mesh[]{
@@ -784,8 +813,8 @@ private createText( text: string[], offsetX = 1, offsetY = 1 ): Mesh[]{
     const tower_volume = total_volume - podium_volume;
     const {towerFacadeArea, towerTotalArea} = this.evaluateTower( towerShapes, towerFloorHeight );
     const {podiumFacadeArea, podiumTotalArea} = this.evaluatePodium(podium.top_contour, podiumFloorHeight, podiumFloorsCount);
-    console.log('[Generator: Facade area] ', podiumFacadeArea , towerFacadeArea);
-    console.log('[Generator: Total area] ', podiumTotalArea , towerTotalArea);
+    // console.log('[Generator: Facade area] ', podiumFacadeArea , towerFacadeArea);
+    // console.log('[Generator: Total area] ', podiumTotalArea , towerTotalArea);
 
 
     return {
@@ -855,13 +884,13 @@ private createText( text: string[], offsetX = 1, offsetY = 1 ): Mesh[]{
           length_2 = d;
           width_2 = c;
         }
-        console.log('[Generator: Type B] ', a,b,c,d);
+        // console.log('[Generator: Type B] ', a,b,c,d);
 
         const inter_dist = Math.abs(length_1 - length_2);
         let area_1 = (length_1 * towerFloorHeight) + ((width_1 * towerFloorHeight) * 2) + ((length_1 - inter_dist) * towerFloorHeight);
         let area_2 = (length_2 * towerFloorHeight) + ((width_2 * towerFloorHeight) * 2) + ((length_2 - inter_dist) * towerFloorHeight);
         let add_area = ((length_2 * towerFloorHeight) * 2) + ((width_2 * towerFloorHeight) * 2);
-        console.log('[Generator: Type B areas] ', area_1, area_2, add_area);
+        // console.log('[Generator: Type B areas] ', area_1, area_2, add_area);
         
         total_facade_area = (area_1 * shortest_shape.num_floors) + (area_2 * shortest_shape.num_floors) + (add_area * dif);
 

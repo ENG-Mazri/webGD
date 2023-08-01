@@ -58,9 +58,15 @@ onmessage = async (event) => {
     let model = bldMassGen.getModelMesh();
 
     genManager.model = model;
+    const varsData = genManager.getVarsData();
+    const resultsByEvaluator = genManager.getResultsByEvaluator();
+    // console.log('[Worker: results] ', resultsByEvaluator)
 
     await genManager.getGlbFromGeneration(model, uuidv4()).then(()=>{
-      postMessage({type: 'onFinished'});
+      postMessage({type: 'onFinished',
+        varsData,
+        resultsByEvaluator
+      });
 
     });
 

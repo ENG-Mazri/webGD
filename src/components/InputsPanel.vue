@@ -341,24 +341,24 @@ export default defineComponent({
             }
             this.showOutputs = true;
         }
-        const genManager = new GenerationManager(   BuildingMassGenerator,
-                                                    this.strategy,
-                                                    [],
-                                                    this.populations);
-        console.log('[Gen Manager]: ', genManager);
-        this.$nextTick( async ()=>{
+        // const genManager = new GenerationManager(   BuildingMassGenerator,
+        //                                             this.strategy,
+        //                                             [],
+        //                                             this.populations);
+        // console.log('[Gen Manager]: ', genManager);
+        // this.$nextTick( async ()=>{
 
-            const canvas = document.getElementById('three_canvas');
-            let v = new Viewer(canvas, []);
+        //     const canvas = document.getElementById('three_canvas');
+        //     let v = new Viewer(canvas, []);
     
-            const blob = await IDB.getDataByKeyAsync('glb');
-            // console.log('[Viewer:Blob onMount] ', blob)
+        //     const blob = await IDB.getDataByKeyAsync('glb');
+        //     // console.log('[Viewer:Blob onMount] ', blob)
             
-            if(blob){
-                console.log('[Viewer:Blob onMount] ', blob, canvas)
-                await v.init(canvas, [], blob)
-            }
-        })
+        //     if(blob){
+        //         console.log('[Viewer:Blob onMount] ', blob, canvas)
+        //         await v.init(canvas, [], blob)
+        //     }
+        // })
 
 
 
@@ -418,17 +418,20 @@ export default defineComponent({
             // console.log('[Inputs]: ', inputs)
             // console.log('[Store]: ', this.store.design)
             this.isProcessing = true;
-
+            let threeContainer, viewer, canvas;
             if(!document.getElementById('three_canvas')){
 
-                const threeContainer = document.getElementById('gallery_container') as HTMLElement;
-                while (threeContainer.firstChild) {
-                threeContainer.removeChild(threeContainer.lastChild as ChildNode);
+                threeContainer = document.getElementById('gallery_container') as HTMLElement;
+                if (threeContainer){
+                    while (threeContainer.firstChild) {
+                        threeContainer.removeChild(threeContainer.lastChild as ChildNode);
+                    }
+
+                    let canvas = document.createElement("canvas");
+                    canvas.classList.add("result_canvas");
+                    canvas.id = "three_canvas"
+                    threeContainer.appendChild(canvas);
                 }
-                let canvas = document.createElement("canvas");
-                canvas.classList.add("result_canvas");
-                canvas.id = "three_canvas"
-                threeContainer.appendChild(canvas);
             }
 
             const worker = new Worker(new URL('../workers/GeneratorWorker.js', import.meta.url));
@@ -444,21 +447,29 @@ export default defineComponent({
 
                 if(event.data.type == 'onFinished'){
                     this.$emit(GDEvents.Generation_completed)
-                    const canvas = document.getElementById('three_canvas');
-                    let v = new Viewer(canvas, []);
+                
+                    if (threeContainer){
+                        const canvas = document.getElementById('three_canvas');
+                        viewer = new Viewer(canvas, []);
 
-                    this.genProgress = 100;
-                    // let blob: any;
-                    let glbStatus = 0;
-                    let interval = setInterval( async ()=>{
-                        const blob = await IDB.getDataByKeyAsync('glb');
-                        if(blob){
-                            clearInterval(interval);
-                            // console.log('[Viewer:Blob] ', blob)
-                            await v.init(canvas, [], blob)
+                    }
+                    
 
-                        }
-                    }, 500)
+                localStorage.setItem('gd_varsData', JSON.stringify(event.data.varsData))
+                localStorage.setItem('gd_resultsByEvaluator', JSON.stringify(Object.fromEntries(event.data.resultsByEvaluator) ))
+
+                this.genProgress = 100;
+                // let blob: any;
+                let glbStatus = 0;
+                // let interval = setInterval( async ()=>{
+                //     const blob = await IDB.getDataByKeyAsync('glb');
+                //     if(blob){
+                //         clearInterval(interval);
+                //         // console.log('[Viewer:Blob] ', blob)
+                //         await vviewer.init(canvas, [], blob)
+
+                //     }
+                // }, 500)
                 } 
             };
 
@@ -646,8 +657,10 @@ export default defineComponent({
             const threeContainer = document.getElementById('gallery_container') as HTMLElement;
 
             //* Clear all children if any
-            while (threeContainer.firstChild) {
-                threeContainer.removeChild(threeContainer.lastChild as ChildNode);
+            if (threeContainer){
+                while (threeContainer.firstChild) {
+                    threeContainer.removeChild(threeContainer.lastChild as ChildNode);
+                }
             }
 
         },
