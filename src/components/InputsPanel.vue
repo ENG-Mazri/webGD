@@ -1,132 +1,139 @@
 <template>
     <div class='panel'>
-        <n-collapse class='panel-collapse' default-expanded-names="1"> <!-- Function -->
-            <n-collapse-item class="parent_panels" title="Inputs" name="1" style="margin: 0px 2px;" default-expanded-names="3"><!-- Inputs -->
-                <template #arrow>
-                    <n-icon>
-                        <inputIcon/>
-                    </n-icon>
-                </template>
-                <n-collapse class='panel-collapse'> <!-- Generators -->
-                    <template #arrow>
-                        <n-icon>
-                            <functionsIcon/>
-                        </n-icon>
-                    </template>
-    
-                    <n-collapse-item title="Generators" name="1">
-                        <n-select id='generator' v-model:value="genFunction" :options="generationFunctions" default-value="Building mass" placeholder='Input types'/>
-                        <n-button text color="#9cabb4" @click="showModal = true">
-                            <template #icon>
-                                <n-icon>
-                                <helpIcon />
-                                </n-icon>
-                            </template>
-                            Function's information
-                        </n-button>
-                        <n-modal v-model:show="showModal">
-                            <n-card
-                                style="width: 600px"
-                                title="Informations"
-                                :bordered="false"
-                                size="huge"
-                                role="dialog"
-                                aria-modal="true"
-                            >
-                                <template #header-extra>
-                                    Function's usage
+
+                <!-- <img src="../assets/dse.svg"/> -->
+                <n-collapse class='panel-collapse' default-expanded-names="1"> <!-- Function -->
+                    <n-collapse-item class="parent_panels" title="Inputs" name="1" style="margin: 0px 2px;" default-expanded-names="3"><!-- Inputs -->
+                        <template #arrow>
+                            <n-icon>
+                                <inputIcon/>
+                            </n-icon>
+                        </template>
+                        <n-scrollbar style="max-height: 400px" trigger='none'>
+                            <div>
+                            <n-collapse class='panel-collapse'> <!-- Generators -->
+                                <template #arrow>
+                                    <n-icon>
+                                        <functionsIcon/>
+                                    </n-icon>
                                 </template>
-                            </n-card>
-                        </n-modal>
+                
+                                <n-collapse-item title="Generators" name="1">
+                                    <n-select id='generator' v-model:value="genFunction" :options="generationFunctions" default-value="Building mass" placeholder='Input types'/>
+                                    <n-button text color="#9cabb4" @click="showModal = true">
+                                        <template #icon>
+                                            <n-icon>
+                                            <helpIcon />
+                                            </n-icon>
+                                        </template>
+                                        Function's information
+                                    </n-button>
+                                    <n-modal v-model:show="showModal">
+                                        <n-card
+                                            style="width: 600px"
+                                            title="Informations"
+                                            :bordered="false"
+                                            size="huge"
+                                            role="dialog"
+                                            aria-modal="true"
+                                        >
+                                            <template #header-extra>
+                                                Function's usage
+                                            </template>
+                                        </n-card>
+                                    </n-modal>
+                                </n-collapse-item>
+                            </n-collapse>
+                            <n-collapse class='panel-collapse'> <!-- Strategy -->
+                            <template #arrow>
+                                    <n-icon>
+                                        <strategyIcon/>
+                                    </n-icon>
+                                </template>
+                                <n-collapse-item title="Strategy" name="1">
+                                    <n-select id='input_type' :options="strategies" v-model:value="strategy" placeholder='Input types'/>
+                                </n-collapse-item>
+                            </n-collapse>
+                            <n-collapse class='panel-collapse' name="3"> <!-- Variables -->
+                                <template #arrow>
+                                    <n-icon>
+                                        <variableIcon/>
+                                    </n-icon>
+                                </template>
+                                <n-collapse-item title="Variables" name="1">
+                                    <!-- <InputVue :function="genFunction"/> -->
+                                    <BoxInputVue v-if="genFunction == 'Box'" :function="strategy"/>
+                                    <BuildingMassInputVue v-if="genFunction == 'Building mass'" :function="strategy"/>
+                                </n-collapse-item>
+                            </n-collapse>
+                            <n-collapse v-if="strategy == 'Optimize'" class='panel-collapse'><!-- Objectives -->
+                            <template #arrow>
+                                    <n-icon>
+                                        <goalIcon/>
+                                    </n-icon>
+                                </template>
+                                <n-collapse-item title="Objectives" name="1">
+                                    <BoxObjectives v-if="genFunction == 'Box'" :function="strategy"/>
+                                    <BuildingMassObjectives v-if="genFunction == 'Building mass'" :function="strategy"/>
+                                </n-collapse-item>
+                            </n-collapse>
+                            <n-collapse class='panel-collapse'> <!-- Design Options -->
+                            <template #arrow>
+                                    <n-icon>
+                                        <optionsIcon/>
+                                    </n-icon>
+                                </template>
+                                <n-collapse-item title="Design options" name="1">
+                                    <n-input-number clearable :precision="0" min="1" max="50"  v-model:value="populations" placeholder='Populations' >
+                                        <template #prefix>
+                                            Populations
+                                        </template>    
+                                    </n-input-number>
+                                    <n-input-number :disabled="strategy !== 'Optimize'" clearable :precision="0" min="1" max="10"  v-model:value="generations" placeholder='Generations' >
+                                        <template #prefix>
+                                            Generations
+                                        </template>    
+                                    </n-input-number>
+                                    <!-- <n-input-number clearable :precision="0" placeholder='Seed'/> -->
+                                </n-collapse-item>
+                            </n-collapse>
+                            </div>
+                        </n-scrollbar>
+                    </n-collapse-item>
+                    <n-collapse-item v-if="hasStudy" class="parent_panels" title="Outputs" name="2" style="margin: 0px 2px;"><!-- Outputs -->
+                        <template #arrow>
+                            <n-icon>
+                                <outputIcon/>
+                            </n-icon>
+                        </template>
+                        <OutputsPanel/>
+                    </n-collapse-item>
+                    <n-collapse-item class="parent_panels" title="Project settings" name="3" style="margin: 0px 2px;"><!-- Project settings -->
+                        <template #arrow>
+                            <n-icon>
+                                <settingsIcon/>
+                            </n-icon>
+                        </template>
+                        <div class='project_settings'>
+                            <n-button text>Export result .xlsx</n-button>
+                            <n-button text>Export result .zip</n-button>
+                            <n-button text>Export result images</n-button>
+                        </div>
                     </n-collapse-item>
                 </n-collapse>
-                <n-collapse class='panel-collapse'> <!-- Strategy -->
-                <template #arrow>
-                        <n-icon>
-                            <strategyIcon/>
-                        </n-icon>
-                    </template>
-                    <n-collapse-item title="Strategy" name="1">
-                        <n-select id='input_type' :options="strategies" v-model:value="strategy" placeholder='Input types'/>
-                    </n-collapse-item>
-                </n-collapse>
-                <n-collapse class='panel-collapse' name="3"> <!-- Variables -->
+                <!-- <n-collapse class='panel-collapse settings'>
                     <template #arrow>
                         <n-icon>
-                            <variableIcon/>
+                            <helpIcon/>
                         </n-icon>
                     </template>
-                    <n-collapse-item title="Variables" name="1">
-                        <!-- <InputVue :function="genFunction"/> -->
-                        <BoxInputVue v-if="genFunction == 'Box'" :function="strategy"/>
-                        <BuildingMassInputVue v-if="genFunction == 'Building mass'" :function="strategy"/>
+                    <n-collapse-item title="Informations" name="1" >
+                        <div class='informations'>
+                            <n-button text>Export result .xlsx</n-button>
+                        </div>
                     </n-collapse-item>
-                </n-collapse>
-                <n-collapse v-if="strategy == 'Optimize'" class='panel-collapse'><!-- Objectives -->
-                <template #arrow>
-                        <n-icon>
-                            <goalIcon/>
-                        </n-icon>
-                    </template>
-                    <n-collapse-item title="Objectives" name="1">
-                        <BoxObjectives v-if="genFunction == 'Box'" :function="strategy"/>
-                        <BuildingMassObjectives v-if="genFunction == 'Building mass'" :function="strategy"/>
-                    </n-collapse-item>
-                </n-collapse>
-                <n-collapse class='panel-collapse'> <!-- Design Options -->
-                <template #arrow>
-                        <n-icon>
-                            <optionsIcon/>
-                        </n-icon>
-                    </template>
-                    <n-collapse-item title="Design options" name="1">
-                        <n-input-number clearable :precision="0" min="1" max="50"  v-model:value="populations" placeholder='Populations' >
-                            <template #prefix>
-                                Populations
-                            </template>    
-                        </n-input-number>
-                        <n-input-number :disabled="strategy !== 'Optimize'" clearable :precision="0" min="1" max="10"  v-model:value="generations" placeholder='Generations' >
-                            <template #prefix>
-                                Generations
-                            </template>    
-                        </n-input-number>
-                        <!-- <n-input-number clearable :precision="0" placeholder='Seed'/> -->
-                    </n-collapse-item>
-                </n-collapse>
-            </n-collapse-item>
-            <n-collapse-item v-if="hasStudy" class="parent_panels" title="Outputs" name="2" style="margin: 0px 2px;"><!-- Outputs -->
-                <template #arrow>
-                    <n-icon>
-                        <outputIcon/>
-                    </n-icon>
-                </template>
-                <OutputsPanel/>
-            </n-collapse-item>
-            <n-collapse-item class="parent_panels" title="Project settings" name="3" style="margin: 0px 2px;"><!-- Project settings -->
-                <template #arrow>
-                    <n-icon>
-                        <settingsIcon/>
-                    </n-icon>
-                </template>
-                <div class='project_settings'>
-                    <n-button text>Export result .xlsx</n-button>
-                    <n-button text>Export result .zip</n-button>
-                    <n-button text>Export result images</n-button>
-                </div>
-            </n-collapse-item>
-        </n-collapse>
-        <!-- <n-collapse class='panel-collapse settings'>
-            <template #arrow>
-                <n-icon>
-                    <helpIcon/>
-                </n-icon>
-            </template>
-            <n-collapse-item title="Informations" name="1" >
-                <div class='informations'>
-                    <n-button text>Export result .xlsx</n-button>
-                </div>
-            </n-collapse-item>
-        </n-collapse> -->
+                </n-collapse> -->
+
         <div class='outputPanel'> <!-- Toolbar -->
             <n-tooltip trigger="hover" placement="bottom">
                 <template #trigger>
@@ -169,6 +176,7 @@
                 Clear results
             </n-tooltip>      
         </div>
+
     </div>
 
     <n-modal v-model:show="isProcessing"><!-- Progress modal -->
@@ -337,7 +345,7 @@ export default defineComponent({
                                                     this.strategy,
                                                     [],
                                                     this.populations);
-        console.log('[Gen Manager]: ', genManager)
+        console.log('[Gen Manager]: ', genManager);
         this.$nextTick( async ()=>{
 
             const canvas = document.getElementById('three_canvas');

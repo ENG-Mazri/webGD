@@ -1,7 +1,7 @@
 <template>
   <div class="outputsBoard" ref="$wrapper" @showResultEvent="visualizeResult">
     <n-card class="outputsPanel_main" justify-content="space-evenly">
-      <n-tabs @click="tabChange" type="line" animated justify-content="space-around" :disabled="hasTabs" default-value="Scatterplot chart" tab-style="color: #a2588f; font-size: 16px !important;">
+      <n-tabs @click="tabChange" type="line" animated justify-content="space-around" :disabled="hasTabs" default-value="3D visual" tab-style="color: #a2588f; font-size: 16px !important;">
         <n-tab-pane name="Scatterplot chart" tab="Scatterplot chart">
           <div id="outputsPanel_main">
             <svg id="d3Svg"></svg>
@@ -15,7 +15,7 @@
             max-height=500
           />
         </n-tab-pane>
-        <n-tab-pane name="3D space" tab="3D visual" style="height: 520px">
+        <n-tab-pane name="3D visual" tab="3D visual" style="height: 35rem">
           <!-- <n-scrollbar style="max-height: 550px"> -->
           <div class="results3D" id="gallery_container">
           </div>
@@ -95,12 +95,12 @@ export default defineComponent({
     //   console.log("D3 panel mounted has study")
     // }
 
-    this.buildTable();
+    // this.buildTable();
     // console.log("[TABLE DATA]: ", this.columns)
 
-    // this.buildViewer();
+    this.buildViewer();
 
-    this.visualizeResult();
+    // this.visualizeResult();
 
 
     // const GD_d3 = JSON.parse(localStorage.getItem('gd_d3') as any);
@@ -112,7 +112,7 @@ export default defineComponent({
   },
   methods: {
     visualizeResult(){
-      const w = 500;
+      const w = 700;
       const h = 500;
 
       const svg = d3.select("#d3Svg").attr("width", w).attr("height", h);
@@ -178,13 +178,10 @@ export default defineComponent({
           "Total facade area": [10,15,20,25,30,35,40]
         }
 
-
-        
-
       // console.log("[TEST: axis]", Object.keys(this.data[0]));
 
   
-      const padding = 60;
+      const padding = 50;
       const maxX = d3.max( [ ...GD_results[GD_d3['x_axis']] ], (d,i) => d);
       const maxY = d3.max( [ ...GD_results[GD_d3['y_axis']] ], (d,i) => d);
       const maxSize = d3.max( [...GD_results[GD_d3['size']] ], (d,i) => d);
@@ -487,8 +484,8 @@ export default defineComponent({
 }
 
 #d3Svg{
-  margin: 10px 100px;
-  /* background-color: #efefef; */
+  margin: 10px; 
+  /*30px;background-color: #efefef; */
 
 }
 
@@ -505,7 +502,7 @@ export default defineComponent({
 }
 
 .outputsPanel_main{
-  height: 75% !important;
+  height: 100% !important;
 }
 
 .carousel-img {

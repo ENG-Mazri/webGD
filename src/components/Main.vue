@@ -6,6 +6,7 @@
     <OutputsBoard :msg="mockData" :hasStudy="hasStudy"/>
     <!-- <VarResultPanel/> -->
   </n-space>
+  <img src="../../public/dse.svg" id="logo"/>
   <p id="app_stamp">Design space explorer - 2023</p>
 </template>
 
@@ -136,6 +137,13 @@ h3{
   font-size: 12px;
   font-family: 'Chakra Petch', sans-serif;
 
+}
+
+#logo{
+  position: absolute;
+  bottom: 30px;
+  left: 20px;
+  width: 150px;
 }
 
 /* .dfwe{
