@@ -1,7 +1,7 @@
 <template>
   <div class="outputsBoard" ref="$wrapper" @showResultEvent="visualizeResult">
     <n-card class="outputsPanel_main" justify-content="space-evenly">
-      <n-tabs @click="tabChange" type="line" animated justify-content="space-around" :disabled="hasTabs" default-value="3D visual" tab-style="color: #a2588f; font-size: 16px !important;">
+      <n-tabs @update:value="handleUpdateValue" type="line" animated justify-content="space-around" :disabled="hasTabs" default-value="3D visual" tab-style="color: #a2588f; font-size: 16px !important;">
         <n-tab-pane name="Scatterplot chart" tab="Scatterplot chart">
           <div id="outputsPanel_main">
             <svg id="d3Svg"></svg>
@@ -15,7 +15,7 @@
             max-height=500
           />
         </n-tab-pane>
-        <n-tab-pane name="3D visual" tab="3D visual" style="height: 35rem">
+        <n-tab-pane display-directive="show:lazy" name="3D visual" tab="3D visual" style="height: 35rem">
           <!-- <n-scrollbar style="max-height: 550px"> -->
           <div class="results3D" id="gallery_container">
           </div>
@@ -41,6 +41,7 @@ import {BuildingMassGenerator} from '../logic/generators/BuildingMassGenerator';
 import {GenerationManager} from '../logic/GenerationManager';
 //@ts-ignore
 // import * as GeneratorWorker from '../logic/generators/MassGeneratorWorker';
+import {IDB} from '../IDB'
 
 export default defineComponent({
   components:{
@@ -86,7 +87,6 @@ export default defineComponent({
     // genWorker.postMessage({type: 'process'})
 
     let hasStudy = JSON.parse(localStorage.getItem('gd_hasStudy') as any);
-
 
     // if(hasStudy) {
     //   this.visualizeResult();
@@ -283,18 +283,23 @@ export default defineComponent({
         
         this.varViewer();
     },
-    tabChange(){
-      // console.log("Tab click")
+    tabChange(e){
 
+      console.log("Tab click")
       // * SVG output
-      const threeContainer = document.getElementById('gallery_container') as HTMLElement;
+      const three_canvas = document.getElementById('three_canvas') as HTMLElement;
+      // this.$nextTick(()=>{
+        
+      //   const threeContainer = document.getElementById('gallery_container') as HTMLElement;
+      //   console.log("Tab click", threeContainer)
+      //   if(threeContainer) {//&& this.hasStudy
+      //     this.buildViewer()
+      //   }
+      // })
 
-      if(threeContainer && !this.hasViewer) {//&& this.hasStudy
-        this.buildViewer()
-      }
       //* SVG output
-      const svg = document.getElementById('d3Svg') as HTMLElement;
-      if(svg && this.hasStudy) this.visualizeResult()
+      // const svg = document.getElementById('d3Svg') as HTMLElement;
+      // if(svg && this.hasStudy) this.visualizeResult()
 
     },
     buildViewer() {
@@ -346,13 +351,21 @@ export default defineComponent({
       // console.log('[Mass mesh]', genManager.model)
       // //* Run viewer instance 
       // new Viewer(canvas, [genManager.model])
+      let v = new Viewer(canvas, []);
+      let interval = setInterval( async ()=>{
+          const blob = await IDB.getDataByKeyAsync('glb');
+          if(blob){
+              clearInterval(interval);
+              // console.log('[Viewer:Blob] ', blob)
+              await v.init(canvas, [], blob)
 
-
-      // }
+          }
+      }, 100)
     },
     buildTable(){
       const GD_results = JSON.parse(localStorage.getItem('gd_result'));
       const GD_study = JSON.parse(localStorage.getItem('gd_study'));
+      if(this.data.length > 0 || this.columns.length > 0 ) return
 
       const mock_table_data = [
         {
@@ -420,7 +433,7 @@ export default defineComponent({
         }
       ]
 
-
+      
       const mock_columns = mock_table_data[0]
       const keys = Object.keys(mock_columns);
       for( let i = 0; i < keys.length; i++ )
@@ -458,6 +471,31 @@ export default defineComponent({
 
       //   // this.buildViewer();
       // }
+    },
+    handleUpdateValue(value: any){
+      switch (value) {
+        case 'Scatterplot chart':
+          this.$nextTick(()=>{
+            this.visualizeResult()
+          })
+            
+          break;
+
+        case 'Data table':
+          this.$nextTick(()=>{
+            this.buildTable()
+          })
+          break;
+        
+        case '3D visual':
+          this.$nextTick(()=>{
+            this.buildViewer()
+          })
+          break;
+
+        default:
+          break;
+      }
     }
   }
 });
@@ -512,7 +550,7 @@ export default defineComponent({
 }
 
 .n-tabs{
-  --n-bar-color:#a2588f !important;
+  --n-bar-color:#153048 !important;
   font-size: 16px !important;
   font-weight: bold !important;
   font-family: 'Chakra Petch', sans-serif !important;
@@ -520,6 +558,10 @@ export default defineComponent({
 
 .n-tabs-pane-wrapper{
   /* height: 700px !important; */
+}
+
+.n-tabs-tab__label{
+  color: #153048 !important
 }
 
 .n-card{

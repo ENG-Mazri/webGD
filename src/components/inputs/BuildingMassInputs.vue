@@ -322,8 +322,8 @@ export default defineComponent({
 <style>
 .inputs{
     background-color: #9cabb4;
-    padding: 10px 5px;
-    margin: 3px 0px;
+    padding: 10px 4%;
+    margin: 3px 1%;
 
 }
 

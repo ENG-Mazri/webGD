@@ -671,7 +671,7 @@ h3{
     position: absolute;
     left: 5px;
     top: 35px;
-    width: 20%; /*17*/
+    width: 18%; /*17*/
     background-color: #efefef;
     margin: 3px;
     padding: 5px;
