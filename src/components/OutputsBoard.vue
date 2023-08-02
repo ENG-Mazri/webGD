@@ -42,6 +42,8 @@ import {GenerationManager} from '../logic/GenerationManager';
 //@ts-ignore
 // import * as GeneratorWorker from '../logic/generators/MassGeneratorWorker';
 import {IDB} from '../IDB'
+import {schemePurples} from "d3-scale-chromatic";
+
 
 export default defineComponent({
   components:{
@@ -95,12 +97,12 @@ export default defineComponent({
     //   console.log("D3 panel mounted has study")
     // }
 
-    this.buildTable();
+    // this.buildTable();
     // console.log("[TABLE DATA]: ", this.columns)
 
     // this.buildViewer();
 
-    // this.visualizeResult();
+    this.visualizeResult();
 
 
     // const GD_d3 = JSON.parse(localStorage.getItem('gd_d3') as any);
@@ -112,13 +114,20 @@ export default defineComponent({
   },
   methods: {
     visualizeResult(){
-      const w = 700;
-      const h = 500;
+      // const w = 700;
+      // const h = 500;
+      var margin = {top: 10, right: 10, bottom: 10, left: 10},
+          w= 700 - margin.left - margin.right,
+          h = 500 - margin.top - margin.bottom;
 
       this.$nextTick(()=>{
         const _svg = document.getElementById('d3Svg') as HTMLElement;
-        const svg = d3.select("#d3Svg").attr("width", w).attr("height", h);
-
+        const svg = d3.select("#d3Svg")//.attr("width", w).attr("height", h);
+                      .attr("width", w + margin.left + margin.right)
+                      .attr("height", h + margin.top + margin.bottom)
+                      // .attr("transform",
+                      //       "translate(" + margin.left + "," + margin.top + ")");
+                      // .append("g")
 
         if (_svg && _svg.lastChild)
           while (_svg.lastChild)
@@ -158,14 +167,7 @@ export default defineComponent({
           },
         ];
 
-        // const gd_resultsByEvaluator = []
-
         const gd_resultsByEvaluator = JSON.parse(localStorage.getItem('gd_resultsByEvaluator') as any);
-        // for (let i = 0; i < objectives.length; i++) {
-
-        //   for ( let [key, value] of Object.entries(objectives[i]))
-        //     if(key == 'evaluatorName') gd_resultsByEvaluator.push(value);
-        // }
 
         const GD_d3 = {
           x_axis: Object.keys(gd_resultsByEvaluator)[0],
@@ -173,22 +175,13 @@ export default defineComponent({
           size: Object.keys(gd_resultsByEvaluator)[2],
           color: Object.keys(gd_resultsByEvaluator)[3]
         };
-        // localStorage.setItem('gd_d3', JSON.stringify(axisMetrics) );
-        // get results arrays by ovaluator 
-        // const gd_resultsByEvaluator = {
-        //     "Exterior area": [10,15,20,25,30,35,40],
-        //     "Podium volume": [110,115,120,125,130,135,140],
-        //     "Tower volume": [100,150,200,250,300,350,400],
-        //     "Total building area": [10,15,20,25,30,35,40],
-        //     "Total facade area": [10,15,20,25,30,35,40]
-        //   }
 
-        console.log("[TEST: axis]", GD_d3);
 
-        const padding = 50;
+        const padding = 15;
         const maxX = d3.max( [ ...gd_resultsByEvaluator[GD_d3['x_axis']] ], (d,i) => d);
         const maxY = d3.max( [ ...gd_resultsByEvaluator[GD_d3['y_axis']] ], (d,i) => d);
         const maxSize = d3.max( [...gd_resultsByEvaluator[GD_d3['size']] ], (d,i) => d);
+        const maxColor = d3.max( [...gd_resultsByEvaluator[GD_d3['color']] ], (d,i) => d);
 
         const xScale = d3.scaleLinear()
                           .domain([0, maxX as number])
@@ -202,37 +195,81 @@ export default defineComponent({
                           .domain([0, maxSize as number])
                           .range([0, 10]);
 
-        // const GD_data = JSON.parse(localStorage.getItem('gd_study') as any);
-        const GD_data = JSON.parse(localStorage.getItem('gd_varsData') as any);
+        const colorScale = d3.scaleLinear()
+                          .domain([0, maxColor as number])
+                          .range([0, 1]);
 
+        let xAxis = d3.axisBottom(xScale);
+        let yAxis = d3.axisLeft(yScale);
 
-        svg.selectAll("circle")
-            .data([...GD_data])
-            .enter()
-            .append("circle")
-            .attr("cx", (d) => xScale(d.outputs[GD_d3['x_axis']]))
-            .attr("cy",(d) => yScale(d.outputs[GD_d3['y_axis']]))
-            .attr("r", (d) => sizeScale(d.outputs[GD_d3['size']]))
-            .attr("id", "scatter")
-            .attr('fill', 'rgba(162, 88, 143, 0.3)')
-            .on("click", (d) => {
-              console.log("CLICKED", d.target.__data__);              
-              // this.showVarData(d.target.__data__);
-            })
-            .append("title")
-            .attr('class', 'svg_tooltip')
-            .text((d) => `Width: ${d.outputs[GD_d3['x_axis']]}`)
-
-        const xAxis = d3.axisBottom(xScale);
-        const yAxis = d3.axisLeft(yScale);
-
-        svg.append("g")
-            .attr("transform", `translate(0, ${(h - padding)})`)
+        let x = svg.append("g")
+            .attr("transform", `translate(0, ${(h-padding)})`)
+            .style("fill", "#ffffff")
             .call(xAxis);
 
-        svg.append("g")
+        let y = svg.append("g")
             .attr("transform", `translate(${(padding)}, 0)`)
+            .style("fill", "#ffffff")
             .call(yAxis); 
+
+        // const GD_data = JSON.parse(localStorage.getItem('gd_study') as any);
+        const GD_data = JSON.parse(localStorage.getItem('gd_varsData') as any);
+       
+        var clip = svg.append("defs").append("SVG:clipPath")
+            .attr("id", "clip")
+            .append("SVG:rect")
+            .attr("width", w )
+            .attr("height", h - padding )
+            .attr("x", 13)
+            .attr("y", 0);
+       
+       
+        const scatter = svg.append('g')
+            .attr("clip-path", "url(#clip)")
+
+        // Add circles
+        scatter
+          .selectAll("circle")
+          .data([...GD_data])
+          .enter()
+          .append("circle")
+            .attr("cx", (d) => xScale(d.outputs[GD_d3['x_axis']]) )
+            .attr("cy", (d) => yScale(d.outputs[GD_d3['y_axis']]) )
+            .attr("r",  (d) => sizeScale(d.outputs[GD_d3['size']]) )
+            .attr('fill', (d) => d3.interpolateRainbow(colorScale(d.outputs[GD_d3['color']])))
+            // .style("fill", "#61a3a9")
+            .style("opacity", 0.5)
+
+        // Set the zoom and Pan features: how much you can zoom, on which part, and what to do when there is a zoom
+        let zoom = d3.zoom()
+            .scaleExtent([1, 5])  // This control how much you can unzoom (x0.5) and zoom (x20)
+            .extent([[0, 0], [w, h]])
+            .on("zoom", (event) => {
+
+              // recover the new scale
+              let newX = event.transform.rescaleX(xScale);
+              let newY = event.transform.rescaleY(yScale);
+
+              // update axes with these new boundaries
+              x.call(d3.axisBottom(newX))
+              y.call(d3.axisLeft(newY))
+              
+              // update circle position
+              scatter
+                .selectAll("circle")
+                .attr('cx', (d) => newX( (d as any).outputs[GD_d3['x_axis']] ))
+                .attr('cy', (d) => newY( (d as any).outputs[GD_d3['y_axis']] ));
+
+            }) as any;
+
+        // This add an invisible rect on top of the chart area. This rect can recover pointer events: necessary to understand when the user zoom
+        svg.append("rect")
+            .attr("width", w - 20)
+            .attr("height", h - 20)
+            .style("fill", "none")
+            .style("pointer-events", "all")
+            .attr('transform', 'translate(' + margin.left + ',' + margin.top+ ')')
+            .call( zoom );
 
       })
 
@@ -527,6 +564,20 @@ export default defineComponent({
         default:
           break;
       }
+    },
+    updateChart(){
+      // const newX = d3.event.transform.rescaleX(x);
+      // const newY = d3.event.transform.rescaleY(y);
+
+      // // update axes with these new boundaries
+      // xAxis.call(d3.axisBottom(newX))
+      // yAxis.call(d3.axisLeft(newY))
+
+      // // update circle position
+      // scatter
+      //   .selectAll("circle")
+      //   .attr('cx', function(d) {return newX(d.Sepal_Length)})
+      //   .attr('cy', function(d) {return newY(d.Petal_Length)});
     }
   }
 });
