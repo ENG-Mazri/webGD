@@ -15,6 +15,7 @@
 //         $evnt: VueEventMethods;
 //     }
 // }
+import { useEventBus } from '@vueuse/core'
 
 export const Generation_completed = new Event("generation_completed");
 export const show_chart_event = new Event("show_chart");
@@ -23,3 +24,8 @@ export enum GDEvents {
     Generation_completed = "onGenCompleted",
     Generation_visual_set = "onGenVisualSet",
 }
+
+export const GenFinished = useEventBus<string>('GenFinished');
+export const GlbUpdated = useEventBus<string>('GlbUpdated');
+// export const bus = useEventBus<string>('news');
+

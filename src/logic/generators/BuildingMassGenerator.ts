@@ -270,20 +270,20 @@ export class BuildingMassGenerator extends Generator {
 
     this.TEXT_MESHES.push( ...this.createText( text, CONTOUR[0].x - 5 , CONTOUR[0].y) );
   
-  const varData = {
-    generation: 1,
-    id: uuidv4(),
-    varNum: index, 
-    strategy: 'Radomize',
-    generator: this.generatorName,
-    inputs: inputsObj,
-    otherMetrics: {},
-    outputs: results
+    const varData = {
+      generation: 1,
+      id: uuidv4(),
+      varNum: index, 
+      strategy: 'Radomize',
+      generator: this.generatorName,
+      inputs: inputsObj,
+      otherMetrics: {},
+      outputs: results
+    }
+    return varData;
   }
-  return varData;
-}
 
-private createText( text: string[], offsetX = 1, offsetY = 1 ): Mesh[]{
+  private createText( text: string[], offsetX = 1, offsetY = 1 ): Mesh[]{
     const loader = new FontLoader();
     const parsedFont = loader.parse(fontJSON)
     

@@ -1,7 +1,7 @@
 <template>
   <div class="outputsBoard" ref="$wrapper" @showResultEvent="visualizeResult">
     <n-card class="outputsPanel_main" justify-content="space-evenly">
-      <n-tabs @update:value="handleUpdateValue" type="line" animated justify-content="space-around" :disabled="hasTabs" default-value="Scatterplot chart" tab-style="color: #a2588f; font-size: 16px !important;">
+      <n-tabs ref="tabs" @update:value="handleUpdateValue" type="line" animated justify-content="space-around" :disabled="hasTabs" default-value="Scatterplot chart" tab-style="color: #a2588f; font-size: 16px !important;">
         <n-tab-pane name="Scatterplot chart" tab="Scatterplot chart">
           <div id="outputsPanel_main">
             <svg id="d3Svg"></svg>
@@ -34,9 +34,9 @@ import { defineComponent } from 'vue';
 import * as d3 from "d3";
 import {useDesign} from '../store/design';
 import { LogOutOutline as outputIcon} from '@vicons/ionicons5';
-import {show_chart_event} from '../events/index'
+import {GenFinished} from '../events/index';
 import { Viewer } from '../logic/Viewer';
-import { BoxGeometry, Mesh, MeshPhongMaterial, Vector2 } from 'three';
+import { BoxGeometry, Mesh, MeshPhongMaterial, SrcAlphaSaturateFactor, Vector2 } from 'three';
 import {BuildingMassGenerator} from '../logic/generators/BuildingMassGenerator';
 import {GenerationManager} from '../logic/GenerationManager';
 //@ts-ignore
@@ -84,40 +84,21 @@ export default defineComponent({
   },
   mounted() {
     console.log("[Study available]: ", this.hasStudy);
-    // const genWorker = new GeneratorWorker();
-    // const genWorker = new Worker('../MassGeneratorWorker.ts')
-    // genWorker.postMessage({type: 'process'})
 
-    let hasStudy = JSON.parse(localStorage.getItem('gd_hasStudy') as any);
-
-    // if(hasStudy) {
-    //   this.visualizeResult();
-    //   this.buildTable();
-    //   this.buildViewer();
-    //   console.log("D3 panel mounted has study")
-    // }
-
-    // this.buildTable();
-    // console.log("[TABLE DATA]: ", this.columns)
-
-    // this.buildViewer();
-
+    GenFinished.on( (event: string) => {
+      
+      console.log(`news: `, this.$refs.tabs)
+    })
     this.visualizeResult();
 
-
-    // const GD_d3 = JSON.parse(localStorage.getItem('gd_d3') as any);
-    // if ( GD_d3 && Object.keys(GD_d3).length > 0 ) {
-    //   window.dispatchEvent(show_chart_event)
-    //   console.log("Dispatch show chart")
-
-    // }
+    let hasStudy = JSON.parse(localStorage.getItem('gd_hasStudy') as any);
   },
   methods: {
     visualizeResult(){
       // const w = 700;
       // const h = 500;
-      var margin = {top: 10, right: 10, bottom: 10, left: 10},
-          w= 700 - margin.left - margin.right,
+      let margin = {top: 10, right: 10, bottom: 10, left: 10},
+          w = 700 - margin.left - margin.right,
           h = 500 - margin.top - margin.bottom;
 
       this.$nextTick(()=>{
@@ -215,7 +196,7 @@ export default defineComponent({
         // const GD_data = JSON.parse(localStorage.getItem('gd_study') as any);
         const GD_data = JSON.parse(localStorage.getItem('gd_varsData') as any);
        
-        var clip = svg.append("defs").append("SVG:clipPath")
+        const clip = svg.append("defs").append("SVG:clipPath")
             .attr("id", "clip")
             .append("SVG:rect")
             .attr("width", w )
@@ -233,12 +214,17 @@ export default defineComponent({
           .data([...GD_data])
           .enter()
           .append("circle")
-            .attr("cx", (d) => xScale(d.outputs[GD_d3['x_axis']]) )
-            .attr("cy", (d) => yScale(d.outputs[GD_d3['y_axis']]) )
-            .attr("r",  (d) => sizeScale(d.outputs[GD_d3['size']]) )
-            .attr('fill', (d) => d3.interpolateRainbow(colorScale(d.outputs[GD_d3['color']])))
-            // .style("fill", "#61a3a9")
-            .style("opacity", 0.5)
+          .attr("cx", (d) => xScale(d.outputs[GD_d3['x_axis']]) )
+          .attr("cy", (d) => yScale(d.outputs[GD_d3['y_axis']]) )
+          .attr("r",  (d) => sizeScale(d.outputs[GD_d3['size']]) )
+          .attr('fill', (d) => d3.interpolateRainbow(colorScale(d.outputs[GD_d3['color']])))
+          // .style("fill", "#61a3a9")
+          .attr("class", "chart_circle")
+          .style("opacity", 0.5)
+          .append("title")
+          // .attr('class', 'svg_tooltip')
+          .text((d) => `Site offset: ${d.inputs.site_offset}\nTotal floors: ${d.inputs.total_floors}\nTower floor height: ${d.inputs.tower_floor_height}\nPodium floor height: ${d.inputs.podium_floor_height}`)
+
 
         // Set the zoom and Pan features: how much you can zoom, on which part, and what to do when there is a zoom
         let zoom = d3.zoom()
@@ -271,7 +257,9 @@ export default defineComponent({
             .attr('transform', 'translate(' + margin.left + ',' + margin.top+ ')')
             .call( zoom );
 
+        scatter.raise()
       })
+
 
       
     },
@@ -584,6 +572,11 @@ export default defineComponent({
 </script>
 
 <style >
+.chart_circle{
+  position:relative !important;
+  z-index:99 !important;
+  /* z-index: 99 !important; */
+}
 .outputsBoard{
   position: absolute;
   right: 30px;

@@ -145,7 +145,7 @@
                 </template>
                 Generate
             </n-tooltip>
-            <!-- <n-tooltip trigger="hover" placement="bottom">
+            <n-tooltip trigger="hover" placement="bottom">
                 <template #trigger>
                     <n-button  @click='test' quaternary>
                         <n-icon >
@@ -153,9 +153,9 @@
                         </n-icon>
                     </n-button>
                 </template>
-                Show generation results
+                Test
             </n-tooltip>
-            <n-tooltip trigger="hover" placement="bottom">
+           <!--  <n-tooltip trigger="hover" placement="bottom">
                 <template #trigger>
                     <n-button  @click="visualizeResult" quaternary>
                         <n-icon >
@@ -256,6 +256,7 @@ import {GenerationManager} from '../logic/GenerationManager'
 import {BuildingMassGenerator} from '../logic/generators/BuildingMassGenerator'
 import {IDB} from '../IDB'
 import OutputsPanel from './OutputsPanel.vue'
+import {GenFinished} from '../events/index';
 
 export default defineComponent({
     components: {
@@ -328,6 +329,7 @@ export default defineComponent({
     },
     created (){},
     async mounted() {
+
         this.store = useDesign();
         const GD_d3 = JSON.parse(localStorage.getItem('gd_d3') as any);
         const GD_results = JSON.parse(localStorage.getItem('gd_result') as any);
@@ -385,22 +387,24 @@ export default defineComponent({
             }
         },
         test(){
-            let resultsData = JSON.parse(localStorage.getItem('gd_result') as any);
+            GenFinished.emit();
 
-            const gens = resultsData.length;
-            const threeContainer = document.getElementById('gallery_container') as HTMLElement;
+            // let resultsData = JSON.parse(localStorage.getItem('gd_result') as any);
+
+            // const gens = resultsData.length;
+            // const threeContainer = document.getElementById('gallery_container') as HTMLElement;
             
-            //* Clear all children
-            while (threeContainer.firstChild) {
-                threeContainer.removeChild(threeContainer.lastChild as ChildNode);
-            }
+            // //* Clear all children
+            // while (threeContainer.firstChild) {
+            //     threeContainer.removeChild(threeContainer.lastChild as ChildNode);
+            // }
             
-            for ( let i=0; i < gens; i++) {
-                let canvas = document.createElement("canvas");
-                threeContainer.appendChild(canvas);
-                const viewer = new Viewer(canvas,resultsData[i]);
-            }
-            console.log(this.store.design)
+            // for ( let i=0; i < gens; i++) {
+            //     let canvas = document.createElement("canvas");
+            //     threeContainer.appendChild(canvas);
+            //     const viewer = new Viewer(canvas,resultsData[i]);
+            // }
+            // console.log(this.store.design)
         },
         async runTest() {
             //TODO:  try getting inputs from child component 
