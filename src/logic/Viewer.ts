@@ -9,15 +9,17 @@ import { GammaCorrectionShader } from 'three/examples/jsm/shaders/GammaCorrectio
 import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
 import {GLTFLoader} from "three/examples/jsm/loaders/GLTFLoader.js";
 import {IDB} from '../IDB'
-
+import {GenFinished, BuildViewer, DestroyViewer} from '../events/index';
 
 export class Viewer {
 
     private scene: Scene;
     private canvas: HTMLElement;
-    private renderer: WebGLRenderer;
+    public renderer: WebGLRenderer;
     private camera: Camera;
     private options: any
+
+    public kill: boolean = false;
 
     constructor( canvas: HTMLElement, meshes: Mesh[], options:any = {} ) {
         this.options = options;
@@ -69,18 +71,22 @@ export class Viewer {
 
 
         //* RENDER SETTINGS
-        const renderer = new THREE.WebGLRenderer({
+        this.renderer = new THREE.WebGLRenderer({
             canvas: canvas,
             alpha: true,
             antialias: true,
             logarithmicDepthBuffer:true
           });
         
-        renderer.setSize(size.width, size.height);
-        renderer.setPixelRatio( Math.min(window.devicePixelRatio, 2) );
-        renderer.outputColorSpace = THREE.SRGBColorSpace;
-        renderer.shadowMap.enabled = true;
-        renderer.shadowMap.type = THREE.PCFShadowMap;
+        // let renderer = this.renderer;
+
+        // (canvas as any).getContext("webgl");
+
+        this.renderer.setSize(size.width, size.height);
+        this.renderer.setPixelRatio( Math.min(window.devicePixelRatio, 2) );
+        this.renderer.outputColorSpace = THREE.SRGBColorSpace;
+        this.renderer.shadowMap.enabled = true;
+        this.renderer.shadowMap.type = THREE.PCFShadowMap;
 
         const renderTarget = new THREE.WebGLRenderTarget(
                 size.width,
@@ -88,7 +94,7 @@ export class Viewer {
                 {samples: 3}
             )
 
-        const composer = new EffectComposer( renderer, renderTarget );
+        const composer = new EffectComposer( this.renderer, renderTarget );
         composer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
         composer.setSize(size.width, size.height);
 
@@ -124,7 +130,7 @@ export class Viewer {
         // controls.minDistance = -Infinity;
         // controls.minZoom = -Infinity;
 
-        console.log('[VIewer: controls] ', controls)
+        // console.log('[VIewer: controls] ', controls)
         controls.maxDistance = 1000;
         // controls.enablePan = true
 
@@ -193,6 +199,8 @@ export class Viewer {
                 console.log( 'An error happened', error );
             }
         );
+
+        let self = this;
         
         
         //*RENDERING
@@ -202,7 +210,7 @@ export class Viewer {
             controls.update();
             controls2.target.copy(target);
             controls2.update()
-            renderer.render(scene, camera);
+            self.renderer.render(scene, camera);
             // composer.render()
             requestAnimationFrame(animate);
             // console.log("Cam: ", camera.position);
@@ -211,16 +219,12 @@ export class Viewer {
         };
         animate();
 
-        window.addEventListener("resize", () => {
-            size.width = window.innerWidth;
-            size.height = window.innerHeight;
-            camera.aspect = size.width / size.height;
-            camera.updateProjectionMatrix();
-            renderer.setSize(size.width, size.height);
-            // composer.setSize( size.width, size.height );
-            console.log("[Render calls]: ", renderer.info.render.calls)
-            
-        });
+
+        window.addEventListener("resize", this.resize(size, camera, this.renderer) as  any);
+
+        DestroyViewer.on( ev => {
+            window.removeEventListener("resize", this.resize(size, camera, this.renderer) as  any)
+        })
     }
 
     // animate( controls: any, renderer: any ) {
@@ -228,4 +232,16 @@ export class Viewer {
     //     renderer.render(scene, camera);
     //     requestAnimationFrame(this.animate());
     // }
+
+    private resize( size:any, camera: any, renderer: any ){
+        size.width = window.innerWidth;
+        size.height = window.innerHeight;
+        
+        camera.aspect = size.width / size.height;
+        camera.updateProjectionMatrix();
+        renderer.setSize(size.width, size.height);
+        // composer.setSize( size.width, size.height );
+
+        console.log("[Render calls]: ", renderer.info.render.calls)
+    }
 }

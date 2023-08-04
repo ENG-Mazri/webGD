@@ -27,5 +27,6 @@ export enum GDEvents {
 
 export const GenFinished = useEventBus<string>('GenFinished');
 export const GlbUpdated = useEventBus<string>('GlbUpdated');
-// export const bus = useEventBus<string>('news');
+export const BuildViewer = useEventBus<string>('BuildViewer');
+export const DestroyViewer = useEventBus<string>('DestroyViewer');
 

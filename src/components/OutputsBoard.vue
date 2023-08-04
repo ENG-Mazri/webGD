@@ -34,7 +34,7 @@ import { defineComponent } from 'vue';
 import * as d3 from "d3";
 import {useDesign} from '../store/design';
 import { LogOutOutline as outputIcon} from '@vicons/ionicons5';
-import {GenFinished} from '../events/index';
+import {GenFinished, BuildViewer, DestroyViewer} from '../events/index';
 import { Viewer } from '../logic/Viewer';
 import { BoxGeometry, Mesh, MeshPhongMaterial, SrcAlphaSaturateFactor, Vector2 } from 'three';
 import {BuildingMassGenerator} from '../logic/generators/BuildingMassGenerator';
@@ -62,7 +62,9 @@ export default defineComponent({
       selectedVarData: {},
       viewerTotalpages: 2,
       viewerCurrPage: 2,
-      hasViewer: false
+      hasViewer: false,
+      viewer: null as any,
+      canvas: null as any
 
     }
    
@@ -87,11 +89,41 @@ export default defineComponent({
 
     GenFinished.on( (event: string) => {
       
-      console.log(`news: `, this.$refs.tabs)
+      console.log('Generation finished!')
     })
     this.visualizeResult();
 
     let hasStudy = JSON.parse(localStorage.getItem('gd_hasStudy') as any);
+    BuildViewer.on( ev =>{
+      this.$nextTick(()=> {
+        const threeContainer = document.getElementById('gallery_container') as HTMLElement;
+        while (threeContainer.firstChild) {
+          threeContainer.removeChild(threeContainer.lastChild as ChildNode);
+        }
+        
+        this.canvas = document.createElement("canvas");
+        this.canvas.classList.add("result_canvas");
+        this.canvas.id = "three_canvas";
+        threeContainer.appendChild(this.canvas);
+
+        this.viewer = new Viewer(this.canvas, []);
+        let interval = setInterval( async ()=>{
+            let blob = await IDB.getDataByKeyAsync('glb');
+            if(blob){
+                clearInterval(interval);
+                // console.log('[Viewer:Blob] ', blob)
+                await this.viewer.init(this.canvas, [], blob)
+
+                console.log('Renderer: ' ,this.viewer.renderer)
+            }
+        }, 100)
+      })
+    })
+    
+    DestroyViewer.on(ev=>{
+      this.viewer.renderer.forceContextLoss();
+    })
+  
   },
   methods: {
     visualizeResult(){
@@ -341,27 +373,30 @@ export default defineComponent({
 
       // const gens = resultsData.length;
       this.$nextTick(()=>{
-        const threeContainer = document.getElementById('gallery_container') as HTMLElement;
-        while (threeContainer.firstChild) {
-          threeContainer.removeChild(threeContainer.lastChild as ChildNode);
-        }
+        // const threeContainer = document.getElementById('gallery_container') as HTMLElement;
+        // while (threeContainer.firstChild) {
+        //   threeContainer.removeChild(threeContainer.lastChild as ChildNode);
+        // }
         
-        let canvas = document.createElement("canvas");
-        canvas.classList.add("result_canvas");
-        canvas.id = "three_canvas"
-        threeContainer.appendChild(canvas);
-        let v = new Viewer(canvas, []);
-        let interval = setInterval( async ()=>{
-            const blob = await IDB.getDataByKeyAsync('glb');
-            if(blob){
-                clearInterval(interval);
-                // console.log('[Viewer:Blob] ', blob)
-                await v.init(canvas, [], blob)
+        // let canvas = document.createElement("canvas");
+        // canvas.classList.add("result_canvas");
+        // canvas.id = "three_canvas";
+        // threeContainer.appendChild(canvas);
 
-            }
-        }, 100)
+        // let v = new Viewer(canvas, []);
+        // let interval = setInterval( async ()=>{
+        //     let blob = await IDB.getDataByKeyAsync('glb');
+        //     if(blob){
+        //         clearInterval(interval);
+        //         // console.log('[Viewer:Blob] ', blob)
+        //         await v.init(canvas, [], blob)
+
+        //         console.log('Renderer: ' ,v.renderer)
+        //     }
+        // }, 100)
 
       })
+
       // console.log("[Generations]: ", gens);
       //* Clear all children if any
 
@@ -533,19 +568,21 @@ export default defineComponent({
     handleUpdateValue(value: any){
       switch (value) {
         case 'Scatterplot chart':
-
+            DestroyViewer.emit()
             this.visualizeResult()
           break;
 
         case 'Data table':
           this.$nextTick(()=>{
+            DestroyViewer.emit()
             this.buildTable()
           })
           break;
         
         case '3D visual':
           this.$nextTick(()=>{
-            this.buildViewer()
+            // this.buildViewer()
+            BuildViewer.emit()
           })
           break;
 
@@ -572,11 +609,6 @@ export default defineComponent({
 </script>
 
 <style >
-.chart_circle{
-  position:relative !important;
-  z-index:99 !important;
-  /* z-index: 99 !important; */
-}
 .outputsBoard{
   position: absolute;
   right: 30px;
