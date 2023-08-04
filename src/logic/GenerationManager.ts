@@ -27,13 +27,15 @@ export class GenerationManager {
     private results = new Map<string,Result>();
     public model: Mesh;
     private varsData: any[] = [];
-    private objectives: any[] = [];
+    private objectives = new Map<string, string>(); 
     private resultsByEvaluator = new Map<string, number[]>(); 
+
+    private evalMaxMin = new Map<string, any>(); 
     // private sortedResults = 
 
     constructor( generator: any,
                  strategy: string,
-                 objectives: Objective[],
+                 objectives: any,
                  populations: number = 1,
                  generations: number = 1 )
     {
@@ -41,6 +43,7 @@ export class GenerationManager {
         this.generations = generations;
         this.generator = generator;
         this.strategy = strategy;
+        this.objectives = objectives;
 
         for (let i = 0; i < generator.objectives.length; i++)
             this.resultsByEvaluator.set(generator.objectives[i], []);
@@ -89,37 +92,52 @@ export class GenerationManager {
         })
     }
 
-    public computeFitness() {
-        this.variants.forEach( variant => {
-            let goal = variant.outputs.goal;
-            let max = this.results.get(variant.outputs.evalName).max;
-            let min = this.results.get(variant.outputs.evalName).min;
-            let value = variant.outputs.evalValue;
+    public computeFitness( varsData: any[], evalMaxMin: Map<string,any> ) {
+        const varsFitness = new Map<string, any>();
 
-            switch (goal) {
-                case 'max':
-                    variant.fitness =  (value - min) / (max - min);
-                    break;
-                case 'min':
-                    variant.fitness =  1 - (value - min) / (max - min);
-                    break;        
-                default:
-                    break;
+        varsData.forEach( varData => {
+            const varOutputs = {};
+
+            for( let [output, value] of Object.entries(varData.outputs) ){
+                let goal = this.objectives.get(output);
+                let fitness: number;
+                let max = evalMaxMin.get(output).max;
+                let min = evalMaxMin.get(output).min;
+
+                switch (goal) {
+                    case 'max':
+                        varOutputs[output] = (value as number - min) / (max - min);
+                        break;
+                    case 'min':
+                        varOutputs[output] = 1 - (value as number - min) / (max - min);
+                        break;   
+                    case 'undefined':
+                        varOutputs[output] = -1;
+                        break;                
+                    default:
+                        break;
+                }
+
             }
+            varsFitness.set( varData.id, varOutputs)
+
         })
+        return varsFitness;
 
     }
 
-    public computeMaxMin() {
-        for (let result of this.results.values()) {
-            result.max = Math.max(...result.values);
-            result.min = Math.min(...result.values);
+    public computeMaxMin( resultsBylEval: any ) {
+        for (let [output, values]  of resultsBylEval.entries()) {
+            let max = Math.max( ...values );
+            let min = Math.min( ...values );
+            this.evalMaxMin.set( output, {max, min} );
         }
+        return this.evalMaxMin;
     }
 
     private runMatingPool() {}
 
-    public async getGlbFromGeneration( generationModel:Mesh, generationModelId: string ){
+    public async getGlbFromGeneration( generationModel: Mesh, generationModelId: string ){
         const gltfExporter = new GLTFExporter();
         let data: Blob;
         await IDB.clearStorageAsync();
@@ -142,6 +160,13 @@ export class GenerationManager {
             { binary: true }
         )
 
+    }
+
+    public clearGenerationData(){
+        this.resultsByEvaluator.clear();
+        this.evalMaxMin.clear();
+        this.varsData.length = 0;
+        this.model = undefined;
     }
 
 }
