@@ -100,7 +100,6 @@ export class GenerationManager {
 
             for( let [output, value] of Object.entries(varData.outputs) ){
                 let goal = this.objectives.get(output);
-                let fitness: number;
                 let max = evalMaxMin.get(output).max;
                 let min = evalMaxMin.get(output).min;
 
@@ -117,13 +116,71 @@ export class GenerationManager {
                     default:
                         break;
                 }
-
             }
             varsFitness.set( varData.id, varOutputs)
-
         })
-        return varsFitness;
 
+        return varsFitness;
+    }
+
+    public computeFitnessMain( varsData: any[], evalMaxMin: Map<string,any>, resultsByEvaluator:  Map<string,number[]> ) {
+        //** This function gets the percentage of vars fitness, higher value if goal, is max is the fittest, if goal is min, then it's the less fit **/
+        const varsFitness = new Map<string, any>();
+        const outputsWeight = this.calculateOutputsWeight(resultsByEvaluator);
+        console.log('[GenManager: weights] ', outputsWeight)
+
+        const chancesByEval = new Map<string, any[]>();
+        const evalsChancesTest = new Map<string, number[]>()
+
+        const realOne = new Map()
+
+
+        varsData.forEach( varData => {
+            const varOutputs = {};
+            // const realOne = new Map()
+            const percentageById = {}
+
+
+            for( let [output, value] of Object.entries(varData.outputs) ){
+                let percentage = value as number / outputsWeight[output] * 100;
+                varOutputs[output] = percentage
+            
+                if (chancesByEval.has(output)) chancesByEval.get(output).push(varData.id);
+                else chancesByEval.set(output, [varData.id]);
+                
+                if (evalsChancesTest.has(output)) evalsChancesTest.get(output).push(percentage);
+                else evalsChancesTest.set(output, [percentage]);
+
+                if (realOne.has(output)) realOne.get(output)[percentage] = varData.id;
+                else realOne.set(output, {[percentage]: varData.id});
+            }
+            varsFitness.set( varData.id, varOutputs)
+        })
+
+        for( let [evaluator, values] of evalsChancesTest.entries() ){
+            values.sort( function( a , b){
+                if(a > b) return 1;
+                if(a < b) return -1;
+                return 0;
+            });
+            evalsChancesTest.set(evaluator , values)
+        }
+
+        const mergedChances = [];
+
+        for( let [output, percentages] of chancesByEval.entries()){
+            let goal = this.objectives.get(output);
+            console.log('[Goal] ', goal)
+
+            mergedChances.push(...this.ganarateFitnessArrayById( evalsChancesTest.get(output), goal, realOne.get(output), output ));
+            // console.log(`[Genartaor:Goal: ${output}] `, array)
+
+        }
+        // console.log('[Generator: sort chances] ', realOne)
+
+
+
+        return mergedChances;
     }
 
     public computeMaxMin( resultsBylEval: any ) {
@@ -135,7 +192,55 @@ export class GenerationManager {
         return this.evalMaxMin;
     }
 
-    private runMatingPool() {}
+    public calculateOutputsWeight( resultsBylEval: any ){
+        let outputsFitness = {};
+        for (let [output, values]  of resultsBylEval.entries()) {
+            outputsFitness[output] = values.reduce((a, b) => a + b, 0);
+        }
+
+        return outputsFitness;
+    }
+
+    private ganarateFitnessArrayById( array: any[] , goal: string, chancesByEval : any, evaluator: string){
+        let output = [];
+
+        const tempArray = [...array];
+
+        // console.log('[FITNESS: array] ', array)
+        // console.log('[FITNESS: chance id ] ', chancesByEval)
+
+
+        switch (goal) {
+            case 'max':
+                for( let i = 0; i < array.length; i++){
+                    let v = chancesByEval[array[i]]
+                    // console.log('[FITNESS: V] ', v)
+                    for( let j = 0; j < Math.round(array[i]); j++){
+                        output.push(v)
+                    }
+                }
+                break;
+        
+            case 'min':
+                for( let i = 0; i < array.length; i++){
+                    let v = chancesByEval[array[ tempArray.length - 1]]
+                    // console.log('[FITNESS: V] ', v)
+                    for( let j = 0; j < Math.round(array[ tempArray.length - 1]); j++){
+                        output.push(v)
+                    }
+                    tempArray.pop()
+                }
+                break;
+            default:
+                break;
+        }
+
+        return output;
+    }
+
+    private runMatingPool() {
+        
+    }
 
     public async getGlbFromGeneration( generationModel: Mesh, generationModelId: string ){
         const gltfExporter = new GLTFExporter();
