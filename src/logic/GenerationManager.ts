@@ -63,7 +63,7 @@ export class GenerationManager {
         return this.varsData;
     }
 
-    public populate(inputs: any, options: any, index: number) {
+    public populate(inputs: any, options: any, index: number, isNextGeneration: boolean = false) {
         if( this.populations == 0 || this.generations == 0 ) return;
 
         let varData = this.generator.generateVariant(inputs, options.transX, options.transY, index);
@@ -238,8 +238,26 @@ export class GenerationManager {
         return output;
     }
 
-    private runMatingPool() {
-        
+    public pickParents( parents: any[], chancesArray: string[] ){
+        let parent1 = chancesArray[Math.floor(Math.random() * chancesArray.length)];
+        let parent2 = chancesArray[Math.floor(Math.random() * chancesArray.length)];
+        let parentsID = `${parent1}_${parent2}`;
+        let reversed = `${parent2}_${parent1}`;
+
+        if(!parents.includes(parentsID) && !parents.includes(reversed) && parent1 !== parent2 )
+            return parents.push(parentsID);
+        else {
+            this.pickParents(parents, chancesArray)
+        }
+    }
+
+    public runMatingPool( parentsIDs: string[] ) {
+        const parents = []
+        for( let i = 0; i < parentsIDs.length; i++){
+            let [parent1, parent2] = parentsIDs[i].split('_');
+            console.log('[parents: 1 - 2] ', parent1, parent2)
+        }
+
     }
 
     public async getGlbFromGeneration( generationModel: Mesh, generationModelId: string ){

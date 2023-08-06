@@ -12,13 +12,21 @@ const mock_contour = [
   new Vector2(0, 0)
 ];
 
-const mock_inputs = {
+const inputs = {
                     site_offset: {type: 'constant', value: 0},
                     contour: mock_contour,
-                    total_floors: {type: 'variable', value: {min: 19, max: 29 }},
+                    total_floors: {type: 'variable', value: [19, 29]},
                     tower_floor_height: {type: 'constant', value: 3},
                     podium_floor_height: {type: 'constant', value: 4}
                   }
+
+const mock_objectives = new Map()
+
+mock_objectives.set('exteriorArea', 'max');
+mock_objectives.set('podiumVolume', 'min');
+mock_objectives.set('towerVolume', 'undefined');
+mock_objectives.set('totalBuildingArea', 'undefined');
+mock_objectives.set('facadeArea', 'undefined');
                   
 // const gd_currentInputs = localStorage.setItem( 'gd_currentInputs' );
 const strategy = 'Randomize';
@@ -27,12 +35,12 @@ const populations = 3;
 
 onmessage = async (event) => {
   if( event.data.type == 'onProcess'){
-    const inputs = JSON.parse(event.data.inputs);
+    // const inputs = JSON.parse(event.data.inputs);
 
     const bldMassGen = new BuildingMassGenerator();
     // const model_mesh = bldMassGen.generateVariant(mock_inputs);
   
-    const genManager = new GenerationManager(bldMassGen, strategy, [], populations)
+    const genManager = new GenerationManager(bldMassGen, strategy, mock_objectives, populations)
     // console.log('[WORKER: inputs] ', inputs);
     let transX = 0;
     let transY = 0;
@@ -41,34 +49,69 @@ onmessage = async (event) => {
     for( let i = 0; i < event.data.populations; i++ ){
       genManager.populate( inputs, {transX, transY}, i);
         // this.generator.evaluate();
-        pos += 1;
-        transX += 150;
+      pos += 1;
+      transX += 150;
 
-        if( pos == 4 ){
-            pos = 0;
-            transX = 0;
-            transY += 150;
-        }
-        
-        // transY += 100;
-        // this.variants.push(var_mesh);
-      postMessage({type: 'onProgress', progress: i});
+      if( pos == 4 ){
+          pos = 0;
+          transX = 0;
+          transY += 150;
+      }  
+      // transY += 100;
+      // this.variants.push(var_mesh);
+      postMessage( {type: 'onProgress', progress: i} );
     }
 
     let model = bldMassGen.getModelMesh();
 
     genManager.model = model;
-    const varsData = genManager.getVarsData();
-    const resultsByEvaluator = genManager.getResultsByEvaluator();
-    // console.log('[Worker: results] ', resultsByEvaluator)
 
-    await genManager.getGlbFromGeneration(model, uuidv4()).then(()=>{
+    // if(strategy == 'Optimize'){
+      //* CREATE NEXT GENERATIONS
+      
+      //* Get last generation data 
+      const varsData = genManager.getVarsData();
+      const resultsByEvaluator = genManager.getResultsByEvaluator();
+      
+      //* Compute fitness
+      const evalMaxMin = genManager.computeMaxMin(resultsByEvaluator);
+      const chancesArray = genManager.computeFitnessMain(varsData, evalMaxMin, resultsByEvaluator);
+
+      const parentsIDs = []
+      const PARENTS = [];
+      //* Selection
+      for( let i = 0; i < event.data.populations; i++ ) {
+        genManager.pickParents( parentsIDs, chancesArray);
+      }
+
+      console.log("[WORKER: parents ids]", parentsIDs);
+      // console.log("[WORKER: parents]", PARENTS);
+      genManager.runMatingPool(parentsIDs);
+
+
+
+
+
+
+
+    // }
+
+
+
+    console.log('[Worker: results] ', resultsByEvaluator);
+    console.log('[Worker: vars] ', varsData);
+    // console.log('[Worker: max - min] ', evalMaxMin);
+    // console.log('[Worker: fitness] ', chances);
+    // console.log('[Worker: outputs fitness] ', outputsFitness);
+
+
+    // await genManager.getGlbFromGeneration(model, uuidv4()).then(()=>{
       postMessage({type: 'onFinished',
         varsData,
         resultsByEvaluator
       });
 
-    });
+    // });
 
     // console.log('[Variants]: ', this.variants);
 
