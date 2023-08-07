@@ -3,7 +3,7 @@
 
                 <!-- <img src="../assets/dse.svg"/> -->
                 <n-collapse class='panel-collapse' default-expanded-names="1"> <!-- Function -->
-                    <n-collapse-item class="parent_panels" title="Inputs" name="1" style="margin: 0px 2px;" default-expanded-names="3"><!-- Inputs -->
+                    <n-collapse-item v-if="hasStudy" class="parent_panels" title="Inputs" name="1" style="margin: 0px 2px;" default-expanded-names="3"><!-- Inputs -->
                         <template #arrow>
                             <n-icon>
                                 <inputIcon/>
@@ -147,11 +147,18 @@
             </n-tooltip>
             <n-tooltip trigger="hover" placement="bottom">
                 <template #trigger>
-                    <n-button  @click='test' quaternary>
+                    <n-upload :on-change="test" ref="file2">
+                        <n-button text color="#153048">
+                            <n-icon >
+                                <resultIcon/>
+                            </n-icon>
+                        </n-button>
+                    </n-upload>
+                    <!-- <n-button  @click='test' quaternary>
                         <n-icon >
                             <resultIcon/>
                         </n-icon>
-                    </n-button>
+                    </n-button> -->
                 </template>
                 Test
             </n-tooltip>
@@ -237,7 +244,8 @@ import {OptionsOutline as optionsIcon ,
         TrashBinOutline as clearIcon,
         ExtensionPuzzleOutline as variableIcon,
         Locate as locateIcon,
-        GolfOutline as goalIcon
+        GolfOutline as goalIcon,
+ChatboxSharp
        } from '@vicons/ionicons5';
 import InputVue from './Input.vue';
 import OutputSettingsVue from './OutputSettings.vue';
@@ -257,6 +265,15 @@ import {BuildingMassGenerator} from '../logic/generators/BuildingMassGenerator'
 import {IDB} from '../IDB'
 import OutputsPanel from './OutputsPanel.vue'
 import {GenFinished} from '../events/index';
+import { parse as SVGParser } from 'svg-parser';
+import { Path, Vector2 } from 'three';
+import { parsePath } from 'react-router-dom';
+
+
+// import { parse, stringify } from 'svgson';
+// import { parse, scale, stringify } from 'svg-path-tools'
+
+// import {createInterpolator} from 'svg-path-interpolator';
 
 export default defineComponent({
     components: {
@@ -302,7 +319,7 @@ export default defineComponent({
             ],
             strategy: "Randomize",
             generations: 1 ,
-            populations: 1 ,
+            populations: 5 ,
             store: '' as any,
             showModal: false,
             genFunction: 'Building mass',
@@ -315,7 +332,8 @@ export default defineComponent({
             selectedVarData: {},
             name:0,
             isProcessing: false,
-            genProgress: 0
+            genProgress: 0,
+            hideInputs: true
         }
     },
     setup () {
@@ -386,8 +404,110 @@ export default defineComponent({
                 string: 'A String'
             }
         },
-        test(){
-            GenFinished.emit();
+        async test(file: any){
+            //TEST SVG PARSING
+            const url = URL.createObjectURL(file.fileList[0].file);
+            const data = await this.getFile(url);
+            const enc = new TextDecoder("utf-8");
+            const dec = enc.decode( data as Uint8Array );
+            const parsed = SVGParser(dec);
+            const path: string = parsed.children[0].children[0].properties.d;
+            const POSITIONS = [];
+
+
+            const CHARS = ['L', 'H', 'V'];
+            const PARTS = []; 
+            const COORDINATES = [];
+
+            for( let i = 0; i < CHARS.length; i++ ){
+                let pos = 0;
+                let target = CHARS[i];
+                while (true) {
+                    let foundPos = path.indexOf(target, pos);
+                    if (foundPos == -1) break;
+                    POSITIONS.push(foundPos)
+    
+                    pos = foundPos + 1;
+                }
+            }
+
+            POSITIONS.sort(d3.ascending);
+            let pos = 0;
+            for( let i = 0; i < POSITIONS.length; i++ ){
+                PARTS.push( path.slice(pos, POSITIONS[i]) );
+                pos = POSITIONS[i];
+
+                if( i == POSITIONS.length - 1 ) PARTS.push( path.slice(pos) );
+            }
+
+            if (PARTS[ PARTS.length - 1 ].endsWith('Z') ) {
+                const last = PARTS[ PARTS.length - 1 ].replace('Z', '');
+                PARTS.pop();
+                PARTS.push( last );
+            }
+
+
+            let last_x;
+            let last_y;
+            for( let i = 0; i < PARTS.length; i++ ){
+                let start: string = PARTS[i].charAt(0);
+
+                switch (start) {
+                    case "M":
+                        let Mx = PARTS[i].slice( PARTS[i].indexOf('M') + 1, PARTS[i].indexOf(' '));
+                        let My = PARTS[i].slice( PARTS[i].indexOf(' '));
+                        last_x = Mx;
+                        last_y = My;
+
+                        COORDINATES.push( new Vector2(parseInt(Mx), parseInt(My)) );                     
+                        break;
+                    case "H":
+                        let Hx = PARTS[i].replace(' ', '').split('H')[1];
+                        COORDINATES.push( new Vector2( parseInt(Hx), parseInt(last_y)) );
+                        last_x = Hx;
+                        
+                        break;
+                    case "V":
+                        let Vy = PARTS[i].replace(' ', '').split('V')[1];
+                        COORDINATES.push( new Vector2(parseInt(last_x) , parseInt(Vy)) );
+                        last_y = Vy;
+                        break;
+                    case "L":
+                        let Lx = PARTS[i].slice( PARTS[i].indexOf('L') + 1, PARTS[i].indexOf(' '));
+                        let Ly = PARTS[i].slice( PARTS[i].indexOf(' '));
+                        COORDINATES.push( new Vector2(parseInt(Lx) , parseInt(Ly)) );
+                        last_x = Lx;
+                        last_y = Ly;
+                        break;
+                    default:
+                        break;
+                }
+
+            }
+
+
+
+            console.log("[SVG: Path] ",  path)
+            console.log("[SVG: positions] ", POSITIONS)
+            console.log("[SVG: slice] ", PARTS)
+            console.log("[SVG: COORDS] ", COORDINATES)
+            // console.log("[SVG: My] ", My)
+
+
+
+
+            const lines = [];
+
+            const config = {
+                joinPathData: false,
+                minDistance: 0.5,
+                roundToNearest: 0.25,
+                sampleFrequency: 0.001
+            };
+
+
+            // GenFinished.emit();
+
 
             // let resultsData = JSON.parse(localStorage.getItem('gd_result') as any);
 
@@ -406,9 +526,46 @@ export default defineComponent({
             // }
             // console.log(this.store.design)
         },
+        getMCoordinates(d: any){
+    
+            let dArray = d
+            // remove new lines and tabs
+            .replace(/[\n\r\t]/g, "")
+            // replace comma with space
+            .replace(/,/g, " ")
+            // add space before minus sign
+            .replace(/-/g, " -")
+            // decompose multiple decimal delimiters like 0.5.5 => 0.5 0.5
+            .replace(/(\.)(\d+)(\.)(\d+)/g, "$1$2 $3$4")
+            // split multiple zero valuues like 0 05 => 0 0 5
+            .replace(/( )(0)(\d+)/g, "$1 $2 $3")
+            // add space between command letter and values
+            .replace(/([mlcsqtahvz])/gi, "|$1 ")
+            .trim()
+            .split(" ")
+            .filter(Boolean);
+            
+            let M = {x: +dArray[1], y: +dArray[2]}
+            return M;
+        
+        },
+        getFile(url: any){
+
+            return new Promise((resolve, reject) => {
+                var oReq = new XMLHttpRequest();
+                oReq.responseType = "arraybuffer";
+                oReq.addEventListener("load", () => {
+                    resolve(new Uint8Array(oReq.response));
+                });
+                oReq.open("GET", url);
+                oReq.send();
+            })
+
+        },
         async runTest() {
             //TODO:  try getting inputs from child component 
-            const inputs = this.store.design[this.strategy].inputs;
+            // const inputs = this.store.design[this.strategy].inputs; <<------- uncomment this 
+            const inputs = {}
             
             console.log('[Panel: run test]', this.store.design);
             //* SET INPUTS IN LOCAL STORAGE
@@ -450,17 +607,17 @@ export default defineComponent({
                 if(event.data.type == 'onProgress') this.genProgress = Math.round( event.data.progress * 100 / this.populations  );
 
                 if(event.data.type == 'onFinished'){
-                    this.$emit(GDEvents.Generation_completed)
+                //     this.$emit(GDEvents.Generation_completed)
                 
-                    if (threeContainer){
-                        const canvas = document.getElementById('three_canvas');
-                        viewer = new Viewer(canvas, []);
+                //     if (threeContainer){
+                //         const canvas = document.getElementById('three_canvas');
+                //         viewer = new Viewer(canvas, []);
 
-                    }
+                //     }
                     
 
-                localStorage.setItem('gd_varsData', JSON.stringify(event.data.varsData))
-                localStorage.setItem('gd_resultsByEvaluator', JSON.stringify(Object.fromEntries(event.data.resultsByEvaluator) ))
+                // localStorage.setItem('gd_varsData', JSON.stringify(event.data.varsData))
+                // localStorage.setItem('gd_resultsByEvaluator', JSON.stringify(Object.fromEntries(event.data.resultsByEvaluator) ))
 
                 this.genProgress = 100;
                 // let blob: any;
