@@ -17,7 +17,8 @@ export class Viewer {
     private canvas: HTMLElement;
     public renderer: WebGLRenderer;
     private camera: Camera;
-    private options: any
+    private options: any;
+    private isActive: boolean = true;
 
     public kill: boolean = false;
 
@@ -27,6 +28,7 @@ export class Viewer {
     }
 
     async init(canvas: HTMLElement, meshes: Mesh[], blob: any) {
+        this.isActive = true;
         const scene = new Scene();
 
         const size = {
@@ -223,7 +225,11 @@ export class Viewer {
         window.addEventListener("resize", this.resize(size, camera, this.renderer) as  any);
 
         DestroyViewer.on( ev => {
-            window.removeEventListener("resize", this.resize(size, camera, this.renderer) as  any)
+            if(this.isActive) {
+                console.log('DESROY renderer: ', this.isActive)
+                window.removeEventListener("resize", this.resize(size, camera, this.renderer) as  any)
+                this.isActive = false;
+            }
         })
     }
 

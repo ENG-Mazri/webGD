@@ -82,13 +82,15 @@ export default defineComponent({
     // hasStudy(){
     //   if(this.hasStudy){
     //     this.visualizeResult();
-    //     this.buildTable();
+    //     this.computeData();
     //     this.buildViewer();
     //   }
     // }
   },
   mounted() {
     console.log("[Study available]: ", this.hasStudy);
+    const gd_resultsByEvaluator = JSON.parse(localStorage.getItem('gd_resultsByEvaluator') as any);
+    if(gd_resultsByEvaluator) this.computeData();
 
     this.refreshOutputsBoard();
 
@@ -125,6 +127,8 @@ export default defineComponent({
     })
 
     GenFinished.on( ev => {
+      this.computeData()
+
       switch (this.currentTab) {
         case 'Scatterplot chart':
             // DestroyViewer.emit()
@@ -134,7 +138,7 @@ export default defineComponent({
         case 'Data table':
           this.$nextTick(()=>{
             // DestroyViewer.emit()
-            this.buildTable()
+            // this.computeData()
           })
           break;
         
@@ -221,6 +225,8 @@ export default defineComponent({
 
         const gd_resultsByEvaluator = JSON.parse(localStorage.getItem('gd_resultsByEvaluator') as any);
         let GD_d3 = JSON.parse(localStorage.getItem('gd_d3'));
+
+        if(!gd_resultsByEvaluator) return;
         if (!GD_d3){
 
           const gd_d3 = {
@@ -537,7 +543,7 @@ export default defineComponent({
       // new Viewer(canvas, [genManager.model])
 
     },
-    buildTable(){
+    computeData(){
       const GD_results = JSON.parse(localStorage.getItem('gd_result'));
       const GD_study = JSON.parse(localStorage.getItem('gd_study'));
       if(this.data.length > 0 || this.columns.length > 0 ) return
@@ -607,45 +613,47 @@ export default defineComponent({
           "Total facade area": 40
         }
       ]
+      this.$nextTick(()=>{
 
-      const GD_data = JSON.parse(localStorage.getItem('gd_varsData') as any);
-      if (!GD_data) return; 
-      // const mock_columns = mock_table_data[0]
-      // const keys = Object.keys(mock_columns);
-
-      // for( let i = 0; i < keys.length; i++ )
-      //   this.columns.push({title: keys[i], key: keys[i]})
-
-      // this.data = mock_table_data
-      this.columns = [
-        {title: 'Generation №', key: 'generation'},
-        {title: 'Variant №', key: 'variant'},  
-        {title: 'Exterior area', key: 'exteriorArea'},
-        {title: 'Podium volume', key: 'podiumVolume'},
-        {title: 'Tower volume', key: 'towerVolume'},
-        {title: 'Total building area', key: 'totalBuildingArea'},
-        {title: 'Facade area', key: 'facadeArea'},
-
-      ]
-      
-      // const keys = Object.keys(GD_data[0].outputs);
-
-      // for( let i = 0; i < keys.length; i++ )
-      //   this.columns.push({title: keys[i], key: keys[i]})
-
-      
-      for( let i = 0; i < GD_data.length; i++ ) {
-        let outs = Object.keys(GD_data[i].outputs);
-        let data = {};
-
-        for( let j = 0; j < outs.length; j++ ){
-          data[outs[j]] = GD_data[i].outputs[outs[j]];
+        const GD_data = JSON.parse(localStorage.getItem('gd_varsData') as any);
+        if (!GD_data) return; 
+        // const mock_columns = mock_table_data[0]
+        // const keys = Object.keys(mock_columns);
+  
+        // for( let i = 0; i < keys.length; i++ )
+        //   this.columns.push({title: keys[i], key: keys[i]})
+  
+        // this.data = mock_table_data
+        this.columns = [
+          {title: 'Generation №', key: 'generation'},
+          {title: 'Variant №', key: 'variant'},  
+          {title: 'Exterior area', key: 'exteriorArea'},
+          {title: 'Podium volume', key: 'podiumVolume'},
+          {title: 'Tower volume', key: 'towerVolume'},
+          {title: 'Total building area', key: 'totalBuildingArea'},
+          {title: 'Facade area', key: 'facadeArea'},
+  
+        ]
+        
+        // const keys = Object.keys(GD_data[0].outputs);
+  
+        // for( let i = 0; i < keys.length; i++ )
+        //   this.columns.push({title: keys[i], key: keys[i]})
+  
+        
+        for( let i = 0; i < GD_data.length; i++ ) {
+          let outs = Object.keys(GD_data[i].outputs);
+          let data = {};
+  
+          for( let j = 0; j < outs.length; j++ ){
+            data[outs[j]] = GD_data[i].outputs[outs[j]];
+          }
+          data['generation'] = GD_data[i].generation;
+          data['variant'] = GD_data[i].varNum;
+  
+          this.data.push(data);
         }
-        data['generation'] = GD_data[i].generation;
-        data['variant'] = GD_data[i].varNum;
-
-        this.data.push(data);
-      }
+      })
 
 
       // if( GD_results && this.hasStudy ){
@@ -679,7 +687,7 @@ export default defineComponent({
         case 'Data table':
           this.$nextTick(()=>{
             DestroyViewer.emit()
-            this.buildTable()
+            // this.computeData()
           })
           this.currentTab = value;
           break;
@@ -720,7 +728,7 @@ export default defineComponent({
         case 'Data table':
           this.$nextTick(()=>{
             DestroyViewer.emit()
-            this.buildTable()
+            // this.computeData()
           })
           break;
         

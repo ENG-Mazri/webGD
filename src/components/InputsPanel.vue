@@ -352,11 +352,23 @@ export default defineComponent({
     async mounted() {
 
         GenFinished.on( ev => {
-            this.showOutputs = true
+            this.showOutputs = true;
+            window.$message.success('✔️ Generation completed successfully!', {
+                showIcon: false
+            });
         })
 
         ClearData.on( ev => {
-            this.showOutputs = false
+            this.showOutputs = false;
+            window.$message.success('🗑 Cleared all data!', {
+                showIcon: false
+            });
+        })
+
+        Refresh.on( ev => {
+            window.$message.success('♻️ Outputs visuals updated', {
+                showIcon: false
+            });
         })
 
         this.store = useDesign();
@@ -717,6 +729,7 @@ export default defineComponent({
         },
         closeModal(){
             this.isProcessing = false;
+            this.genProgress = 0;
         },
         refresh(){
             Refresh.emit()
@@ -767,7 +780,7 @@ h3{
 .n-collapse-item__content-inner{
     color: #a2588f !important;
     font-family: 'Chakra Petch', sans-serif !important;
-    padding: 0% !important;
+    /* padding: 0% !important; */
 }
 
 .n-button{
