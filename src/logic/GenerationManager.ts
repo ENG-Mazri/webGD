@@ -63,10 +63,10 @@ export class GenerationManager {
         return this.varsData;
     }
 
-    public populate(inputs: any, options: any, index: number, isNextGeneration: boolean = false) {
+    public populate(inputs: any, options: any, index: number, genNum: number, isNextGeneration: boolean = false) {
         if( this.populations == 0 || this.generations == 0 ) return;
 
-        let varData = this.generator.generateVariant(inputs, options.transX, options.transY, index);
+        let varData = this.generator.generateVariant(inputs, options.transX, options.transY, index, genNum);
         
         this.varsData.push(varData);
 
@@ -260,10 +260,10 @@ export class GenerationManager {
 
     }
 
-    public async getGlbFromGeneration( generationModel: Mesh, generationModelId: string ){
+    public async getGlbFromGeneration( generationModel: Mesh, genNum: number, generationModelId: string ){
         const gltfExporter = new GLTFExporter();
         let data: Blob;
-        await IDB.clearStorageAsync();
+        // await IDB.clearStorageAsync();
         gltfExporter.parse( generationModel, async (glb) => {
                 data = new Blob([new Uint8Array( await glb as ArrayBuffer, 0, glb.byteLength)]);
                 // let _data = btoa(
@@ -271,7 +271,7 @@ export class GenerationManager {
                 //       .reduce((data, byte) => data + String.fromCharCode(byte), '')
                 //   );
                 // await IDB.saveDataAsync( data, 'glb');
-                await IDB.saveDataAsync( data, 'glb');
+                await IDB.saveDataAsync( data, `glb_${genNum + 1}`);
 
                 console.log('[GenerationManager:Glb]: ', data)
 

@@ -36,7 +36,7 @@ import { defineComponent } from 'vue';
 import * as d3 from "d3";
 import {useDesign} from '../store/design';
 import { LogOutOutline as outputIcon} from '@vicons/ionicons5';
-import {GenFinished, BuildViewer, DestroyViewer, Refresh, ClearData} from '../events/index';
+import {GenFinished, BuildViewer, DestroyViewer, Refresh, ClearData, GlbUpdated} from '../events/index';
 import { Viewer } from '../logic/Viewer';
 import { BoxGeometry, Mesh, MeshPhongMaterial, SrcAlphaSaturateFactor, Vector2 } from 'three';
 import {BuildingMassGenerator} from '../logic/generators/BuildingMassGenerator';
@@ -78,14 +78,7 @@ export default defineComponent({
     },
     msg(){
       console.log("D3 Panel got message from Input panel: ",this.msg)
-    },
-    // hasStudy(){
-    //   if(this.hasStudy){
-    //     this.visualizeResult();
-    //     this.computeData();
-    //     this.buildViewer();
-    //   }
-    // }
+    }
   },
   mounted() {
     console.log("[Study available]: ", this.hasStudy);
@@ -98,6 +91,7 @@ export default defineComponent({
     
     BuildViewer.on( ev =>{
       this.$nextTick(()=> {
+        let glb = ev ? ev : 'glb_1';
         const threeContainer = document.getElementById('gallery_container') as HTMLElement;
         while (threeContainer.firstChild) {
           threeContainer.removeChild(threeContainer.lastChild as ChildNode);
@@ -110,7 +104,7 @@ export default defineComponent({
 
         this.viewer = new Viewer(this.canvas, []);
         let interval = setInterval( async ()=>{
-            let blob = await IDB.getDataByKeyAsync('glb');
+            let blob = await IDB.getDataByKeyAsync( glb );
             if(blob){
                 clearInterval(interval);
                 // console.log('[Viewer:Blob] ', blob)
@@ -165,6 +159,11 @@ export default defineComponent({
       this.data = [];
       this.columns = [];
       this.refreshOutputsBoard();
+    })
+
+    GlbUpdated.on( ev => {
+      console.log('EVENT GLB UPDATED: ', ev )
+      this.buildViewer(ev);
     })
   
   },
@@ -475,7 +474,7 @@ export default defineComponent({
       // if(svg && this.hasStudy) this.visualizeResult()
 
     },
-    buildViewer() {
+    buildViewer(glb: string = 'glb_1') {
       this.hasViewer = true;
 
       // let resultsData = JSON.parse(localStorage.getItem('gd_study') as any);
@@ -492,15 +491,15 @@ export default defineComponent({
         canvas.id = "three_canvas";
         threeContainer.appendChild(canvas);
 
-        let v = new Viewer(canvas, []);
+        let viewer = new Viewer(canvas, []);
         let interval = setInterval( async ()=>{
-            let blob = await IDB.getDataByKeyAsync('glb');
+            let blob = await IDB.getDataByKeyAsync( glb );
             if(blob){
                 clearInterval(interval);
                 // console.log('[Viewer:Blob] ', blob)
-                await v.init(canvas, [], blob)
+                await viewer.init(canvas, [], blob)
 
-                console.log('Renderer: ' ,v.renderer)
+                console.log('Renderer: ' ,viewer.renderer)
             }
         }, 100)
 

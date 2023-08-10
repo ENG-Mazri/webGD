@@ -28,7 +28,7 @@
                     <viewerIcon/>
                 </n-icon>
             </template>
-            <n-select id='generator' :options="generationList" default-value="Generation 1" placeholder=''/>
+            <n-select id='generation_3d' :on-update:value="updateGeneration" :options="generationList" default-value="Generation 1" placeholder='' />
         </n-collapse-item>
     </n-collapse>
 </template>
@@ -52,7 +52,9 @@ import {Strategy} from '../enums/Strategy'
 import {Generator} from '../enums/Generator'
 import {GenerationManager} from '../logic/GenerationManager'
 import {BuildingMassGenerator} from '../logic/generators/BuildingMassGenerator'
-import {IDB} from '../IDB'
+import {IDB} from '../IDB';
+import {GenFinished, Refresh, ClearData, BuildViewer, DestroyViewer, GlbUpdated} from '../events/index';
+
 
 
 export default defineComponent({
@@ -64,11 +66,11 @@ export default defineComponent({
         BoxObjectives, BuildingMassObjectives, outputIcon, OutputSettingsVue,
         clearIcon, viewerIcon, tableIcon
     },
-    props: ['hasStudy'],
+    props: ['hasStudy', 'generations'],
     data(){
         return {
             strategy: "Randomize",
-            generations: 1 ,
+            // generations: 1 ,
             populations: 1 ,
             store: '' as any,
             showModal: false,
@@ -83,7 +85,7 @@ export default defineComponent({
             name:0,
             isProcessing: false,
             genProgress: 0,
-            generationList: [ {label:'Generation 1', value: 'Generation 1' }, {label:'Generation 2', value: 'Generation 2' } ]
+            generationList: []
         }
     },
     setup () {
@@ -93,7 +95,23 @@ export default defineComponent({
     created (){},
     async mounted() {
 
+        // GenFinished.on(ev => {
+        //     console.log(`Generations completed: ${ev}`)
+        // })
+
+        console.log(`Generations completed: ${this.generations}`)
+        for( let i = 0; i < this.generations; i++ ){
+            this.generationList.push({ 
+                label:`Generation ${i+1}`,
+                value: `glb_${i+1}` 
+            })
+        }
     },
-    methods: {}
+    methods: {
+        updateGeneration(value: any){
+            console.log('Generation updated: ', value)
+            GlbUpdated.emit(value)
+        }
+    }
 })
 </script>

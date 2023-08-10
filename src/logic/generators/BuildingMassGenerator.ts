@@ -103,7 +103,9 @@ export class BuildingMassGenerator extends Generator {
     return {site_offset, contour, total_floors, tower_floor_height, podium_floor_height}
   }
 
-  public generateVariant(inputs: any, transX: number = 0, transY: number = 0, index: number, isNextGeneration: boolean = false ){
+  public generateVariant(inputs: any, transX: number = 0, transY: number = 0, index: number, genNum: number = 1, isNextGeneration: boolean = false){
+
+    
     let INPUTS: any;
     if (isNextGeneration){
 
@@ -285,7 +287,7 @@ export class BuildingMassGenerator extends Generator {
     this.TEXT_MESHES.push( ...this.createText( text, CONTOUR[0].x - 5 , CONTOUR[0].y) );
   
     const varData = {
-      generation: 1,
+      generation: genNum,
       id: uuidv4(),
       varNum: index, 
       strategy: 'Radomize',
@@ -919,8 +921,6 @@ export class BuildingMassGenerator extends Generator {
       default:
         break;
     }
-
-
     
     return {towerFacadeArea: total_facade_area,
             towerTotalArea: total_area
@@ -937,30 +937,17 @@ export class BuildingMassGenerator extends Generator {
     };
   }
 
-
+  public clearBuffers(){
+    this.SLAB_GEOMETRIES  = [];
+    this.SPACE_GEOMETRIES = [];
+    this.LINE_GEOMETRIES  = [];
+    this.TEXT_GEOMETRIES  = [];
+    this.SITE_GEOMETRIES  = [];
+    this.LINE_MESHES  = [];
+    this.TEXT_MESHES  = [];
+  }
 
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 

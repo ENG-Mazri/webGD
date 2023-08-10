@@ -31,6 +31,11 @@ export class Viewer {
         this.isActive = true;
         const scene = new Scene();
 
+        for (let i = scene.children.length - 1; i >= 0; i--) {
+            if(scene.children[i].type === "Mesh")
+                scene.remove(scene.children[i]);
+        }
+
         const size = {
             width: window.innerWidth,
             height: window.innerHeight,

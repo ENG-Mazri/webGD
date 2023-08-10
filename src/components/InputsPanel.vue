@@ -107,7 +107,7 @@
                         <outputIcon/>
                     </n-icon>
                 </template>
-                <OutputsPanel/>
+                <OutputsPanel :generations="generations"/>
             </n-collapse-item>
             <n-divider id="inputs_divider"/>
             <n-collapse-item class="parent_panels" title="Project settings" name="3" style="margin: 0px 2px;"><!-- Project settings -->
@@ -140,7 +140,7 @@
         <div class='outputPanel'> <!-- Toolbar -->
             <n-tooltip trigger="hover" placement="bottom">
                 <template #trigger>
-                    <n-button  @click='runTest' type="warning" quaternary>
+                    <n-button  @click='generate' type="warning" quaternary>
                         <n-icon >
                             <testIcon/>
                         </n-icon>
@@ -205,7 +205,24 @@
         </template>
         <n-space vertical align="center">
             <n-space justify="space-around" size="large">
-                <n-progress type="circle" color="#a2588f" :percentage="genProgress" />
+                <!-- <n-progress type="circle" color="#a2588f" :percentage="genProgress" /> -->
+                <n-progress
+                    type="multiple-circle"
+                    :stroke-width="6"
+                    :circle-gap="0.5"
+                    :percentage="[
+                        popProgress,
+                        genProgress
+                    ]"
+                    :color="[
+                        '#00cc99',
+                        '#a2588f'
+                    ]"
+                    >
+                    <div style="text-align: center">
+                        {{ popProgress }} %
+                    </div>
+                </n-progress>
                 <n-divider vertical />
                 <n-space vertical>
                     <n-text>
@@ -321,8 +338,8 @@ export default defineComponent({
                 // }
             ],
             strategy: "Randomize",
-            generations: 1 ,
-            populations: 1 ,
+            generations: 2 ,
+            populations: 5 ,
             store: '' as any,
             showModal: false,
             genFunction: 'Building mass',
@@ -336,6 +353,7 @@ export default defineComponent({
             name:0,
             isProcessing: false,
             genProgress: 0,
+            popProgress: 0,
             hideInputs: true
         }
     },
@@ -363,6 +381,7 @@ export default defineComponent({
             window.$message.success('🗑 Cleared all data!', {
                 showIcon: false
             });
+            setTimeout(()=>location.reload(), 1500); 
         })
 
         Refresh.on( ev => {
@@ -377,7 +396,7 @@ export default defineComponent({
 
     },
     methods: {
-        onCreate () {
+        onCreate() {
             return {
                 isCheck: false,
                 num: 1,
@@ -402,27 +421,6 @@ export default defineComponent({
                 roundToNearest: 0.25,
                 sampleFrequency: 0.001
             };
-
-
-            // GenFinished.emit();
-
-
-            // let resultsData = JSON.parse(localStorage.getItem('gd_result') as any);
-
-            // const gens = resultsData.length;
-            // const threeContainer = document.getElementById('gallery_container') as HTMLElement;
-            
-            // //* Clear all children
-            // while (threeContainer.firstChild) {
-            //     threeContainer.removeChild(threeContainer.lastChild as ChildNode);
-            // }
-            
-            // for ( let i=0; i < gens; i++) {
-            //     let canvas = document.createElement("canvas");
-            //     threeContainer.appendChild(canvas);
-            //     const viewer = new Viewer(canvas,resultsData[i]);
-            // }
-            // console.log(this.store.design)
         },
         getMCoordinates(d: any){
     
@@ -460,12 +458,10 @@ export default defineComponent({
             })
 
         },
-        async runTest() {
-            //TODO:  try getting inputs from child component 
-            const inputs = this.store.design[this.strategy].inputs;// <<------- uncomment this 
-            // const inputs = {}
-            
-            console.log('[Panel: run test]', this.store.design);
+        async generate(){
+            let currentGeneration = 0;
+
+            const inputs = this.store.design[this.strategy].inputs;
             //* SET INPUTS IN LOCAL STORAGE
             localStorage.setItem( 'gd_currentInputs', JSON.stringify( this.store.design[this.strategy].inputs ) );
             // const inputs = {
@@ -474,94 +470,43 @@ export default defineComponent({
             //     generations: this.generations,
             //     populations: this.populations,
             // }
-            // console.log('[Inputs]: ', inputs)
-            // console.log('[Store]: ', this.store.design)
             this.isProcessing = true;
-            // let threeContainer, viewer, canvas;
-            // if(!document.getElementById('three_canvas')){
-
-            //     threeContainer = document.getElementById('gallery_container') as HTMLElement;
-            //     if (threeContainer){
-            //         while (threeContainer.firstChild) {
-            //             threeContainer.removeChild(threeContainer.lastChild as ChildNode);
-            //         }
-
-            //         let canvas = document.createElement("canvas");
-            //         canvas.classList.add("result_canvas");
-            //         canvas.id = "three_canvas"
-            //         threeContainer.appendChild(canvas);
-            //     }
-            // }
 
             const worker = new Worker(new URL('../workers/GeneratorWorker.js', import.meta.url));
 
 
             worker.postMessage({ type: 'onProcess',
                                  populations: this.populations,
+                                 generations: this.generations,
                                  inputs: JSON.stringify(inputs)
                                 });
 
             worker.onmessage = async (event) => {
-                if(event.data.type == 'onProgress') this.genProgress = Math.round( event.data.progress * 100 / this.populations  );
+                if(event.data.type == 'onProgress') this.popProgress = Math.round( event.data.progress * 100 / this.populations  );
 
                 if(event.data.type == 'onFinished'){
-                    GenFinished.emit()
-                //     this.$emit(GDEvents.Generation_completed)
-                
-                //     if (threeContainer){
-                //         const canvas = document.getElementById('three_canvas');
-                //         viewer = new Viewer(canvas, []);
+                    this.popProgress = 100;
+                    currentGeneration = event.data.generation + 1;
+                    this.genProgress = Math.round( currentGeneration * 100 / this.generations  );
 
-                //     }
+                    window.$message.success(`🧬 Generation ${ currentGeneration } completed!`, {
+                        showIcon: false
+                    });
+                        
+                    // SET RESULTS IN LOCAL STORAGE
+
+                    localStorage.setItem('gd_varsData', JSON.stringify(event.data.varsData))
+                    localStorage.setItem('gd_resultsByEvaluator', JSON.stringify(Object.fromEntries(event.data.resultsByEvaluator) ))
+
                     
-                // SET RESULTS IN LOCAL STORAGE
-
-                localStorage.setItem('gd_varsData', JSON.stringify(event.data.varsData))
-                localStorage.setItem('gd_resultsByEvaluator', JSON.stringify(Object.fromEntries(event.data.resultsByEvaluator) ))
-
-                this.genProgress = 100;
-                // let blob: any;
-                let glbStatus = 0;
-                // let interval = setInterval( async ()=>{
-                //     const blob = await IDB.getDataByKeyAsync('glb');
-                //     if(blob){
-                //         clearInterval(interval);
-                //         // console.log('[Viewer:Blob] ', blob)
-                //         await vviewer.init(canvas, [], blob)
-
-                //     }
-                // }, 500)
+                    if(currentGeneration == this.generations) {
+                        this.genProgress = 100;
+                        GenFinished.emit(`${this.generations}`);
+    
+                    }
                 } 
+
             };
-
-
-            //TODO: just for now, the contour is hardcoded
-
-            // try {
-            //     switch(this.genFunction){
-            //         case Generator.BoxGenerator:
-            //             this.store.design[Strategy.Randomize]['populations'] = this.populations;
-            //             const generate = new TestAlgorithm(this.store.design[Strategy.Randomize])
-            //             const results = generate.process();
-            //             const study = generate.getStudyData();
-            //             localStorage.setItem('gd_result', JSON.stringify(results));
-            //             localStorage.setItem('gd_study', JSON.stringify(study));
-            //             this.showOutputs = true;
-            //             this.outputSet.length = 0;
-            //             for (let res in results) {
-            //                 this.outputSet.push({label: res, value: res})
-            //                 console.log({label: res, value: res})
-            //             }
-            //             break; 
-
-            //     }
-            
-            //     window?.$message.success('Test completed successfully!');
-            //     this.$emit('generate_finished')
-            // } catch (error) {
-            //     window?.$message.error('Test failed: make sure you provide inputs correctly')
-            //     console.warn(error)
-            // }
 
         },
         visualizeResult() {
