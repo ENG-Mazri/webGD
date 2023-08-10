@@ -1,7 +1,7 @@
 <template>
   <div class="outputsBoard" ref="$wrapper" @showResultEvent="visualizeResult">
     <n-card class="outputsPanel_main" justify-content="space-evenly">
-      <n-tabs ref="tabs" @update:value="handleUpdateValue" type="line" animated justify-content="space-around" :disabled="hasTabs" default-value="Scatterplot chart" tab-style="color: #a2588f; font-size: 16px !important;">
+      <n-tabs ref="tabs" @update:value="handleUpdateValue" type="line" animated justify-content="space-around" :disabled="hasTabs" :default-value="currentTab" tab-style="color: #a2588f; font-size: 16px !important;">
         <n-tab-pane name="Scatterplot chart" tab="Scatterplot chart">
           <div id="outputsPanel_main">
             <svg id="d3Svg"></svg>
@@ -9,6 +9,7 @@
         </n-tab-pane>
         <n-tab-pane name="Data table" tab="Data table" justify-content="space-evenly">
           <n-data-table
+            v-if="data.length !== 0"
             ref="dataTableInst"
             :columns="columns"
             :data="data"
@@ -26,6 +27,7 @@
            :page-count="viewerTotalpages" /> -->
         </n-tab-pane>
       </n-tabs>
+      <img v-if="data.length == 0" src="../../public/dse_grey.svg" id="noData_logo"/>
     </n-card>
   </div> 
 </template>
@@ -34,7 +36,7 @@ import { defineComponent } from 'vue';
 import * as d3 from "d3";
 import {useDesign} from '../store/design';
 import { LogOutOutline as outputIcon} from '@vicons/ionicons5';
-import {GenFinished, BuildViewer, DestroyViewer} from '../events/index';
+import {GenFinished, BuildViewer, DestroyViewer, Refresh, ClearData} from '../events/index';
 import { Viewer } from '../logic/Viewer';
 import { BoxGeometry, Mesh, MeshPhongMaterial, SrcAlphaSaturateFactor, Vector2 } from 'three';
 import {BuildingMassGenerator} from '../logic/generators/BuildingMassGenerator';
@@ -64,7 +66,8 @@ export default defineComponent({
       viewerCurrPage: 2,
       hasViewer: false,
       viewer: null as any,
-      canvas: null as any
+      canvas: null as any,
+      currentTab: 'Data table'
 
     }
    
@@ -87,13 +90,10 @@ export default defineComponent({
   mounted() {
     console.log("[Study available]: ", this.hasStudy);
 
-    GenFinished.on( (event: string) => {
-      
-      console.log('Generation finished!')
-    })
-    this.visualizeResult();
+    this.refreshOutputsBoard();
 
     let hasStudy = JSON.parse(localStorage.getItem('gd_hasStudy') as any);
+    
     BuildViewer.on( ev =>{
       this.$nextTick(()=> {
         const threeContainer = document.getElementById('gallery_container') as HTMLElement;
@@ -119,9 +119,48 @@ export default defineComponent({
         }, 100)
       })
     })
-    
-    DestroyViewer.on(ev=>{
-      this.viewer.renderer.forceContextLoss();
+
+    DestroyViewer.on( ev =>{
+      // this.viewer.renderer.forceContextLoss();
+    })
+
+    GenFinished.on( ev => {
+      switch (this.currentTab) {
+        case 'Scatterplot chart':
+            // DestroyViewer.emit()
+            this.visualizeResult()
+          break;
+
+        case 'Data table':
+          this.$nextTick(()=>{
+            // DestroyViewer.emit()
+            this.buildTable()
+          })
+          break;
+        
+        case '3D visual':
+          this.$nextTick(()=>{
+            // this.buildViewer()
+            BuildViewer.emit()
+          })
+          break;
+        default:
+          break;
+      }
+    })
+
+    Refresh.on( ev => {
+      this.refreshOutputsBoard();
+    })
+
+    ClearData.on( ev => {
+      localStorage.removeItem('gd_resultsByEvaluator');
+      localStorage.removeItem('gd_varsData');
+      localStorage.removeItem('gd_currentInputs');
+      localStorage.setItem('has_study', 'false');
+      this.data = [];
+      this.columns = [];
+      this.refreshOutputsBoard();
     })
   
   },
@@ -181,28 +220,32 @@ export default defineComponent({
         ];
 
         const gd_resultsByEvaluator = JSON.parse(localStorage.getItem('gd_resultsByEvaluator') as any);
+        let GD_d3 = JSON.parse(localStorage.getItem('gd_d3'));
+        if (!GD_d3){
 
-        const GD_d3 = {
-          x_axis: Object.keys(gd_resultsByEvaluator)[0],
-          y_axis: Object.keys(gd_resultsByEvaluator)[1],
-          size: Object.keys(gd_resultsByEvaluator)[2],
-          color: Object.keys(gd_resultsByEvaluator)[3]
-        };
+          const gd_d3 = {
+            x_axis: Object.keys(gd_resultsByEvaluator)[0],
+            y_axis: Object.keys(gd_resultsByEvaluator)[1],
+            size: Object.keys(gd_resultsByEvaluator)[2],
+            color: Object.keys(gd_resultsByEvaluator)[3]
+          };
+          localStorage.setItem('gd_d3', JSON.stringify(gd_d3));
+        }
 
-
-        const padding = 15;
+        
+        const padding = 50;
         const maxX = d3.max( [ ...gd_resultsByEvaluator[GD_d3['x_axis']] ], (d,i) => d);
         const maxY = d3.max( [ ...gd_resultsByEvaluator[GD_d3['y_axis']] ], (d,i) => d);
         const maxSize = d3.max( [...gd_resultsByEvaluator[GD_d3['size']] ], (d,i) => d);
         const maxColor = d3.max( [...gd_resultsByEvaluator[GD_d3['color']] ], (d,i) => d);
-
+        
         const xScale = d3.scaleLinear()
                           .domain([0, maxX as number])
                           .range([padding, w - padding]);
 
         const yScale = d3.scaleLinear()
                           .domain([0, maxY as number])
-                          .range([h - padding, padding]);
+                          .range([h- padding, padding]);
 
         const sizeScale = d3.scaleLinear()
                           .domain([0, maxSize as number])
@@ -225,72 +268,132 @@ export default defineComponent({
             .style("fill", "#ffffff")
             .call(yAxis); 
 
+        // console.log('[X scale]: ',xAxis);
+        // console.log('[Y scale]: ',yAxis);
+
+
         // const GD_data = JSON.parse(localStorage.getItem('gd_study') as any);
         const GD_data = JSON.parse(localStorage.getItem('gd_varsData') as any);
        
-        const clip = svg.append("defs").append("SVG:clipPath")
-            .attr("id", "clip")
-            .append("SVG:rect")
-            .attr("width", w )
-            .attr("height", h - padding )
-            .attr("x", 13)
-            .attr("y", 0);
-       
-       
-        const scatter = svg.append('g')
-            .attr("clip-path", "url(#clip)")
+          const clip = svg.append("defs").append("SVG:clipPath")
+              .attr("id", "clip")
+              .append("SVG:rect")
+              .attr("width", w )
+              .attr("height", h - padding )
+              .attr("x", 13)
+              .attr("y", 0);
+        
+        
+          const scatter = svg.append('g')
+              .attr("clip-path", "url(#clip)")
 
-        // Add circles
-        scatter
-          .selectAll("circle")
-          .data([...GD_data])
-          .enter()
-          .append("circle")
-          .attr("cx", (d) => xScale(d.outputs[GD_d3['x_axis']]) )
-          .attr("cy", (d) => yScale(d.outputs[GD_d3['y_axis']]) )
-          .attr("r",  (d) => sizeScale(d.outputs[GD_d3['size']]) )
-          .attr('fill', (d) => d3.interpolateRainbow(colorScale(d.outputs[GD_d3['color']])))
-          // .style("fill", "#61a3a9")
-          .attr("class", "chart_circle")
-          .style("opacity", 0.5)
-          .append("title")
-          // .attr('class', 'svg_tooltip')
-          .text((d) => `Site offset: ${d.inputs.site_offset}\nTotal floors: ${d.inputs.total_floors}\nTower floor height: ${d.inputs.tower_floor_height}\nPodium floor height: ${d.inputs.podium_floor_height}`)
+          // Add circles
+          scatter
+            .selectAll("circle")
+            .data([...GD_data])
+            .enter()
+            .append("circle")
+            .attr("cx", (d) => xScale(d.outputs[GD_d3['x_axis']]) )
+            .attr("cy", (d) => yScale(d.outputs[GD_d3['y_axis']]) )
+            .attr("r",  (d) => sizeScale(d.outputs[GD_d3['size']]) )
+            .attr('fill', (d) => d3.interpolateRainbow(colorScale(d.outputs[GD_d3['color']])))
+            // .style("fill", "#61a3a9")
+            .attr("class", "chart_circle")
+            .style("opacity", 0.5)
+            .append("title")
+            // .attr('class', 'svg_tooltip')
+            .text((d) => `Site offset: ${d.inputs.site_offset}\nTotal floors: ${d.inputs.total_floors}\nTower floor height: ${d.inputs.tower_floor_height}\nPodium floor height: ${d.inputs.podium_floor_height}`)
 
 
-        // Set the zoom and Pan features: how much you can zoom, on which part, and what to do when there is a zoom
-        let zoom = d3.zoom()
-            .scaleExtent([1, 5])  // This control how much you can unzoom (x0.5) and zoom (x20)
-            .extent([[0, 0], [w, h]])
-            .on("zoom", (event) => {
+          // Set the zoom and Pan features: how much you can zoom, on which part, and what to do when there is a zoom
+          let zoom = d3.zoom()
+              .scaleExtent([1, 5])  // This control how much you can unzoom (x0.5) and zoom (x20)
+              .extent([[0, 0], [w, h]])
+              .on("zoom", (event) => {
 
-              // recover the new scale
-              let newX = event.transform.rescaleX(xScale);
-              let newY = event.transform.rescaleY(yScale);
+                // recover the new scale
+                let newX = event.transform.rescaleX(xScale);
+                let newY = event.transform.rescaleY(yScale);
 
-              // update axes with these new boundaries
-              x.call(d3.axisBottom(newX))
-              y.call(d3.axisLeft(newY))
-              
-              // update circle position
-              scatter
-                .selectAll("circle")
-                .attr('cx', (d) => newX( (d as any).outputs[GD_d3['x_axis']] ))
-                .attr('cy', (d) => newY( (d as any).outputs[GD_d3['y_axis']] ));
+                // update axes with these new boundaries
+                x.call(d3.axisBottom(newX))
+                y.call(d3.axisLeft(newY))
+                
+                // update circle position
+                scatter
+                  .selectAll("circle")
+                  .attr('cx', (d) => newX( (d as any).outputs[GD_d3['x_axis']] ))
+                  .attr('cy', (d) => newY( (d as any).outputs[GD_d3['y_axis']] ));
 
-            }) as any;
+              }) as any;
 
-        // This add an invisible rect on top of the chart area. This rect can recover pointer events: necessary to understand when the user zoom
-        svg.append("rect")
-            .attr("width", w - 20)
-            .attr("height", h - 20)
-            .style("fill", "none")
-            .style("pointer-events", "all")
-            .attr('transform', 'translate(' + margin.left + ',' + margin.top+ ')')
-            .call( zoom );
+          // This add an invisible rect on top of the chart area. This rect can recover pointer events: necessary to understand when the user zoom
+          svg.append("rect")
+              .attr("width", w - 20)
+              .attr("height", h - 20)
+              .style("fill", "none")
+              .style("pointer-events", "all")
+              .attr('transform', 'translate(' + margin.left + ',' + margin.top+ ')')
+              .call( zoom );
 
-        scatter.raise()
+          scatter.raise()
+
+
+        //** Testing ather D3 charts  **/
+        // Parse the Data
+      //   d3.csv("https://raw.githubusercontent.com/holtzy/D3-graph-gallery/master/DATA/iris.csv", (data) => {
+
+      //   // Extract the list of dimensions we want to keep in the plot. Here I keep all except the column called Species
+      //   let dimensions = (d3 as any).keys(data[0]).filter( (d) => { return d != "Species" })
+
+      //   // For each dimension, I build a linear scale. I store all in a y object
+      //   // let y = {}
+      //   // for ( let i in dimensions) {
+      //   //   let name = dimensions[i]
+      //   //   y[name] = d3.scaleLinear()
+      //   //     .domain( d3.extent(data, (d) => { return +d[name] }) as any)
+      //   //     .range([h, 0])
+      //   // }
+
+      //   // // Build the X scale -> it find the best position for each Y axis
+      //   // let x = d3.scalePoint()
+      //   //   .range([0, w])
+      //   //   .padding(1)
+      //   //   .domain(dimensions);
+
+      //   // // The path function take a row of the csv as input, and return x and y coordinates of the line to draw for this raw.
+      //   // function path(d) {
+      //   //     return d3.line()(dimensions.map(function(p) { return [x(p), y[p](d[p])]; }));
+      //   // }
+
+      //   // // Draw the lines
+      //   // svg
+      //   //   .selectAll("myPath")
+      //   //   .data(data)
+      //   //   .enter().append("path")
+      //   //   .attr("d",  path)
+      //   //   .style("fill", "none")
+      //   //   .style("stroke", "#69b3a2")
+      //   //   .style("opacity", 0.5)
+
+      //   // // Draw the axis:
+      //   // svg.selectAll("myAxis")
+      //   //   // For each dimension of the dataset I add a 'g' element:
+      //   //   .data(dimensions).enter()
+      //   //   .append("g")
+      //   //   // I translate this element to its right position on the x axis
+      //   //   .attr("transform", function(d) { return "translate(" + x(d) + ")"; })
+      //   //   // And I build the axis with the call function
+      //   //   .each(function(d) { d3.select(this).call(d3.axisLeft().scale(y[d])); })
+      //   //   // Add axis title
+      //   //   .append("text")
+      //   //     .style("text-anchor", "middle")
+      //   //     .attr("y", -9)
+      //   //     .text( ((d) => { return d; } ) as any)
+      //   //     .style("fill", "black")
+      //   }
       })
+
 
 
       
@@ -373,27 +476,27 @@ export default defineComponent({
 
       // const gens = resultsData.length;
       this.$nextTick(()=>{
-        // const threeContainer = document.getElementById('gallery_container') as HTMLElement;
-        // while (threeContainer.firstChild) {
-        //   threeContainer.removeChild(threeContainer.lastChild as ChildNode);
-        // }
+        const threeContainer = document.getElementById('gallery_container') as HTMLElement;
+        while (threeContainer.firstChild) {
+          threeContainer.removeChild(threeContainer.lastChild as ChildNode);
+        }
         
-        // let canvas = document.createElement("canvas");
-        // canvas.classList.add("result_canvas");
-        // canvas.id = "three_canvas";
-        // threeContainer.appendChild(canvas);
+        let canvas = document.createElement("canvas");
+        canvas.classList.add("result_canvas");
+        canvas.id = "three_canvas";
+        threeContainer.appendChild(canvas);
 
-        // let v = new Viewer(canvas, []);
-        // let interval = setInterval( async ()=>{
-        //     let blob = await IDB.getDataByKeyAsync('glb');
-        //     if(blob){
-        //         clearInterval(interval);
-        //         // console.log('[Viewer:Blob] ', blob)
-        //         await v.init(canvas, [], blob)
+        let v = new Viewer(canvas, []);
+        let interval = setInterval( async ()=>{
+            let blob = await IDB.getDataByKeyAsync('glb');
+            if(blob){
+                clearInterval(interval);
+                // console.log('[Viewer:Blob] ', blob)
+                await v.init(canvas, [], blob)
 
-        //         console.log('Renderer: ' ,v.renderer)
-        //     }
-        // }, 100)
+                console.log('Renderer: ' ,v.renderer)
+            }
+        }, 100)
 
       })
 
@@ -506,7 +609,7 @@ export default defineComponent({
       ]
 
       const GD_data = JSON.parse(localStorage.getItem('gd_varsData') as any);
-      
+      if (!GD_data) return; 
       // const mock_columns = mock_table_data[0]
       // const keys = Object.keys(mock_columns);
 
@@ -570,6 +673,7 @@ export default defineComponent({
         case 'Scatterplot chart':
             DestroyViewer.emit()
             this.visualizeResult()
+            this.currentTab = value;
           break;
 
         case 'Data table':
@@ -577,6 +681,7 @@ export default defineComponent({
             DestroyViewer.emit()
             this.buildTable()
           })
+          this.currentTab = value;
           break;
         
         case '3D visual':
@@ -584,6 +689,7 @@ export default defineComponent({
             // this.buildViewer()
             BuildViewer.emit()
           })
+          this.currentTab = value;
           break;
 
         default:
@@ -603,12 +709,44 @@ export default defineComponent({
       //   .selectAll("circle")
       //   .attr('cx', function(d) {return newX(d.Sepal_Length)})
       //   .attr('cy', function(d) {return newY(d.Petal_Length)});
+    },
+    refreshOutputsBoard(){
+      switch (this.currentTab) {
+        case 'Scatterplot chart':
+            DestroyViewer.emit()
+            this.visualizeResult()
+          break;
+
+        case 'Data table':
+          this.$nextTick(()=>{
+            DestroyViewer.emit()
+            this.buildTable()
+          })
+          break;
+        
+        case '3D visual':
+          this.$nextTick(()=>{
+            // this.buildViewer()
+            BuildViewer.emit()
+          })
+          break;
+
+        default:
+          break;
+      }
     }
   }
 });
 </script>
 
 <style >
+
+#noData_logo{
+  position: absolute;
+  bottom: 220px;
+  right: 27%;
+  width: 500px;
+}
 .outputsBoard{
   position: absolute;
   right: 30px;
@@ -679,7 +817,7 @@ export default defineComponent({
   position: relative;
   /* background-color: aquamarine !important; */
   width: 97%;
-  height: 100%;
+  height: 100%;  /* <<<-------------------  this controls the height of the canvas */
   margin: 3px;
   padding: 5px;
   /* display: flex;

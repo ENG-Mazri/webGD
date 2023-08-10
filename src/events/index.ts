@@ -29,4 +29,5 @@ export const GenFinished = useEventBus<string>('GenFinished');
 export const GlbUpdated = useEventBus<string>('GlbUpdated');
 export const BuildViewer = useEventBus<string>('BuildViewer');
 export const DestroyViewer = useEventBus<string>('DestroyViewer');
-
+export const Refresh = useEventBus<string>('Refresh');
+export const ClearData = useEventBus<string>('ClearData');

@@ -103,12 +103,19 @@ export class BuildingMassGenerator extends Generator {
     return {site_offset, contour, total_floors, tower_floor_height, podium_floor_height}
   }
 
-  public generateVariant(inputs: any, transX: number = 0, transY: number= 0, index: number){
-    const {site_offset, contour, total_floors, tower_floor_height, podium_floor_height} = this.getInputs(inputs);
+  public generateVariant(inputs: any, transX: number = 0, transY: number = 0, index: number, isNextGeneration: boolean = false ){
+    let INPUTS: any;
+    if (isNextGeneration){
+
+    } else {
+
+      // const {site_offset, contour, total_floors, tower_floor_height, podium_floor_height} = this.getInputs(inputs);
+      INPUTS = this.getInputs(inputs);
+    }
 
     const spaceExtrudeSettings = {
         steps: 1,
-        depth: tower_floor_height - constants.SLAB_THICKNESS,
+        depth: INPUTS.tower_floor_height - constants.SLAB_THICKNESS,
         bevelEnabled: true,
         bevelThickness: 0,
         bevelSize: 0,
@@ -117,18 +124,18 @@ export class BuildingMassGenerator extends Generator {
     };
 
     const inputsObj = {
-      site_offset,
-      total_floors,
-      tower_floor_height, 
-      podium_floor_height,
-      contour
+      site_offset: INPUTS.site_offset,
+      total_floors: INPUTS.total_floors,
+      tower_floor_height: INPUTS.tower_floor_height, 
+      podium_floor_height: INPUTS.podium_floor_height,
+      contour: INPUTS.contour
     }
 
-    const offsetedContour = this.offsetContour( site_offset, contour );
+    const offsetedContour = this.offsetContour( INPUTS.site_offset, INPUTS.contour );
     const CONTOUR = this.getTranslatedContour(offsetedContour, transX, transY);
-    const CONTOUR_ = this.getTranslatedContour(contour, transX, transY);
+    const CONTOUR_ = this.getTranslatedContour(INPUTS.contour, transX, transY); // non offseted contour
     
-    const TOTAL_FLOORS_NUMBER = total_floors;
+    const TOTAL_FLOORS_NUMBER = INPUTS.total_floors;
   
     const PODIUM_FLOORS_NUMBER = this.randomIntFromInterval(1, 4);
     const TOWER_FLOORS_NUMBER = TOTAL_FLOORS_NUMBER - PODIUM_FLOORS_NUMBER;
@@ -137,25 +144,29 @@ export class BuildingMassGenerator extends Generator {
     const contourLines = []; // add this to scene
     const contourLines3 = [];
     let towerContour: Vector2[] = [];
+
+    //* OTHER METRICS
     let towerType: string;
+    let podiumBaseWidth: number;
+    let podiumBaseLength: number;
+    // let towerRotation: number;
+
     let space_shapes = [];
 
 
     for( let i=0; i < CONTOUR.length - 1; i++ ){
-
-        let current = CONTOUR[i];
-        let incremented = CONTOUR[i+1];
-        const geometry = new BufferGeometry().setFromPoints([current,incremented]);
-        const line = new Line(geometry, mat);
-        line.rotation.set(Math.PI/2,0, 0);
-        line.updateMatrix()
-        
-        let l3 = new Line3( new Vector3(current.x, 0, current.y),
-                            new Vector3(incremented.x, 0, incremented.y));
-        contourLines.push(line)
-        this.LINE_MESHES.push(line)
-        contourLines3.push(l3)
-
+      let current = CONTOUR[i];
+      let incremented = CONTOUR[i+1];
+      const geometry = new BufferGeometry().setFromPoints([current,incremented]);
+      const line = new Line(geometry, mat);
+      line.rotation.set(Math.PI/2,0, 0);
+      line.updateMatrix()
+      
+      let l3 = new Line3( new Vector3(current.x, 0, current.y),
+                          new Vector3(incremented.x, 0, incremented.y));
+      contourLines.push(line)
+      this.LINE_MESHES.push(line)
+      contourLines3.push(l3)
     }
       
       // TODO: SITE BASE
@@ -236,7 +247,7 @@ export class BuildingMassGenerator extends Generator {
 
     let topPodium = 0; // the highest point on the podium
 
-    const pod = this.generatePodium(PODIUM_WIDTH, PODIUM_LENGTH , this.extrudeSettings.depth, podiumBase.matrix , PODIUM_FLOORS_NUMBER, podium_floor_height)
+    const pod = this.generatePodium(PODIUM_WIDTH, PODIUM_LENGTH , this.extrudeSettings.depth, podiumBase.matrix , PODIUM_FLOORS_NUMBER, INPUTS.podium_floor_height)
     // console.log(`Top podium is at: ${topPodium}`)
     // console.log('Podium: ', pod)
     
@@ -246,11 +257,14 @@ export class BuildingMassGenerator extends Generator {
     const topPodShapeF = this.formBaseShape(contourF);
     const topPodShapeS = this.formBaseShape(contourS);
 
-    let rndBool = Math.random() < 0.5;
-    if(rndBool)
-      this.createTypeB(tower_floor_height, pod, spaceExtrudeSettings, podiumBase, space_shapes)
-    else
-      this.createTypeA(topPodShapeF,topPodShapeS, spaceExtrudeSettings, pod.height, tower_floor_height, TOWER_FLOORS_NUMBER, podiumBase.matrix, space_shapes);
+    let rndBool = Math.random() < 0.7;
+    if(rndBool){
+      this.createTypeB(INPUTS.tower_floor_height, pod, spaceExtrudeSettings, podiumBase, space_shapes)
+      towerType = 'Type_B';
+    } else {
+      this.createTypeA(topPodShapeF,topPodShapeS, spaceExtrudeSettings, pod.height, INPUTS.tower_floor_height, TOWER_FLOORS_NUMBER, podiumBase.matrix, space_shapes);
+      towerType = 'Type_A';
+    }
     
 
     //TODO: create a text entity for each generator
@@ -258,7 +272,7 @@ export class BuildingMassGenerator extends Generator {
 
     const totalGeometry  = mergeGeometries( [...this.SLAB_GEOMETRIES, ...this.SPACE_GEOMETRIES] );
 
-    const results = this.evaluate( CONTOUR, pod, totalGeometry, space_shapes as any, tower_floor_height, spaceExtrudeSettings.depth, PODIUM_FLOORS_NUMBER);
+    const results = this.evaluate( CONTOUR, pod, totalGeometry, space_shapes as any, INPUTS.tower_floor_height, spaceExtrudeSettings.depth, PODIUM_FLOORS_NUMBER);
     
     const text = [  `Variant number: ${index}`,
                     `Exterior area: ${results.exteriorArea} m2`,
@@ -277,9 +291,14 @@ export class BuildingMassGenerator extends Generator {
       strategy: 'Radomize',
       generator: this.generatorName,
       inputs: inputsObj,
-      otherMetrics: {},
+      otherMetrics: {
+        towerType,
+        rotation
+      },
       outputs: results
     }
+
+
     return varData;
   }
 

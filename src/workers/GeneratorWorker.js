@@ -35,7 +35,7 @@ const populations = 3;
 
 onmessage = async (event) => {
   if( event.data.type == 'onProcess'){
-    // const inputs = JSON.parse(event.data.inputs);
+    const inputs = JSON.parse(event.data.inputs);
 
     const bldMassGen = new BuildingMassGenerator();
     // const model_mesh = bldMassGen.generateVariant(mock_inputs);
@@ -74,47 +74,36 @@ onmessage = async (event) => {
       const resultsByEvaluator = genManager.getResultsByEvaluator();
       
       //* Compute fitness
-      const evalMaxMin = genManager.computeMaxMin(resultsByEvaluator);
-      const chancesArray = genManager.computeFitnessMain(varsData, evalMaxMin, resultsByEvaluator);
+    //   const evalMaxMin = genManager.computeMaxMin(resultsByEvaluator);
+    //   const chancesArray = genManager.computeFitnessMain(varsData, evalMaxMin, resultsByEvaluator);
 
-      const parentsIDs = []
-      const PARENTS = [];
-      //* Selection
-      for( let i = 0; i < event.data.populations; i++ ) {
-        genManager.pickParents( parentsIDs, chancesArray);
-      }
+    //   const parentsIDs = []
+    //   const PARENTS = [];
+    //   //* Selection
+    //   for( let i = 0; i < event.data.populations; i++ ) {
+    //     genManager.pickParents( parentsIDs, chancesArray);
+    //   }
 
-      console.log("[WORKER: parents ids]", parentsIDs);
-      // console.log("[WORKER: parents]", PARENTS);
-      genManager.runMatingPool(parentsIDs);
+    //   console.log("[WORKER: parents ids]", parentsIDs);
+    //   // console.log("[WORKER: parents]", PARENTS);
+    //   genManager.runMatingPool(parentsIDs);
 
+    // // }
 
-
-
-
-
-
-    // }
-
-
-
-    console.log('[Worker: results] ', resultsByEvaluator);
-    console.log('[Worker: vars] ', varsData);
+    // console.log('[Worker: results] ', resultsByEvaluator);
+    // console.log('[Worker: vars] ', varsData);
     // console.log('[Worker: max - min] ', evalMaxMin);
     // console.log('[Worker: fitness] ', chances);
     // console.log('[Worker: outputs fitness] ', outputsFitness);
 
 
-    // await genManager.getGlbFromGeneration(model, uuidv4()).then(()=>{
-      postMessage({type: 'onFinished',
-        varsData,
-        resultsByEvaluator
+    await genManager.getGlbFromGeneration( model, uuidv4() )
+      .then(()=>{
+        postMessage({type: 'onFinished',
+          varsData,
+          resultsByEvaluator
+        });
+
       });
-
-    // });
-
-    // console.log('[Variants]: ', this.variants);
-
   }
-  // postMessage('helokojm');
 };

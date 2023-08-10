@@ -99,7 +99,7 @@
                 <n-divider title-placement="left">
                     Site boundary
                 </n-divider>
-                <!-- <n-upload :on-change="upload" ref="file2">
+                <n-upload :on-change="upload" ref="file2">
                     <n-button text color="#153048">
                         <template #icon>
                             <n-icon>
@@ -108,8 +108,8 @@
                         </template>
                         Upload .svg
                     </n-button>
-                </n-upload> -->
-                <DrawPad/>
+                </n-upload>
+                <!-- <DrawPad/> -->
             </div>
         </n-space>
     </div>
@@ -121,8 +121,9 @@ import {useDesign} from '../../store/design';
 import { DocumentAttachOutline as fileIcon } from '@vicons/ionicons5';
 import { parse as SVGParser } from 'svg-parser';
 import DrawPad from './DrawPad.vue'
-// import { parse, stringify } from 'svgson';
 import * as THREE from 'three';
+import {SVGTools} from '../../tools/SVGTools'
+// import { parse, stringify } from 'svgson';
 // import { parse, scale, stringify } from 'svg-path-tools'
 
 // import {createInterpolator} from 'svg-path-interpolator';
@@ -288,6 +289,11 @@ export default defineComponent({
             const dec = enc.decode( data as Uint8Array );
             const parsed = SVGParser(dec);
             const path = parsed.children[0].children[0].properties.d;
+
+            const coords = SVGTools.parsePath(path);
+            // this.store.design[this.function]['inputs']['contour'] = coords;
+            console.log('[COORDS} ', coords)
+
             const lines = [];
 
             const config = {

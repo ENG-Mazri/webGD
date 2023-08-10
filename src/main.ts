@@ -32,3 +32,48 @@ app.component('TabPanel', TabPanel);
 
 app.use(createPinia());
 app.mount('#app');
+
+//todo: tst rearrangr array max min 
+let array = [9,
+    18.6,
+    16.2,
+    20.9,
+    34.8];
+let array2 = [...array]
+let outputMax = [];
+
+// for( let i = 0; i < array.length; i++){
+//     let v = Math.round(array[i])
+//     for( let j = 0; j < v; j++){
+//         outputMax.push(array[i])
+//     }
+// }
+
+// // console.log(outputMax)
+
+// let outputMin = [];
+
+// for( let i = 0; i < array.length; i++){
+//     let v = Math.round(array[ array2.length - 1])
+//     for( let j = 0; j < v; j++){
+//         outputMin.push(array[i])
+//     }
+//     array2.pop()
+// }
+
+
+// let randomMax = outputMax[Math.floor(Math.random() * outputMax.length)];
+// let randomMin = outputMin[Math.floor(Math.random() * outputMin.length)];
+
+// console.log('Max: ', randomMax)
+// console.log('Min: ', randomMin)
+
+
+// import * as d3 from "d3";
+
+// (async () =>{
+//     const svg = await d3.svg("/contour.svg");
+    
+//     console.log('[SVG] ', svg);
+
+// })();

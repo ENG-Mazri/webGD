@@ -40,6 +40,28 @@ export default defineComponent({
             y_axis: null,
             size: null,
             color: null,
+            outputOptions: [
+                {
+                    label: 'exteriorArea',
+                    value: 'exteriorArea'
+                },
+                {
+                    label: 'facadeArea',
+                    value: 'facadeArea'
+                },
+                {
+                    label: 'podiumVolume',
+                    value: 'podiumVolume'
+                },
+                {
+                    label: 'totalBuildingArea',
+                    value: 'totalBuildingArea'
+                },
+                {
+                    label: 'towerVolume',
+                    value: 'towerVolume'
+                },
+            ]
         }
     },
     setup () {
@@ -83,24 +105,29 @@ export default defineComponent({
         this.store = useDesign();
         // console.log("OUTPUT ", this.outputOptions);
 
-        const GD_results = JSON.parse(localStorage.getItem('gd_result'));
-        if( GD_results ){
-            const keys = Object.keys(GD_results);
-            this.x_axis = keys[0];
-            this.y_axis = keys[1];
-            this.size = keys[2];
-            // this.color = keys[3];
-            // window.dispatchEvent(show_chart_event)
+        const gd_resultsByEvaluator = JSON.parse(localStorage.getItem('gd_resultsByEvaluator') );
 
-            
+
+        // const GD_d3 = {
+        //   x_axis: Object.keys(gd_resultsByEvaluator)[0],
+        //   y_axis: Object.keys(gd_resultsByEvaluator)[1],
+        //   size: Object.keys(gd_resultsByEvaluator)[2],
+        //   color: Object.keys(gd_resultsByEvaluator)[3]
+        // };
+        if( gd_resultsByEvaluator ){
+            this.x_axis = Object.keys(gd_resultsByEvaluator)[0];
+            this.y_axis = Object.keys(gd_resultsByEvaluator)[1];
+            this.size = Object.keys(gd_resultsByEvaluator)[2];
+            this.color = Object.keys(gd_resultsByEvaluator)[3];
+            // window.dispatchEvent(show_chart_event)            
         }
 
-        localStorage.setItem('gd_d3', JSON.stringify({
-            x_axis: this.x_axis,
-            y_axis: this.y_axis,
-            size: this.size,
-            color: this.color
-        }));
+        // localStorage.setItem('gd_d3', JSON.stringify({
+        //     x_axis: this.x_axis,
+        //     y_axis: this.y_axis,
+        //     size: this.size,
+        //     color: this.color
+        // }));
     },
     methods: {
     }
