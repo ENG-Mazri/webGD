@@ -208,23 +208,23 @@
                 <!-- <n-progress type="circle" color="#a2588f" :percentage="genProgress" /> -->
                 <n-progress
                     type="multiple-circle"
-                    :stroke-width="6"
-                    :circle-gap="0.5"
+                    :stroke-width="5"
+                    :circle-gap="1"
                     :percentage="[
                         popProgress,
                         genProgress
                     ]"
                     :color="[
-                        '#00cc99',
-                        '#a2588f'
+                        '#80ffdf',
+                        '#c18bb1'
                     ]"
                     >
-                    <div style="text-align: center">
+                    <div style="text-align: center; font-size: 25px">
                         {{ popProgress }} %
                     </div>
                 </n-progress>
                 <n-divider vertical />
-                <n-space vertical>
+                <n-space vertical style="padding-top: 25%;">
                     <n-text>
                         Generator: {{ genFunction }}
                     </n-text>
@@ -339,7 +339,7 @@ export default defineComponent({
             ],
             strategy: "Randomize",
             generations: 2 ,
-            populations: 5 ,
+            populations: 4 ,
             store: '' as any,
             showModal: false,
             genFunction: 'Building mass',
@@ -472,12 +472,14 @@ export default defineComponent({
             // }
             this.isProcessing = true;
 
-            const worker = new Worker(new URL('../workers/GeneratorWorker.js', import.meta.url));
 
+            const worker = new Worker(new URL('../workers/GeneratorWorker.js', import.meta.url));
+            const gd_goals = localStorage.getItem('gd_goals');
 
             worker.postMessage({ type: 'onProcess',
                                  populations: this.populations,
                                  generations: this.generations,
+                                 objectives: gd_goals ? gd_goals : null,
                                  inputs: JSON.stringify(inputs)
                                 });
 

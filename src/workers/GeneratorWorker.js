@@ -13,12 +13,12 @@ const mock_contour = [
 ];
 
 const inputs = {
-                    site_offset: {type: 'constant', value: 0},
-                    contour: mock_contour,
-                    total_floors: {type: 'variable', value: [19, 29]},
-                    tower_floor_height: {type: 'constant', value: 3},
-                    podium_floor_height: {type: 'constant', value: 4}
-                  }
+                  site_offset: {type: 'constant', value: 0},
+                  contour: mock_contour,
+                  total_floors: {type: 'variable', value: [19, 29]},
+                  tower_floor_height: {type: 'constant', value: 3},
+                  podium_floor_height: {type: 'constant', value: 4}
+                }
 
 const mock_objectives = new Map()
 
@@ -33,14 +33,15 @@ const strategy = 'Randomize';
 const generations = 1;
 const populations = 3;
 
-onmessage = async (event) => {
-  if( event.data.type == 'onProcess'){
-    const inputs = JSON.parse(event.data.inputs);
+onmessage = async (e) => {
+  if( e.data.type == 'onProcess'){
+    const inputs = JSON.parse(e.data.inputs);
 
     const bldMassGen = new BuildingMassGenerator();
     // const model_mesh = bldMassGen.generateVariant(mock_inputs);
+    let goals = e.data.objectives ? e.data.objectives : mock_objectives;
   
-    const genManager = new GenerationManager(bldMassGen, strategy, mock_objectives, populations)
+    const genManager = new GenerationManager(bldMassGen, strategy, goals, populations)
     // console.log('[WORKER: inputs] ', inputs);
     let transX = 0;
     let transY = 0;
@@ -48,9 +49,11 @@ onmessage = async (event) => {
 
     let genNum = 0;
 
-    for( let j = 0; j < event.data.generations; j++ ){
+    for( let j = 0; j < e.data.generations; j++ ){
       genNum += 1; 
-      for( let i = 0; i < event.data.populations; i++ ){
+
+
+      for( let i = 0; i < e.data.populations; i++ ){
         
         genManager.populate( inputs, {transX, transY}, i, genNum );
           // this.generator.evaluate();
@@ -66,7 +69,6 @@ onmessage = async (event) => {
         // this.variants.push(var_mesh);
         postMessage( {type: 'onProgress', progress: i} );
       }
-
       transX = 0;
       transY = 0;
       pos = 0;
@@ -86,48 +88,32 @@ onmessage = async (event) => {
             generation: j
           });
         });
+
+
+      //* PREPARE NEXT GENERATION
+
+      if(e.data.generations > 1) {
+
+        // * Get last generation data 
+        const varsData = genManager.getVarsData();
+        const resultsByEvaluator = genManager.getResultsByEvaluator();
+
+        //* Compute fitness
+        const evalMaxMin = genManager.computeMaxMin(resultsByEvaluator);
+        const chancesArray = genManager.computeFitnessMain(varsData, evalMaxMin, resultsByEvaluator);
+
+        const parentsIDs = []
+        const PARENTS = [];
+
+        //* Selection
+        for( let i = 0; i < e.data.populations; i++ ) {
+          genManager.pickParents( parentsIDs, chancesArray);
+        }
+
+        console.log("[WORKER: parents ids]", parentsIDs);
+        genManager.runMatingPool(parentsIDs);
+
+      }
     }
-
-
-
-    // if(strategy == 'Optimize'){
-      //* CREATE NEXT GENERATIONS
-      
-      //* Get last generation data 
-      // const varsData = genManager.getVarsData();
-      // const resultsByEvaluator = genManager.getResultsByEvaluator();
-      
-      //* Compute fitness
-    //   const evalMaxMin = genManager.computeMaxMin(resultsByEvaluator);
-    //   const chancesArray = genManager.computeFitnessMain(varsData, evalMaxMin, resultsByEvaluator);
-
-    //   const parentsIDs = []
-    //   const PARENTS = [];
-    //   //* Selection
-    //   for( let i = 0; i < event.data.populations; i++ ) {
-    //     genManager.pickParents( parentsIDs, chancesArray);
-    //   }
-
-    //   console.log("[WORKER: parents ids]", parentsIDs);
-    //   // console.log("[WORKER: parents]", PARENTS);
-    //   genManager.runMatingPool(parentsIDs);
-
-    // // }
-
-    // console.log('[Worker: results] ', resultsByEvaluator);
-    // console.log('[Worker: vars] ', varsData);
-    // console.log('[Worker: max - min] ', evalMaxMin);
-    // console.log('[Worker: fitness] ', chances);
-    // console.log('[Worker: outputs fitness] ', outputsFitness);
-
-
-    // await genManager.getGlbFromGeneration( model, uuidv4() )
-    //   .then(()=>{
-    //     postMessage({type: 'onFinished',
-    //       varsData,
-    //       resultsByEvaluator
-    //     });
-
-    //   });
   }
 };

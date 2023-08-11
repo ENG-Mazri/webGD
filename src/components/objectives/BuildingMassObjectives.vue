@@ -261,6 +261,13 @@ export default defineComponent({
                 podiumVolume: this.podiumVolume,
                 totalArea: this.totalArea
             };
+            localStorage.setItem('gd_goals', JSON.stringify( {
+                    exteriorArea: this.extArea,
+                    towerVolume: this.towerVolume,
+                    podiumVolume: this.podiumVolume,
+                    totalArea: this.totalArea
+                } 
+            ))
             // console.log('[Objectives]: ', this.store.design[this.function]['objectives']);
             // this.store.design[this.function]['objectives']['']
         }

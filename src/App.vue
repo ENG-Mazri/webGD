@@ -1,11 +1,11 @@
 <template>
   <n-message-provider>
     <n-dialog-provider>
-
-  <!--<img alt="Vue logo" src="./assets/logo.png">-->
-      <Main/>
+      <!-- <n-loading-bar-provider> -->
+    <!--<img alt="Vue logo" src="./assets/logo.png">-->
+        <Main/>
+      <!-- </n-loading-bar-provider> -->
     </n-dialog-provider>
-
   </n-message-provider>
 </template>
 

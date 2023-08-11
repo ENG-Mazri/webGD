@@ -8,13 +8,19 @@
           </div>
         </n-tab-pane>
         <n-tab-pane name="Data table" tab="Data table" justify-content="space-evenly">
-          <n-data-table
-            v-if="data.length !== 0"
-            ref="dataTableInst"
-            :columns="columns"
-            :data="data"
-            max-height=500
-          />
+          <!-- <n-loading-bar-provider
+            :to="loadingBarTargetRef"
+            container-style="position: absolute;"
+            > -->
+            <n-data-table
+              v-if="data.length !== 0"
+              ref="loadingBarTargetRef"
+              :columns="columns"
+              :data="data"
+              max-height=500
+            />
+            <!-- <loading-bar-trigger />
+          </n-loading-bar-provider> -->
         </n-tab-pane>
         <n-tab-pane display-directive="show:lazy" name="3D visual" tab="3D visual" style="height: 35rem">
           <!-- <n-scrollbar style="max-height: 550px"> -->
@@ -32,7 +38,7 @@
   </div> 
 </template>
 <script lang="ts">
-import { defineComponent } from 'vue';
+import { defineComponent, ref } from 'vue';
 import * as d3 from "d3";
 import {useDesign} from '../store/design';
 import { LogOutOutline as outputIcon} from '@vicons/ionicons5';
@@ -45,6 +51,7 @@ import {GenerationManager} from '../logic/GenerationManager';
 // import * as GeneratorWorker from '../logic/generators/MassGeneratorWorker';
 import {IDB} from '../IDB'
 import {schemePurples} from "d3-scale-chromatic";
+import { useLoadingBar } from 'naive-ui'
 
 
 export default defineComponent({
@@ -53,6 +60,11 @@ export default defineComponent({
   },
   name: 'OutputsBoard',
   props: ['msg', 'hasStudy'],
+  setup(){
+    // const GlbLoadingBar = useLoadingBar();
+    
+    // return{ GlbLoadingBar, loadingBarTargetRef: ref<undefined | HTMLElement>(undefined)}
+  },
   data() {
     return {
       show: false,
@@ -81,7 +93,7 @@ export default defineComponent({
     }
   },
   mounted() {
-    console.log("[Study available]: ", this.hasStudy);
+    // console.log("[GLB loading bar]: ", this.GlbLoadingBar);
     const gd_resultsByEvaluator = JSON.parse(localStorage.getItem('gd_resultsByEvaluator') as any);
     if(gd_resultsByEvaluator) this.computeData();
 
@@ -155,6 +167,7 @@ export default defineComponent({
       localStorage.removeItem('gd_resultsByEvaluator');
       localStorage.removeItem('gd_varsData');
       localStorage.removeItem('gd_currentInputs');
+      localStorage.removeItem('gd_goals');
       localStorage.setItem('has_study', 'false');
       this.data = [];
       this.columns = [];

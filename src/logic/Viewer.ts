@@ -138,7 +138,7 @@ export class Viewer {
         // controls.minZoom = -Infinity;
 
         // console.log('[VIewer: controls] ', controls)
-        controls.maxDistance = 1000;
+        controls.maxDistance = 1500;
         // controls.enablePan = true
 
         controls2.noPan = true;
@@ -200,7 +200,7 @@ export class Viewer {
                 });
             },
             ( xhr ) => {        
-                // console.log( ( xhr.loaded / xhr.total * 100 ) + '% loaded' );       
+                console.log( ( xhr.loaded / xhr.total * 100 ) + '% loaded' );       
             },
             ( error ) => {
                 console.log( 'An error happened', error );
