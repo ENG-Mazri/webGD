@@ -485,15 +485,18 @@ export default defineComponent({
 
             worker.onmessage = async (event) => {
                 if(event.data.type == 'onProgress') this.popProgress = Math.round( event.data.progress * 100 / this.populations  );
-
-                if(event.data.type == 'onFinished'){
-                    this.popProgress = 100;
+                
+                if(event.data.type == 'onProgressGen') {
                     currentGeneration = event.data.generation + 1;
                     this.genProgress = Math.round( currentGeneration * 100 / this.generations  );
-
                     window.$message.success(`🧬 Generation ${ currentGeneration } completed!`, {
                         showIcon: false
                     });
+                }
+
+                if(event.data.type == 'onFinished'){
+                    this.popProgress = 100;
+                    // this.genProgress = 100
                         
                     // SET RESULTS IN LOCAL STORAGE
 

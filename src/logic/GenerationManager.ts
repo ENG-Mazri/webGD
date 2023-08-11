@@ -45,8 +45,7 @@ export class GenerationManager {
         this.strategy = strategy;
         this.objectives = objectives;
 
-        for (let i = 0; i < generator.objectives.length; i++)
-            this.resultsByEvaluator.set(generator.objectives[i], []);
+
 
         // console.log('[GenManager: results]', this.resultsByEvaluator)
     }
@@ -54,6 +53,11 @@ export class GenerationManager {
     init(){}
 
     process(){}
+
+    public prepareDataStores(){
+        for (let i = 0; i < this.generator.objectives.length; i++)
+            this.resultsByEvaluator.set(this.generator.objectives[i], []);
+    }
 
     public getResultsByEvaluator(){
         return this.resultsByEvaluator;
@@ -75,7 +79,6 @@ export class GenerationManager {
 
         }
         // console.log('[GenManager: output]', this.resultsByEvaluator)
-
     }
 
     private getResults() {
@@ -252,10 +255,13 @@ export class GenerationManager {
     }
 
     public runMatingPool( parentsIDs: string[] ) {
+        // get parents id_id, mate them by picking random midpoint 
         const parents = []
         for( let i = 0; i < parentsIDs.length; i++){
             let [parent1, parent2] = parentsIDs[i].split('_');
-            console.log('[parents: 1 - 2] ', parent1, parent2)
+            console.log('[parents: 1 - 2] ', parent1, parent2);
+
+
         }
 
     }
@@ -288,33 +294,8 @@ export class GenerationManager {
     public clearGenerationData(){
         this.resultsByEvaluator.clear();
         this.evalMaxMin.clear();
-        this.varsData.length = 0;
+        this.varsData = [];
         this.model = undefined;
     }
 
 }
-
-/*
-variant - is the object holding inputs, and evalution outputs.
-
-variant = {
-    inputs: { '' : '' },
-    outputs: [
-        {
-            goal: 'max' | 'min' | 'undefined',
-            evalName: '',
-            evalValue: 232,
-            fitness: 0.1,
-        },
-        {}
-    ]
-}
-
-//* from inputs panel
-objective = [
-    {
-        outputName: '',
-        goal: max | min
-    }
-]
-*/

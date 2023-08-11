@@ -33,7 +33,17 @@ const strategy = 'Randomize';
 const generations = 1;
 const populations = 3;
 
+const allVarsData = [];
+const allResultsByEvaluator = new Map();
+allResultsByEvaluator.set('exteriorArea', []);
+allResultsByEvaluator.set('podiumVolume', []);
+allResultsByEvaluator.set('towerVolume', []);
+allResultsByEvaluator.set('totalBuildingArea', []);
+allResultsByEvaluator.set('facadeArea', []);
+
+
 onmessage = async (e) => {
+
   if( e.data.type == 'onProcess'){
     const inputs = JSON.parse(e.data.inputs);
 
@@ -42,6 +52,7 @@ onmessage = async (e) => {
     let goals = e.data.objectives ? e.data.objectives : mock_objectives;
   
     const genManager = new GenerationManager(bldMassGen, strategy, goals, populations)
+
     // console.log('[WORKER: inputs] ', inputs);
     let transX = 0;
     let transY = 0;
@@ -51,6 +62,7 @@ onmessage = async (e) => {
 
     for( let j = 0; j < e.data.generations; j++ ){
       genNum += 1; 
+      genManager.prepareDataStores()
 
 
       for( let i = 0; i < e.data.populations; i++ ){
@@ -79,16 +91,25 @@ onmessage = async (e) => {
 
       const varsData = genManager.getVarsData();
       const resultsByEvaluator = genManager.getResultsByEvaluator();
+      allVarsData.push(...varsData);
+
+      for( let [key,value] of resultsByEvaluator)
+        allResultsByEvaluator.get(key).push(...value);
+
       await genManager.getGlbFromGeneration( model, j, uuidv4() )
         .then(()=>{
-          bldMassGen.clearBuffers()
-          postMessage({type: 'onFinished',
-            varsData,
-            resultsByEvaluator,
-            generation: j
-          });
-        });
+          postMessage( {type: 'onProgressGen', generation: j} );
 
+
+          if(j == e.data.generations - 1 ){
+            postMessage({type: 'onFinished',
+            varsData: allVarsData,
+            resultsByEvaluator: allResultsByEvaluator
+            });
+
+          }
+          bldMassGen.clearBuffers()
+        });
 
       //* PREPARE NEXT GENERATION
 
@@ -100,18 +121,25 @@ onmessage = async (e) => {
 
         //* Compute fitness
         const evalMaxMin = genManager.computeMaxMin(resultsByEvaluator);
+
+        //* Create merged chances array by var id
         const chancesArray = genManager.computeFitnessMain(varsData, evalMaxMin, resultsByEvaluator);
 
-        const parentsIDs = []
+        const parentsIDs = [] // parents id_id 
         const PARENTS = [];
 
-        //* Selection
+        //* Selection parents for next generation
         for( let i = 0; i < e.data.populations; i++ ) {
-          genManager.pickParents( parentsIDs, chancesArray);
+          genManager.pickParents( parentsIDs, chancesArray); // fill parents ids array
         }
 
-        console.log("[WORKER: parents ids]", parentsIDs);
-        genManager.runMatingPool(parentsIDs);
+        // console.log("[WORKER: parents ids]", parentsIDs);
+        // console.log("[WORKER: chances]", chancesArray);
+
+        const nextGenDna = genManager.runMatingPool(parentsIDs);
+
+        //* clear generation data 
+        genManager.clearGenerationData();
 
       }
     }
