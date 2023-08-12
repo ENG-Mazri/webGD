@@ -258,10 +258,16 @@ export class GenerationManager {
         // get parents id_id, mate them by picking random midpoint 
         const parents = []
         for( let i = 0; i < parentsIDs.length; i++){
-            let [parent1, parent2] = parentsIDs[i].split('_');
-            console.log('[parents: 1 - 2] ', parent1, parent2);
+            let newDNA = {}
+            let parents = [];
 
+            let [id1, id2] = parentsIDs[i].split('_');
+            for( let i=0; i < this.varsData.length; i++){
+                let varData = this.varsData[i];
 
+                if( varData.id == id1 || varData.id == id2 ) parents.push(varData);
+            }
+            console.log('[parents] ', parents);
         }
 
     }
