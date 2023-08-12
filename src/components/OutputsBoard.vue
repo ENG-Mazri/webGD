@@ -79,7 +79,7 @@ export default defineComponent({
       hasViewer: false,
       viewer: null as any,
       canvas: null as any,
-      currentTab: 'Data table'
+      currentTab: '3D visual'
 
     }
    
@@ -109,20 +109,20 @@ export default defineComponent({
           threeContainer.removeChild(threeContainer.lastChild as ChildNode);
         }
         
-        this.canvas = document.createElement("canvas");
-        this.canvas.classList.add("result_canvas");
-        this.canvas.id = "three_canvas";
-        threeContainer.appendChild(this.canvas);
+        const canvas = document.createElement("canvas");
+        canvas.classList.add("result_canvas");
+        canvas.id = "three_canvas";
+        threeContainer.appendChild(canvas);
 
-        this.viewer = new Viewer(this.canvas, []);
+        const viewer = new Viewer(canvas, []);
         let interval = setInterval( async ()=>{
             let blob = await IDB.getDataByKeyAsync( glb );
             if(blob){
                 clearInterval(interval);
                 // console.log('[Viewer:Blob] ', blob)
-                await this.viewer.init(this.canvas, [], blob)
+                await viewer.init(canvas, [], blob)
 
-                console.log('Renderer: ' ,this.viewer.renderer)
+                console.log('Renderer: ' ,viewer.renderer)
             }
         }, 100)
       })

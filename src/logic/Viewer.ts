@@ -18,6 +18,9 @@ export class Viewer {
     public renderer: WebGLRenderer;
     private camera: Camera;
     private options: any;
+    private controls: any;
+    private controls2: any;
+    private composer: any;
     private isActive: boolean = true;
 
     public kill: boolean = false;
@@ -29,11 +32,11 @@ export class Viewer {
 
     async init(canvas: HTMLElement, meshes: Mesh[], blob: any) {
         this.isActive = true;
-        const scene = new Scene();
+        this.scene = new Scene();
 
-        for (let i = scene.children.length - 1; i >= 0; i--) {
-            if(scene.children[i].type === "Mesh")
-                scene.remove(scene.children[i]);
+        for (let i = this.scene.children.length - 1; i >= 0; i--) {
+            if(this.scene.children[i].type === "Mesh")
+                this.scene.remove(this.scene.children[i]);
         }
 
         const size = {
@@ -46,23 +49,23 @@ export class Viewer {
         const aspect = 2; 
         const near = 0.1;
         const far = 3000;
-        const camera = new THREE.PerspectiveCamera(fov, aspect, near, far);
+        this.camera = new THREE.PerspectiveCamera(fov, aspect, near, far);
 
-        camera.position.set(-220, 228, -124);
-        camera.up.set(0, 1, 0);
-        camera.lookAt(0, 0, 0);
+        this.camera.position.set(-220, 228, -124);
+        this.camera.up.set(0, 1, 0);
+        this.camera.lookAt(0, 0, 0);
 
 
         //* LIGHT SETTINGS
         const lightColor = 0xffffff;
 
         const ambientLight = new THREE.AmbientLight(lightColor, 0.7);
-        scene.add(ambientLight);
+        this.scene.add(ambientLight);
 
         const sunlight = new THREE.DirectionalLight();
         sunlight.intensity = 0.3;
         sunlight.position.set(1000, 200, 1000);
-        scene.add(sunlight);
+        this.scene.add(sunlight);
         sunlight.castShadow = true;
         sunlight.shadow.camera.top = 200;
         sunlight.shadow.camera.bottom = - 200;
@@ -74,7 +77,7 @@ export class Viewer {
         const light2 = new THREE.DirectionalLight(lightColor, 0.3);
         light2.color.setHSL(11, 43, 96);
         light2.position.set(-40, 80, 30);
-        scene.add(light2);
+        this.scene.add(light2);
 
 
         //* RENDER SETTINGS
@@ -101,60 +104,60 @@ export class Viewer {
                 {samples: 3}
             )
 
-        const composer = new EffectComposer( this.renderer, renderTarget );
-        composer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-        composer.setSize(size.width, size.height);
+        this.composer = new EffectComposer( this.renderer, renderTarget );
+        this.composer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        this.composer.setSize(size.width, size.height);
 
-        const renderPass = new RenderPass( scene, camera );
-        composer.addPass( renderPass );
+        const renderPass = new RenderPass( this.scene, this.camera );
+        this.composer.addPass( renderPass );
 
-        const saoPass = new SAOPass( scene, camera, false, true );
-        composer.addPass( saoPass );
+        const saoPass = new SAOPass( this.scene, this.camera, false, true );
+        this.composer.addPass( saoPass );
         // const fxaaPass = new ShaderPass( FXAAShader );
         // fxaaPass.material.uniforms[ 'resolution' ].value.x = 1 / ( this.container.offsetWidth * (Math.min(window.devicePixelRatio, 2)) );
         // fxaaPass.material.uniforms[ 'resolution' ].value.y = 1 / ( this.container.offsetHeight * (Math.min(window.devicePixelRatio, 2)) );
         // composer.addPass(fxaaPass)
-        saoPass.params.output = SAOPass.OUTPUT.Default
-        saoPass.params.saoBias = 0.5
+        saoPass.params.output = SAOPass.OUTPUT.Default;
+        saoPass.params.saoBias = 0.8
         saoPass.params.saoIntensity = 0.0008
-        saoPass.params.saoScale = .5
+        saoPass.params.saoScale = 0.9 // decrease this to make more shadows but performance will go down
         saoPass.params.saoKernelRadius = 10
         saoPass.params.saoMinResolution = 0
 
         const gPass = new ShaderPass( GammaCorrectionShader );
-        composer.addPass(gPass);
+        this.composer.addPass(gPass);
         
         // const grid = new THREE.GridHelper(50, 30);
-        // scene.add(grid);
+        // this.scene.add(grid);
 
         //* CONTROLS SETINGS
-        const controls = new OrbitControls(camera, canvas);
-        const controls2 = new TrackballControls(camera, canvas);
+        this.controls = new OrbitControls( this.camera, canvas);
+        this.controls2 = new TrackballControls( this.camera, canvas);
         // controls.target.set(0,0,0)
-        controls.target.set(25, 54, 57);
-        controls.enableZoom = false;
+        this.controls.target.set(25, 54, 57);
+        this.controls.enableZoom = false;
         
         // controls.minDistance = -Infinity;
         // controls.minZoom = -Infinity;
 
         // console.log('[VIewer: controls] ', controls)
-        controls.maxDistance = 1500;
+        this.controls.maxDistance = 1500;
         // controls.enablePan = true
 
-        controls2.noPan = true;
-        controls2.noRotate = true;
-        controls2.noZoom = false;
-        controls2.zoomSpeed = 1.5;
+        this.controls2.noPan = true;
+        this.controls2.noRotate = true;
+        this.controls2.noZoom = false;
+        this.controls2.zoomSpeed = 1.5;
 
         //* HELPERS
         // const grid = new THREE.GridHelper(200, 200);
         // grid.position.setY(-1)
-        // scene.add(grid);
+        // this.scene.add(grid);
 
         // const axes = new THREE.AxesHelper(2);
         // // axes.material.depthTest = false;
         // axes.renderOrder = 1;
-        // scene.add(axes);
+        // this.scene.add(axes);
 
 
         //* GLTF LOADER
@@ -164,10 +167,10 @@ export class Viewer {
             url,
             ( gltf ) => {
                 // console.log('[Viewer:Blob] ', gltf);
-                scene.add( gltf.scene );
-                // console.log('[Viewer:Scene] ', scene);
+                this.scene.add( gltf.scene );
+                // console.log('[Viewer:this.Scene] ', this.scene);
 
-                scene.traverse((child: any) =>{
+                this.scene.traverse((child: any) =>{
                     // console.log(child)
 
                     if (child.name == 'site_mesh') {
@@ -212,39 +215,45 @@ export class Viewer {
         
         //*RENDERING
         //TODO: try tweaking render pass settings
-        const animate = () => {
-            const target = controls.target;
-            controls.update();
-            controls2.target.copy(target);
-            controls2.update()
-            self.renderer.render(scene, camera);
-            // composer.render()
-            requestAnimationFrame(animate);
-            // console.log("Cam: ", camera.position);
-            // console.log("Target: ", controls.target)
+        // const animate = () => {
+        //     const target = controls.target;
+        //     controls.update();
+        //     controls2.target.copy(target);
+        //     controls2.update()
+        //     // self.renderer.render(this.scene, camera);
+        //     composer.render()
+        //     requestAnimationFrame(animate);
+        //     // console.log("Cam: ", camera.position);
+        //     // console.log("Target: ", controls.target)
             
-        };
-        animate();
+        // };
+        this.animate();
 
 
-        window.addEventListener("resize", this.resize(size, camera, this.renderer) as  any);
+        window.addEventListener("resize", this.resize(size, this.camera, this.renderer, this.composer) as  any);
 
         DestroyViewer.on( ev => {
             if(this.isActive) {
                 console.log('DESROY renderer: ', this.isActive)
-                window.removeEventListener("resize", this.resize(size, camera, this.renderer) as  any)
+                window.removeEventListener("resize", this.resize(size, this.camera, this.renderer, this.composer) as  any)
                 this.isActive = false;
             }
         })
     }
 
-    // animate( controls: any, renderer: any ) {
-    //     controls.update();
-    //     renderer.render(scene, camera);
-    //     requestAnimationFrame(this.animate());
-    // }
+    public animate() {
+        const target = this.controls.target;
 
-    private resize( size:any, camera: any, renderer: any ){
+        this.controls2.target.copy(target);
+        this.controls2.update()
+        // self.renderer.render(this.scene, camera);
+        // this.composer.render()
+        this.controls.update();
+        this.renderer.render(this.scene, this.camera);
+        requestAnimationFrame(() => this.animate());
+    }
+
+    private resize( size:any, camera: any, renderer: any, composer: any ){
         size.width = window.innerWidth;
         size.height = window.innerHeight;
         

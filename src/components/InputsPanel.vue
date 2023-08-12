@@ -183,7 +183,7 @@
                         </n-icon>
                     </n-button>
                 </template>
-                Clear results
+                Clear study
             </n-tooltip>      
         </div>
 
@@ -338,7 +338,7 @@ export default defineComponent({
                 // }
             ],
             strategy: "Randomize",
-            generations: 2 ,
+            generations: 1 ,
             populations: 4 ,
             store: '' as any,
             showModal: false,
