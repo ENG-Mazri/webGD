@@ -61,6 +61,8 @@ export class BuildingMassGenerator extends Generator {
 
   private SLAB_GEOMETRIES  = [];
   private SPACE_GEOMETRIES = [];
+  private GEN_SLAB_GEOMETRIES  = [];
+  private GEN_SPACE_GEOMETRIES = [];
   private LINE_GEOMETRIES  = [];
   private TEXT_GEOMETRIES  = [];
   private SITE_GEOMETRIES  = [];
@@ -100,15 +102,15 @@ export class BuildingMassGenerator extends Generator {
     const tower_floor_height = inputs.tower_floor_height.type == 'constant' ? inputs.tower_floor_height.value : this.randomIntFromInterval(inputs.tower_floor_height.value[0], inputs.tower_floor_height.value[1]);
     const podium_floor_height = inputs.podium_floor_height.type == 'constant' ? inputs.podium_floor_height.value : this.randomIntFromInterval(inputs.podium_floor_height.value[0], inputs.podium_floor_height.value[1]);
 
-    return {site_offset, contour, total_floors, tower_floor_height, podium_floor_height};
+    return {site_offset, contour, total_floors, tower_floor_height, podium_floor_height, towerType: inputs.towerType?inputs.towerType: '' };
   }
 
   public generateVariant(inputs: any, transX: number = 0, transY: number = 0, index: number, genNum: number = 1){
 
     
     let INPUTS: any;
-    const SLAB_GEOMETRIES  = [];
-    const SPACE_GEOMETRIES = [];
+    // const SLAB_GEOMETRIES  = [];
+    // const SPACE_GEOMETRIES = [];
 
     const isNextGen = genNum > 1 ? true : false;
 
@@ -299,6 +301,8 @@ export class BuildingMassGenerator extends Generator {
 
     const totalGeometry  = mergeGeometries( [...this.SLAB_GEOMETRIES, ...this.SPACE_GEOMETRIES] );
 
+    console.log('[Generator: evaluate] ', CONTOUR, pod, totalGeometry, space_shapes as any, INPUTS.tower_floor_height, spaceExtrudeSettings.depth, PODIUM_FLOORS_NUMBER);
+
     const results = this.evaluate( CONTOUR, pod, totalGeometry, space_shapes as any, INPUTS.tower_floor_height, spaceExtrudeSettings.depth, PODIUM_FLOORS_NUMBER);
     
     const text = [  `Variant number: ${index}`,
@@ -326,6 +330,12 @@ export class BuildingMassGenerator extends Generator {
       },
       outputs: results
     }
+
+    this.GEN_SLAB_GEOMETRIES.push(...this.SLAB_GEOMETRIES);
+    this.GEN_SPACE_GEOMETRIES.push(...this.SPACE_GEOMETRIES);
+
+    this.SLAB_GEOMETRIES = [];
+    this.SPACE_GEOMETRIES = [];
 
 
     return varData;
@@ -821,9 +831,9 @@ export class BuildingMassGenerator extends Generator {
     return p1.dot(p2.cross(p3)) / 6.0;
   }
 
-  public getModelMesh(){
-    const MERGED_SLAB_GEOMETRIES  = mergeGeometries( this.SLAB_GEOMETRIES );
-    const MERGED_SPACE_GEOMETRIES = mergeGeometries( this.SPACE_GEOMETRIES );
+  public getGenerationMesh(){
+    const MERGED_SLAB_GEOMETRIES  = mergeGeometries( this.GEN_SLAB_GEOMETRIES );
+    const MERGED_SPACE_GEOMETRIES = mergeGeometries( this.GEN_SPACE_GEOMETRIES );
     const MERGED_SITE_GEOMETRIES = mergeGeometries( this.SITE_GEOMETRIES );
 
 
@@ -878,13 +888,13 @@ export class BuildingMassGenerator extends Generator {
   public evaluateTower( shapes: any[], towerFloorHeight: number ){
     let total_facade_area = 0;
     let total_area = 0
-    let type = shapes.length == 1 ? 'Type_a' : 'Type_b';
+    let type = shapes.length == 1 ? 'Type_A' : 'Type_B';
 
     if(shapes.length == 0 ) return {};
 
     switch (type) {
 
-      case 'Type_a':
+      case 'Type_A':
         let contour_a = shapes[0].contour;
         let dist1_a = contour_a[0].distanceTo(contour_a[1]);
         let dist2_a = contour_a[1].distanceTo(contour_a[2]);
@@ -893,7 +903,7 @@ export class BuildingMassGenerator extends Generator {
         total_area = (dist1_a * dist2_a) * shapes[0].num_floors; 
         break;
 
-      case 'Type_b':
+      case 'Type_B':
         let contour1_b = shapes[0].contour;
         let contour2_b = shapes[1].contour;
         let h1 = shapes[0].num_floors;
@@ -949,6 +959,9 @@ export class BuildingMassGenerator extends Generator {
       default:
         break;
     }
+
+    // console.log('[Generator: Tower areas] ', total_facade_area, total_area);
+
     
     return {towerFacadeArea: total_facade_area,
             towerTotalArea: total_area
@@ -959,6 +972,8 @@ export class BuildingMassGenerator extends Generator {
     let dist1= contour[0].distanceTo(contour[1]);
     let dist2 = contour[1].distanceTo(contour[2]);
     let facade_area = ( (dist1 * podiumFloorHeight) * 2 + (dist2 * podiumFloorHeight) * 2 ) * podiumFloorsCount;
+    // console.log('[Generator: Podium areas] ', facade_area, (dist1 * dist2 ) * podiumFloorsCount);
+
     return {
       podiumFacadeArea: facade_area,
       podiumTotalArea: (dist1 * dist2 ) * podiumFloorsCount
@@ -966,6 +981,8 @@ export class BuildingMassGenerator extends Generator {
   }
 
   public clearBuffers(){
+    this.GEN_SLAB_GEOMETRIES  = [];
+    this.GEN_SPACE_GEOMETRIES = [];
     this.SLAB_GEOMETRIES  = [];
     this.SPACE_GEOMETRIES = [];
     this.LINE_GEOMETRIES  = [];

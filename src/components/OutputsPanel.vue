@@ -29,13 +29,35 @@
                 </n-icon>
             </template>
             <n-select id='generation_3d' :on-update:value="updateGeneration" :options="generationList" default-value="Generation 1" placeholder='' />
+            <div class="outputPanel">
+                <n-tooltip trigger="hover" placement="bottom">
+                    <template #trigger>
+                        <n-button  @click='ambientOcclusion' quaternary>
+                            <n-icon >
+                                <viewerQIcon/>
+                            </n-icon>
+                        </n-button>
+                    </template>
+                    Ambient occlusion
+                </n-tooltip>
+                <n-tooltip trigger="hover" placement="bottom">
+                    <template #trigger>
+                        <n-button  @click='' quaternary>
+                            <n-icon >
+                                <openWindowIcon/>
+                            </n-icon>
+                        </n-button>
+                    </template>
+                    Open in new Tab
+                </n-tooltip>
+            </div>
         </n-collapse-item>
     </n-collapse>
 </template>
 
 <script lang="ts">
 import { defineComponent, ref } from 'vue';
-import { ReorderFourSharp as tableIcon, CubeOutline as viewerIcon, OptionsOutline as optionsIcon , EnterOutline as inputIcon, Flash as testIcon, LogoTableau as resultIcon, BarChartSharp as statsIcon, ConstructOutline as functionsIcon, TrophyOutline as objectivesIcon, SettingsOutline as settingsIcon, HelpCircleOutline as helpIcon, FlaskOutline as strategyIcon, LogOutOutline as outputIcon, TrashBinOutline as clearIcon} from '@vicons/ionicons5';
+import {OpenOutline as openWindowIcon,ColorWandOutline as viewerQIcon, ReorderFourSharp as tableIcon, CubeOutline as viewerIcon, OptionsOutline as optionsIcon , EnterOutline as inputIcon, Flash as testIcon, LogoTableau as resultIcon, BarChartSharp as statsIcon, ConstructOutline as functionsIcon, TrophyOutline as objectivesIcon, SettingsOutline as settingsIcon, HelpCircleOutline as helpIcon, FlaskOutline as strategyIcon, LogOutOutline as outputIcon, TrashBinOutline as clearIcon} from '@vicons/ionicons5';
 import InputVue from './Input.vue';
 import OutputSettingsVue from './OutputSettings.vue';
 import BoxInputVue from './inputs/BoxInputs.vue';
@@ -54,6 +76,7 @@ import {GenerationManager} from '../logic/GenerationManager'
 import {BuildingMassGenerator} from '../logic/generators/BuildingMassGenerator'
 import {IDB} from '../IDB';
 import {GenFinished, Refresh, ClearData, BuildViewer, DestroyViewer, GlbUpdated} from '../events/index';
+import {DSEViewer} from '../entities'
 
 
 
@@ -64,7 +87,7 @@ export default defineComponent({
         functionsIcon, objectivesIcon, settingsIcon, 
         helpIcon, BoxInputVue, BuildingMassInputVue,
         BoxObjectives, BuildingMassObjectives, outputIcon, OutputSettingsVue,
-        clearIcon, viewerIcon, tableIcon
+        clearIcon, viewerIcon, tableIcon, viewerQIcon, openWindowIcon
     },
     props: ['hasStudy', 'generations'],
     data(){
@@ -111,6 +134,9 @@ export default defineComponent({
         updateGeneration(value: any){
             console.log('Generation updated: ', value)
             GlbUpdated.emit(value)
+        },
+        ambientOcclusion(){
+            DSEViewer.animate(true);
         }
     }
 })

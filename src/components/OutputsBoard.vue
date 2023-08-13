@@ -80,7 +80,7 @@ export default defineComponent({
       hasViewer: false,
       viewer: null as any,
       canvas: null as any,
-      currentTab: '3D visual'
+      currentTab: 'Data table'
 
     }
    
@@ -321,7 +321,7 @@ export default defineComponent({
             .style("opacity", 0.5)
             .append("title")
             // .attr('class', 'svg_tooltip')
-            .text((d) => `Site offset: ${d.inputs.site_offset}\nTotal floors: ${d.inputs.total_floors}\nTower floor height: ${d.inputs.tower_floor_height}\nPodium floor height: ${d.inputs.podium_floor_height}`)
+            .text((d) => `Generation: ${d.generation}\nVariant: ${d.varNum}\nSite offset: ${d.inputs.site_offset}\nTotal floors: ${d.inputs.total_floors}\nTower floor height: ${d.inputs.tower_floor_height}\nPodium floor height: ${d.inputs.podium_floor_height}`)
 
 
           // Set the zoom and Pan features: how much you can zoom, on which part, and what to do when there is a zoom

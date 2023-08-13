@@ -130,7 +130,7 @@ export class GenerationManager {
         //** This function gets the percentage of vars fitness, higher value if goal, is max is the fittest, if goal is min, then it's the less fit **/
         const varsFitness = new Map<string, any>();
         const outputsWeight = this.calculateOutputsWeight(resultsByEvaluator);
-        console.log('[GenManager: weights] ', outputsWeight)
+        // console.log('[GenManager: weights] ', outputsWeight)
 
         const chancesByEval = new Map<string, any[]>();
         const evalsChancesTest = new Map<string, number[]>()
@@ -173,7 +173,7 @@ export class GenerationManager {
 
         for( let [output, percentages] of chancesByEval.entries()){
             let goal = this.objectives.get(output);
-            console.log('[Goal] ', goal)
+            // console.log('[Goal] ', goal)
 
             mergedChances.push(...this.ganarateFitnessArrayById( evalsChancesTest.get(output), goal, realOne.get(output), output ));
             // console.log(`[Genartaor:Goal: ${output}] `, array)
@@ -287,13 +287,13 @@ export class GenerationManager {
             // console.log('[parents] ', parents);
             // console.log("[NEW DNA]", newDNA);
 
-            console.log("[NEW DNA: T-type]", parents[1].otherMetrics.towerType);
+            // console.log("[NEW DNA: T-type]", parents[1].otherMetrics.towerType);
 
             let rndBool = Math.random() < 0.5;
             newDNA.towerType = rndBool ? parents[0].otherMetrics.towerType : parents[1].otherMetrics.towerType ;
             DNAs.push(newDNA)
         }
-        console.log("[NEW DNAs]", DNAs);
+        // console.log("[NEW DNAs]", DNAs);
 
         return DNAs;
     }

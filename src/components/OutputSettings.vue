@@ -42,23 +42,23 @@ export default defineComponent({
             color: null,
             outputOptions: [
                 {
-                    label: 'exteriorArea',
+                    label: 'exterior Area',
                     value: 'exteriorArea'
                 },
                 {
-                    label: 'facadeArea',
+                    label: 'facade Area',
                     value: 'facadeArea'
                 },
                 {
-                    label: 'podiumVolume',
+                    label: 'podium Volume',
                     value: 'podiumVolume'
                 },
                 {
-                    label: 'totalBuildingArea',
+                    label: 'total Building Area',
                     value: 'totalBuildingArea'
                 },
                 {
-                    label: 'towerVolume',
+                    label: 'tower Volume',
                     value: 'towerVolume'
                 },
             ]

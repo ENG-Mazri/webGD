@@ -99,7 +99,7 @@
                 <n-divider title-placement="left">
                     Site boundary
                 </n-divider>
-                <n-upload :on-change="upload" ref="file2">
+                <n-upload :on-change="upload" ref="file2" accept=".svg">
                     <n-button text color="#153048">
                         <template #icon>
                             <n-icon>

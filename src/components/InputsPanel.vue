@@ -148,15 +148,15 @@
                 </template>
                 Generate
             </n-tooltip>
-            <n-tooltip trigger="hover" placement="bottom">
+            <!-- <n-tooltip trigger="hover" placement="bottom">
                 <template #trigger>
-                    <!-- <n-upload :on-change="test" ref="file2">
+                    <n-upload :on-change="test" ref="file2">
                         <n-button text color="#153048">
                             <n-icon >
                                 <resultIcon/>
                             </n-icon>
                         </n-button>
-                    </n-upload> -->
+                    </n-upload>
                     <n-button  @click='test' quaternary>
                         <n-icon >
                             <resultIcon/>
@@ -164,7 +164,7 @@
                     </n-button> 
                 </template>
                 Test
-            </n-tooltip>
+            </n-tooltip> -->
             <n-tooltip trigger="hover" placement="bottom">
                 <template #trigger>
                     <n-button  @click="refresh" quaternary>
@@ -338,8 +338,8 @@ export default defineComponent({
                 // }
             ],
             strategy: "Randomize",
-            generations: 2 ,
-            populations: 4 ,
+            generations: 1 ,
+            populations: 1 ,
             store: '' as any,
             showModal: false,
             genFunction: 'Building mass',
@@ -462,9 +462,9 @@ export default defineComponent({
         async generate(){
             let currentGeneration = 0;
 
-            // const inputs = this.store.design[this.strategy].inputs; <<<------
+            const inputs = this.store.design[this.strategy].inputs; //<<<------
             //* SET INPUTS IN LOCAL STORAGE
-            // localStorage.setItem( 'gd_currentInputs', JSON.stringify( this.store.design[this.strategy].inputs ) ); <<<------
+            localStorage.setItem( 'gd_currentInputs', JSON.stringify( this.store.design[this.strategy].inputs ) ); //<<<------
             // const inputs = {
             //     strategy: this.strategy,
             //     generator: this.genFunction,
@@ -481,13 +481,14 @@ export default defineComponent({
                                  populations: this.populations,
                                  generations: this.generations,
                                  objectives: gd_goals ? gd_goals : null,
-                                //  inputs: JSON.stringify(inputs) <<<------
+                                 inputs: JSON.stringify(inputs) 
                                 });
 
             worker.onmessage = async (event) => {
                 if(event.data.type == 'onProgress') this.popProgress = Math.round( event.data.progress * 100 / this.populations  );
                 
                 if(event.data.type == 'onProgressGen') {
+                    this.popProgress = 100;
                     currentGeneration = event.data.generation + 1;
                     this.genProgress = Math.round( currentGeneration * 100 / this.generations  );
                     window.$message.success(`🧬 Generation ${ currentGeneration } completed!`, {
