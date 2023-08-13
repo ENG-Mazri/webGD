@@ -22,10 +22,11 @@ export class Viewer {
     private controls2: any;
     private composer: any;
     private isActive: boolean = true;
+    public glbLoadingProgress: number = 0;
 
     public kill: boolean = false;
 
-    constructor( canvas: HTMLElement, meshes: Mesh[], options:any = {} ) {
+    constructor( canvas?: HTMLElement, meshes?: Mesh[], options:any = {} ) {
         this.options = options;
         // this.init(canvas, meshes)
     }
@@ -120,15 +121,12 @@ export class Viewer {
         saoPass.params.output = SAOPass.OUTPUT.Default;
         saoPass.params.saoBias = 0.8
         saoPass.params.saoIntensity = 0.0008
-        saoPass.params.saoScale = 0.9 // decrease this to make more shadows but performance will go down
+        saoPass.params.saoScale = 0.9 // decrease this to have more shadows but performance will go down
         saoPass.params.saoKernelRadius = 10
         saoPass.params.saoMinResolution = 0
 
         const gPass = new ShaderPass( GammaCorrectionShader );
         this.composer.addPass(gPass);
-        
-        // const grid = new THREE.GridHelper(50, 30);
-        // this.scene.add(grid);
 
         //* CONTROLS SETINGS
         this.controls = new OrbitControls( this.camera, canvas);
@@ -167,8 +165,8 @@ export class Viewer {
             url,
             ( gltf ) => {
                 // console.log('[Viewer:Blob] ', gltf);
+                
                 this.scene.add( gltf.scene );
-                // console.log('[Viewer:this.Scene] ', this.scene);
 
                 this.scene.traverse((child: any) =>{
                     // console.log(child)
@@ -179,6 +177,28 @@ export class Viewer {
                         // child.material.transparent = true;
                         // child.material.opacity = 0.1;
                         // child.material.color = new THREE.Color(0xa6a6a6)
+
+                        child.material.onBeforeCompile = shader =>{
+                            // shader.uniforms.diffuse.value =  new THREE.Vector3(1,1,0);
+                            // shader.vertexShader.replace(
+                            //     '#include <color_vertex>',
+                            //     `
+                            //     #include <color_vertex>
+
+                            //     vColor = vec4( 5.0 );
+                            //     #elif defined( USE_COLOR ) || defined( USE_INSTANCING_COLOR )
+                            //         vColor = vec3( 5.0 );
+                            //     #endif
+                            //     #ifdef USE_COLOR
+                            //         vColor *= color;
+                            //     #endif
+                            //     #ifdef USE_INSTANCING_COLOR
+                            //         vColor.xyz *= instanceColor.xyz;
+                            //     #endif
+                            //     `
+                            //     )
+                            // console.log('[Shader ]', shader)
+                        };
 
                     }
                     
@@ -202,8 +222,9 @@ export class Viewer {
                     // }
                 });
             },
-            ( xhr ) => {        
-                console.log( ( xhr.loaded / xhr.total * 100 ) + '% loaded' );       
+            ( xhr ) => { 
+                this.glbLoadingProgress = xhr.loaded / xhr.total * 100;
+                // console.log( ( xhr.loaded / xhr.total * 100 ) + '% loaded' );       
             },
             ( error ) => {
                 console.log( 'An error happened', error );
@@ -227,6 +248,7 @@ export class Viewer {
         //     // console.log("Target: ", controls.target)
             
         // };
+        // this.resize(size, this.camera, this.renderer, this.composer);
         this.animate();
 
 
@@ -234,34 +256,48 @@ export class Viewer {
 
         DestroyViewer.on( ev => {
             if(this.isActive) {
-                console.log('DESROY renderer: ', this.isActive)
+                // console.log('DESROY renderer: ', this.isActive)
                 window.removeEventListener("resize", this.resize(size, this.camera, this.renderer, this.composer) as  any)
                 this.isActive = false;
             }
         })
     }
 
-    public animate() {
+    public animate( hasPass: boolean = false ) {
+        this.controls.update();
         const target = this.controls.target;
 
         this.controls2.target.copy(target);
         this.controls2.update()
         // self.renderer.render(this.scene, camera);
-        // this.composer.render()
-        this.controls.update();
-        this.renderer.render(this.scene, this.camera);
-        requestAnimationFrame(() => this.animate());
+        // this.composer.render();
+        if ( hasPass ) this.composer.render();
+        else this.renderer.render(this.scene, this.camera);
+
+        // console.log("[Render calls]: ", this.renderer.info.render.calls);
+
+        requestAnimationFrame(() => this.animate(hasPass));
     }
 
-    private resize( size:any, camera: any, renderer: any, composer: any ){
+    private resize( size: any, camera: any, renderer: any, composer: any ){
         size.width = window.innerWidth;
         size.height = window.innerHeight;
         
         camera.aspect = size.width / size.height;
         camera.updateProjectionMatrix();
         renderer.setSize(size.width, size.height);
-        // composer.setSize( size.width, size.height );
+        composer.setSize( size.width, size.height );
 
         console.log("[Render calls]: ", renderer.info.render.calls)
+    }
+
+    public dispose(){
+        for (let i = this.scene.children.length - 1; i >= 0; i--) {
+            if(this.scene.children[i].type === "Mesh")
+                this.scene.remove(this.scene.children[i]);
+        }
+
+
+
     }
 }

@@ -205,14 +205,14 @@ export default defineComponent({
         this.store.design[this.function]['inputs'] = {};
         //TODO: just for now, the contour is hardcoded
         this.store.design[this.function]['inputs']['contour'] = [
-                                                                            new THREE.Vector2(0, 0),
-                                                                            new THREE.Vector2(0,88),
-                                                                            new THREE.Vector2(60,88),
-                                                                            new THREE.Vector2(90,55),
-                                                                            new THREE.Vector2(90,0),
-                                                                            new THREE.Vector2(0, 0)
-                                                                        ];
-        console.log("Function: ", this.store.design)
+                                                                    new THREE.Vector2(0, 0),
+                                                                    new THREE.Vector2(0,88),
+                                                                    new THREE.Vector2(60,88),
+                                                                    new THREE.Vector2(90,55),
+                                                                    new THREE.Vector2(90,0),
+                                                                    new THREE.Vector2(0, 0)
+                                                                ];
+        console.log("[DESIGN STORE] ", this.store.design);
 
     },
     watch: {

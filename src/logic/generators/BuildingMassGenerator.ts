@@ -100,20 +100,21 @@ export class BuildingMassGenerator extends Generator {
     const tower_floor_height = inputs.tower_floor_height.type == 'constant' ? inputs.tower_floor_height.value : this.randomIntFromInterval(inputs.tower_floor_height.value[0], inputs.tower_floor_height.value[1]);
     const podium_floor_height = inputs.podium_floor_height.type == 'constant' ? inputs.podium_floor_height.value : this.randomIntFromInterval(inputs.podium_floor_height.value[0], inputs.podium_floor_height.value[1]);
 
-    return {site_offset, contour, total_floors, tower_floor_height, podium_floor_height}
+    return {site_offset, contour, total_floors, tower_floor_height, podium_floor_height};
   }
 
-  public generateVariant(inputs: any, transX: number = 0, transY: number = 0, index: number, genNum: number = 1, isNextGeneration: boolean = false){
+  public generateVariant(inputs: any, transX: number = 0, transY: number = 0, index: number, genNum: number = 1){
 
     
     let INPUTS: any;
-    if (isNextGeneration){
+    const SLAB_GEOMETRIES  = [];
+    const SPACE_GEOMETRIES = [];
 
-    } else {
+    const isNextGen = genNum > 1 ? true : false;
+
 
       // const {site_offset, contour, total_floors, tower_floor_height, podium_floor_height} = this.getInputs(inputs);
-      INPUTS = this.getInputs(inputs);
-    }
+    INPUTS = this.getInputs(inputs);
 
     const spaceExtrudeSettings = {
         steps: 1,
@@ -139,6 +140,7 @@ export class BuildingMassGenerator extends Generator {
     
     const TOTAL_FLOORS_NUMBER = INPUTS.total_floors;
   
+    // const PODIUM_FLOORS_NUMBER = isNextGen ? INPUTS.podium_floors_number : this.randomIntFromInterval(1, 4);
     const PODIUM_FLOORS_NUMBER = this.randomIntFromInterval(1, 4);
     const TOWER_FLOORS_NUMBER = TOTAL_FLOORS_NUMBER - PODIUM_FLOORS_NUMBER;
 
@@ -189,9 +191,15 @@ export class BuildingMassGenerator extends Generator {
     site_mesh.updateMatrix();
     site_mesh.updateMatrixWorld();
     site_mesh.receiveShadow = true;
-    let g_site = geom.clone();
+    let g_site: BufferGeometry = geom.clone();
     g_site.rotateX(Math.PI/2)
     g_site.applyMatrix4(matrix)
+
+    //TODO: add varNum attributes to bufferGeometry
+    let varNumSize = g_site.getAttribute('position').count;
+    g_site.setAttribute( 'varNum', new BufferAttribute(new Float32Array( varNumSize ).fill(index), 1))
+    
+    // console.log('[Generator: Site] ', g_site);
     this.SITE_GEOMETRIES.push(g_site)
 
     let bbox = new Box3().setFromObject(site_mesh)
@@ -204,11 +212,12 @@ export class BuildingMassGenerator extends Generator {
     //* COMPUTED INPUTS
     const PODIUM_BASE_WIDTH = bbox.min.distanceTo(bbox.max) / 1.7; // TRY PLAYING WITH 1.7 VALUE
     const PODIUM_BASE_LENGTH = PODIUM_BASE_WIDTH / 2; // HEIGHT PARAMETER IN THE BOX METHOD
+    // const PODIUM_WIDTH = isNextGen ? INPUTS.podium_width : this.randomFloatFromInterval( PODIUM_BASE_WIDTH / 2, PODIUM_BASE_WIDTH);
+    // const PODIUM_LENGTH = isNextGen ? INPUTS.podium_length : this.randomFloatFromInterval( PODIUM_BASE_LENGTH / 2, PODIUM_BASE_LENGTH);
     const PODIUM_WIDTH = this.randomFloatFromInterval( PODIUM_BASE_WIDTH / 2, PODIUM_BASE_WIDTH);
     const PODIUM_LENGTH = this.randomFloatFromInterval( PODIUM_BASE_LENGTH / 2, PODIUM_BASE_LENGTH);
     const axesLines = this.drawAxes(bbox, false);
 
-    
     const podiumBaseGeom = new BoxGeometry( PODIUM_BASE_WIDTH, PODIUM_BASE_LENGTH, 0.5 ); 
     const podiumBaseMat = new MeshBasicMaterial( {color: 0xff0000, side: DoubleSide, transparent: true, opacity:0.5} );
     const podiumBase = new Mesh( podiumBaseGeom, podiumBaseMat );
@@ -241,11 +250,11 @@ export class BuildingMassGenerator extends Generator {
         intersections = []
         rotation = Math.PI / (Math.random() * 4)
         times++;
-        if(times == 500) break;
+        if(times == 1000) break;
       } 
     }
 
-    // console.log(`Found base position and orientation after: ${times} times`)
+    console.log(`Var_${index} - Found base position and orientation after: ${times} times`)
 
     let topPodium = 0; // the highest point on the podium
 
@@ -259,14 +268,30 @@ export class BuildingMassGenerator extends Generator {
     const topPodShapeF = this.formBaseShape(contourF);
     const topPodShapeS = this.formBaseShape(contourS);
 
-    let rndBool = Math.random() < 0.7;
-    if(rndBool){
-      this.createTypeB(INPUTS.tower_floor_height, pod, spaceExtrudeSettings, podiumBase, space_shapes)
-      towerType = 'Type_B';
+    if( isNextGen ){
+      if (INPUTS.towerType == "Type_A"){
+        this.createTypeA(topPodShapeF,topPodShapeS, spaceExtrudeSettings, pod.height, INPUTS.tower_floor_height, TOWER_FLOORS_NUMBER, podiumBase.matrix, space_shapes);
+        towerType = 'Type_A';
+      }
+
+
+      else if (INPUTS.towerType == "Type_B"){
+        this.createTypeB(INPUTS.tower_floor_height, pod, spaceExtrudeSettings, podiumBase, space_shapes);
+        towerType = 'Type_B';
+      }
+
     } else {
-      this.createTypeA(topPodShapeF,topPodShapeS, spaceExtrudeSettings, pod.height, INPUTS.tower_floor_height, TOWER_FLOORS_NUMBER, podiumBase.matrix, space_shapes);
-      towerType = 'Type_A';
+
+      let rndBool = Math.random() < 0.6;
+      if(rndBool){
+        this.createTypeB(INPUTS.tower_floor_height, pod, spaceExtrudeSettings, podiumBase, space_shapes)
+        towerType = 'Type_B';
+      } else {
+        this.createTypeA(topPodShapeF,topPodShapeS, spaceExtrudeSettings, pod.height, INPUTS.tower_floor_height, TOWER_FLOORS_NUMBER, podiumBase.matrix, space_shapes);
+        towerType = 'Type_A';
+      }
     }
+
     
 
     //TODO: create a text entity for each generator
@@ -284,7 +309,7 @@ export class BuildingMassGenerator extends Generator {
                     `Total facade area: ${results.facadeArea} m2`
                   ];
 
-    this.TEXT_MESHES.push( ...this.createText( text, CONTOUR[0].x - 5 , CONTOUR[0].y) );
+    this.TEXT_MESHES.push( ...this.createText( text, CONTOUR[0].x - 5 , CONTOUR[0].y ) );
   
     const varData = {
       generation: genNum,
@@ -295,7 +320,9 @@ export class BuildingMassGenerator extends Generator {
       inputs: inputsObj,
       otherMetrics: {
         towerType,
-        rotation
+        rotation,
+        podium_width: PODIUM_WIDTH, 
+        podium_length: PODIUM_LENGTH
       },
       outputs: results
     }
@@ -642,7 +669,6 @@ export class BuildingMassGenerator extends Generator {
           shapeP.push(new Vector2(x[a] as number, y[b] as number))
         }
       }
-
     
       const sortedCountour = [shapeP[2], shapeP[3], shapeP[1], shapeP[0], shapeP[2]];
     
@@ -820,6 +846,8 @@ export class BuildingMassGenerator extends Generator {
 
     const main = new Mesh();
     main.children = [SLAB_MESH, SPACE_MESH, SITE_MESH, ...this.LINE_MESHES, ...this.TEXT_MESHES];
+
+    console.log('[Variant: Mesh] ', main )
     main.name = 'model';
     return main
   }
@@ -945,6 +973,10 @@ export class BuildingMassGenerator extends Generator {
     this.SITE_GEOMETRIES  = [];
     this.LINE_MESHES  = [];
     this.TEXT_MESHES  = [];
+  }
+
+  private addVarNumtoGeomBuffers( slabGeom: BufferGeometry, spaceGeom: BufferGeometry, siteGeom: BufferGeometry ){
+
   }
 
 }

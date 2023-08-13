@@ -2,7 +2,7 @@
     <div class='panel'>
 
         <!-- <img src="../assets/dse.svg"/> -->
-        <n-collapse class='panel-collapse' default-expanded-names="1"> <!-- Function -->
+        <n-collapse class='panel-collapse'> <!-- Function -->
             <n-collapse-item class="parent_panels" title="Inputs" name="1" style="margin: 0px 2px;" default-expanded-names="3"><!-- Inputs -->
                 <template #arrow>
                     <n-icon>
@@ -148,15 +148,15 @@
                 </template>
                 Generate
             </n-tooltip>
-            <!-- <n-tooltip trigger="hover" placement="bottom">
+            <n-tooltip trigger="hover" placement="bottom">
                 <template #trigger>
-                    <n-upload :on-change="test" ref="file2">
+                    <!-- <n-upload :on-change="test" ref="file2">
                         <n-button text color="#153048">
                             <n-icon >
                                 <resultIcon/>
                             </n-icon>
                         </n-button>
-                    </n-upload>
+                    </n-upload> -->
                     <n-button  @click='test' quaternary>
                         <n-icon >
                             <resultIcon/>
@@ -164,7 +164,7 @@
                     </n-button> 
                 </template>
                 Test
-            </n-tooltip> -->
+            </n-tooltip>
             <n-tooltip trigger="hover" placement="bottom">
                 <template #trigger>
                     <n-button  @click="refresh" quaternary>
@@ -288,7 +288,7 @@ import { parse as SVGParser } from 'svg-parser';
 import { Path, Vector2 } from 'three';
 import { parsePath } from 'react-router-dom';
 import {GenFinished, Refresh, ClearData, BuildViewer, DestroyViewer} from '../events/index';
-
+import {DSEViewer} from '../entities'
 
 // import { parse, stringify } from 'svgson';
 // import { parse, scale, stringify } from 'svg-path-tools'
@@ -338,7 +338,7 @@ export default defineComponent({
                 // }
             ],
             strategy: "Randomize",
-            generations: 1 ,
+            generations: 2 ,
             populations: 4 ,
             store: '' as any,
             showModal: false,
@@ -404,23 +404,24 @@ export default defineComponent({
             }
         },
         async test(file: any){
+            DSEViewer.animate(true);
             //TEST SVG PARSING
-            const url = URL.createObjectURL(file.fileList[0].file);
-            const data = await this.getFile(url);
-            const enc = new TextDecoder("utf-8");
-            const dec = enc.decode( data as Uint8Array );
-            const parsed = SVGParser(dec);
-            const path: string = parsed.children[0].children[0].properties.d;
+            // const url = URL.createObjectURL(file.fileList[0].file);
+            // const data = await this.getFile(url);
+            // const enc = new TextDecoder("utf-8");
+            // const dec = enc.decode( data as Uint8Array );
+            // const parsed = SVGParser(dec);
+            // const path: string = parsed.children[0].children[0].properties.d;
             
 
-            const lines = [];
+            // const lines = [];
 
-            const config = {
-                joinPathData: false,
-                minDistance: 0.5,
-                roundToNearest: 0.25,
-                sampleFrequency: 0.001
-            };
+            // const config = {
+            //     joinPathData: false,
+            //     minDistance: 0.5,
+            //     roundToNearest: 0.25,
+            //     sampleFrequency: 0.001
+            // };
         },
         getMCoordinates(d: any){
     
@@ -461,9 +462,9 @@ export default defineComponent({
         async generate(){
             let currentGeneration = 0;
 
-            const inputs = this.store.design[this.strategy].inputs;
+            // const inputs = this.store.design[this.strategy].inputs; <<<------
             //* SET INPUTS IN LOCAL STORAGE
-            localStorage.setItem( 'gd_currentInputs', JSON.stringify( this.store.design[this.strategy].inputs ) );
+            // localStorage.setItem( 'gd_currentInputs', JSON.stringify( this.store.design[this.strategy].inputs ) ); <<<------
             // const inputs = {
             //     strategy: this.strategy,
             //     generator: this.genFunction,
@@ -480,7 +481,7 @@ export default defineComponent({
                                  populations: this.populations,
                                  generations: this.generations,
                                  objectives: gd_goals ? gd_goals : null,
-                                 inputs: JSON.stringify(inputs)
+                                //  inputs: JSON.stringify(inputs) <<<------
                                 });
 
             worker.onmessage = async (event) => {

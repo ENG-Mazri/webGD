@@ -51,7 +51,8 @@ import {GenerationManager} from '../logic/GenerationManager';
 // import * as GeneratorWorker from '../logic/generators/MassGeneratorWorker';
 import {IDB} from '../IDB'
 import {schemePurples} from "d3-scale-chromatic";
-import { useLoadingBar } from 'naive-ui'
+import { useLoadingBar } from 'naive-ui';
+import { DSEViewer } from '../entities'
 
 
 export default defineComponent({
@@ -114,15 +115,15 @@ export default defineComponent({
         canvas.id = "three_canvas";
         threeContainer.appendChild(canvas);
 
-        const viewer = new Viewer(canvas, []);
+        // const viewer = new Viewer(canvas, []);
         let interval = setInterval( async ()=>{
             let blob = await IDB.getDataByKeyAsync( glb );
             if(blob){
                 clearInterval(interval);
                 // console.log('[Viewer:Blob] ', blob)
-                await viewer.init(canvas, [], blob)
+                await DSEViewer.init(canvas, [], blob)
 
-                console.log('Renderer: ' ,viewer.renderer)
+                // console.log('Renderer: ' ,DSEViewer.renderer)
             }
         }, 100)
       })
@@ -512,7 +513,7 @@ export default defineComponent({
                 // console.log('[Viewer:Blob] ', blob)
                 await viewer.init(canvas, [], blob)
 
-                console.log('Renderer: ' ,viewer.renderer)
+                // console.log('Renderer: ' ,viewer.renderer)
             }
         }, 100)
 

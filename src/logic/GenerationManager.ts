@@ -67,7 +67,7 @@ export class GenerationManager {
         return this.varsData;
     }
 
-    public populate(inputs: any, options: any, index: number, genNum: number, isNextGeneration: boolean = false) {
+    public populate(inputs: any, options: any, index: number, genNum: number) {
         if( this.populations == 0 || this.generations == 0 ) return;
 
         let varData = this.generator.generateVariant(inputs, options.transX, options.transY, index, genNum);
@@ -254,22 +254,48 @@ export class GenerationManager {
         }
     }
 
-    public runMatingPool( parentsIDs: string[] ) {
+    public runMatingPool( parentsIDs: string[] ): any[]{
         // get parents id_id, mate them by picking random midpoint 
         const parents = []
+
+        const DNAs = [];
         for( let i = 0; i < parentsIDs.length; i++){
-            let newDNA = {}
+            let newDNA = {
+                site_offset: {},
+                contour: [],
+                total_floors: {},
+                tower_floor_height: {},
+                podium_floor_height: {},
+                towerType: '',
+            };
+
             let parents = [];
 
             let [id1, id2] = parentsIDs[i].split('_');
             for( let i=0; i < this.varsData.length; i++){
                 let varData = this.varsData[i];
-
                 if( varData.id == id1 || varData.id == id2 ) parents.push(varData);
             }
-            console.log('[parents] ', parents);
-        }
 
+            for( let [k,v] of Object.entries(newDNA)){
+                let rndBool = Math.random() < 0.5;
+                if ( k == 'contour' ) 
+                    newDNA[k] = parents[0].inputs[k];
+                else
+                    newDNA[k] = rndBool ? {type: 'constant', value: parents[0].inputs[k]} : {type: 'constant', value: parents[1].inputs[k]}; 
+            }
+            // console.log('[parents] ', parents);
+            // console.log("[NEW DNA]", newDNA);
+
+            console.log("[NEW DNA: T-type]", parents[1].otherMetrics.towerType);
+
+            let rndBool = Math.random() < 0.5;
+            newDNA.towerType = rndBool ? parents[0].otherMetrics.towerType : parents[1].otherMetrics.towerType ;
+            DNAs.push(newDNA)
+        }
+        console.log("[NEW DNAs]", DNAs);
+
+        return DNAs;
     }
 
     public async getGlbFromGeneration( generationModel: Mesh, genNum: number, generationModelId: string ){

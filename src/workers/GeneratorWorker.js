@@ -16,8 +16,8 @@ const inputs = {
                   site_offset: {type: 'constant', value: 0},
                   contour: mock_contour,
                   total_floors: {type: 'variable', value: [19, 29]},
-                  tower_floor_height: {type: 'constant', value: 3},
-                  podium_floor_height: {type: 'constant', value: 4}
+                  tower_floor_height: {type: 'variable', value: [1, 3]},
+                  podium_floor_height: {type: 'variable', value: [3, 5]}
                 }
 
 const mock_objectives = new Map()
@@ -45,7 +45,7 @@ allResultsByEvaluator.set('facadeArea', []);
 onmessage = async (e) => {
 
   if( e.data.type == 'onProcess'){
-    const inputs = JSON.parse(e.data.inputs);
+    // const inputs = JSON.parse(e.data.inputs);
 
     const bldMassGen = new BuildingMassGenerator();
     // const model_mesh = bldMassGen.generateVariant(mock_inputs);
@@ -136,7 +136,7 @@ onmessage = async (e) => {
         // console.log("[WORKER: parents ids]", parentsIDs);
         // console.log("[WORKER: chances]", chancesArray);
 
-        const nextGenDna = genManager.runMatingPool(parentsIDs);
+        const nextGenDNA = genManager.runMatingPool(parentsIDs);
 
         //* clear generation data 
         genManager.clearGenerationData();
