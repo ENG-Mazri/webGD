@@ -3,7 +3,7 @@ import App from './App.vue'
 import naive from 'naive-ui'
 import { createPinia } from 'pinia'
 import PrimeVue from 'primevue/config';
-
+import router from './router'
 
 // import Vue from 'vue';
 // const EventBus = new Vue();
@@ -29,7 +29,7 @@ app.component('Button', Button);
 app.component('TabView', TabView);
 app.component('TabPanel', TabPanel);
 
-
+app.use(router)
 app.use(createPinia());
 app.mount('#app');
 

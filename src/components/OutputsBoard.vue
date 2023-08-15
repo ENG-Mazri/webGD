@@ -80,7 +80,7 @@ export default defineComponent({
       hasViewer: false,
       viewer: null as any,
       canvas: null as any,
-      currentTab: 'Data table'
+      currentTab: 'Scatterplot chart'
 
     }
    

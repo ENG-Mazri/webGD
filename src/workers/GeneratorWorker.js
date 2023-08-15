@@ -45,7 +45,7 @@ allResultsByEvaluator.set('facadeArea', []);
 onmessage = async (e) => {
 
   if( e.data.type == 'onProcess'){
-    let inputs = JSON.parse(e.data.inputs);
+    // let inputs = JSON.parse(e.data.inputs);
 
     const bldMassGen = new BuildingMassGenerator();
     // const model_mesh = bldMassGen.generateVariant(mock_inputs);

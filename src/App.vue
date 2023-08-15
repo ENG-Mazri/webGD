@@ -3,7 +3,8 @@
     <n-dialog-provider>
       <!-- <n-loading-bar-provider> -->
     <!--<img alt="Vue logo" src="./assets/logo.png">-->
-        <Main/>
+        <!-- <Main/> -->
+        <router-view/>
       <!-- </n-loading-bar-provider> -->
     </n-dialog-provider>
   </n-message-provider>

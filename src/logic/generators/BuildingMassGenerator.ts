@@ -165,8 +165,17 @@ export class BuildingMassGenerator extends Generator {
       let incremented = CONTOUR[i+1];
       const geometry = new BufferGeometry().setFromPoints([current,incremented]);
       const line = new Line(geometry, mat);
-      line.rotation.set(Math.PI/2,0, 0);
+      line.rotation.set(Math.PI/2, 0, 0);
       line.updateMatrix()
+      // let g = line.geometry.clone();
+      // g.rotateX( Math.PI/2 );
+      // g.applyMatrix4(line.matrix);
+      
+      // console.log('[LINE: Geom] ', g)
+      // console.log('[LINE: Geom 1] ', line)
+
+
+      this.LINE_GEOMETRIES.push( line.geometry );
       
       let l3 = new Line3( new Vector3(current.x, 0, current.y),
                           new Vector3(incremented.x, 0, incremented.y));
@@ -836,28 +845,35 @@ export class BuildingMassGenerator extends Generator {
     const MERGED_SPACE_GEOMETRIES = mergeGeometries( this.GEN_SPACE_GEOMETRIES );
     const MERGED_SITE_GEOMETRIES = mergeGeometries( this.SITE_GEOMETRIES );
 
+    const MERGED_LINE_GEOMETRIES = mergeGeometries( this.LINE_GEOMETRIES );
+
+
 
     const SLAB_MATERIAL = new MeshBasicMaterial( { color: constants.SLAB_COLOR } );
     const SPACE_MATERIAL = new MeshPhongMaterial( { color: constants.SPACE_COLOR } );
     const SITE_MATERIAL = new MeshPhongMaterial( { color: 0x00cc99, opacity: 0.2, transparent: true } );
+    const LINE_MATERIAL = new LineBasicMaterial( {color: 0x00b386, linewidth: 2} );
 
 
     const SLAB_MESH = new Mesh( MERGED_SLAB_GEOMETRIES, SLAB_MATERIAL );
     const SPACE_MESH = new Mesh( MERGED_SPACE_GEOMETRIES, SPACE_MATERIAL );
     const SITE_MESH = new Mesh( MERGED_SITE_GEOMETRIES, SITE_MATERIAL );
+    const LINE_MESH = new Mesh( MERGED_LINE_GEOMETRIES, LINE_MATERIAL);
+
   
     SLAB_MESH.name = 'slab_mesh';
     SPACE_MESH.name = 'space_mesh';
     SITE_MESH.name = 'site_mesh';
+    LINE_MESH.name = 'line_mesh';
     
     SLAB_MESH.castShadow = true ;
     SPACE_MESH.castShadow = true ;
     SITE_MESH.receiveShadow = true ;
 
     const main = new Mesh();
-    main.children = [SLAB_MESH, SPACE_MESH, SITE_MESH, ...this.LINE_MESHES, ...this.TEXT_MESHES];
+    main.children = [SLAB_MESH, SPACE_MESH, SITE_MESH, ...this.TEXT_MESHES]; //...this.LINE_MESHES
 
-    console.log('[Variant: Mesh] ', main )
+    // console.log('[Variant: Mesh] ', main )
     main.name = 'model';
     return main
   }

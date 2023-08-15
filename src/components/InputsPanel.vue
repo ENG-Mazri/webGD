@@ -339,7 +339,7 @@ export default defineComponent({
             ],
             strategy: "Randomize",
             generations: 1 ,
-            populations: 1 ,
+            populations: 3 ,
             store: '' as any,
             showModal: false,
             genFunction: 'Building mass',
@@ -388,6 +388,7 @@ export default defineComponent({
             window.$message.success('♻️ Outputs visuals updated', {
                 showIcon: false
             });
+            setTimeout(()=>location.reload(), 1500); 
         })
 
         this.store = useDesign();
@@ -462,9 +463,9 @@ export default defineComponent({
         async generate(){
             let currentGeneration = 0;
 
-            const inputs = this.store.design[this.strategy].inputs; //<<<------
+            // const inputs = this.store.design[this.strategy].inputs; //<<<------
             //* SET INPUTS IN LOCAL STORAGE
-            localStorage.setItem( 'gd_currentInputs', JSON.stringify( this.store.design[this.strategy].inputs ) ); //<<<------
+            // localStorage.setItem( 'gd_currentInputs', JSON.stringify( this.store.design[this.strategy].inputs ) ); //<<<------
             // const inputs = {
             //     strategy: this.strategy,
             //     generator: this.genFunction,
@@ -481,7 +482,7 @@ export default defineComponent({
                                  populations: this.populations,
                                  generations: this.generations,
                                  objectives: gd_goals ? gd_goals : null,
-                                 inputs: JSON.stringify(inputs) 
+                                 inputs: null //JSON.stringify(inputs) //<<<------
                                 });
 
             worker.onmessage = async (event) => {
