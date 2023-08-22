@@ -405,7 +405,13 @@ export default defineComponent({
             }
         },
         async test(file: any){
-            DSEViewer.animate(true);
+
+            const route = this.$router.resolve({
+				name: "About"
+			});
+
+			window.open(route.href, "_blank");
+            // DSEViewer.animate(true);
             //TEST SVG PARSING
             // const url = URL.createObjectURL(file.fileList[0].file);
             // const data = await this.getFile(url);
@@ -685,7 +691,15 @@ export default defineComponent({
             this.genProgress = 0;
         },
         refresh(){
-            Refresh.emit()
+            Refresh.emit();
+
+            //* Router example
+            
+            // const route = this.$router.resolve({
+			// 	name: "About"
+			// });
+
+			// window.open(route.href, "_blank");
         }
     }
 })

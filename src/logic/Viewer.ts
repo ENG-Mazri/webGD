@@ -10,6 +10,10 @@ import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
 import {GLTFLoader} from "three/examples/jsm/loaders/GLTFLoader.js";
 import {IDB} from '../IDB'
 import {GenFinished, BuildViewer, DestroyViewer} from '../events/index';
+import {mergeGeometries} from 'three/examples/jsm/utils/BufferGeometryUtils.js'
+import vShader from '../assets/shaders/meshVertex.glsl.js';
+import fShader from '../assets/shaders/meshFragment.glsl.js';
+import {GeometryLoader} from '../geometry/GeometryLoader'
 
 export class Viewer {
 
@@ -159,79 +163,40 @@ export class Viewer {
 
 
         //* GLTF LOADER
-        const loader = new GLTFLoader();
-        let url = URL.createObjectURL(blob as Blob)
-        loader.load(
-            url,
-            ( gltf ) => {
-                // console.log('[Viewer:Blob] ', gltf);
-                
-                this.scene.add( gltf.scene );
 
-                this.scene.traverse((child: any) =>{
-                    // console.log(child)
+        const loader = new GeometryLoader()
+        loader.load(blob, (meshes)=>{
 
-                    if (child.name == 'site_mesh') {
-                        child.receiveShadow = true;
-                        child.castShadow = true;
-                        // child.material.transparent = true;
-                        // child.material.opacity = 0.1;
-                        // child.material.color = new THREE.Color(0xa6a6a6)
+            for( let [k,v] of meshes.entries() ){
+                const uniforms = {
+                    diffuse: {value: v.color},
+                    emissive: {value: new THREE.Color(0x000000)},
+                    specular: {value: new THREE.Color(0x111111)},
+                    opacity: {value: v.opacity},
+                    shininess: {value: 30},
+                    time: {value: 1.0},
+                    emptyPatternSize: {value: 2.5},
 
-                        child.material.onBeforeCompile = shader =>{
-                            // shader.uniforms.diffuse.value =  new THREE.Vector3(1,1,0);
-                            // shader.vertexShader.replace(
-                            //     '#include <color_vertex>',
-                            //     `
-                            //     #include <color_vertex>
-
-                            //     vColor = vec4( 5.0 );
-                            //     #elif defined( USE_COLOR ) || defined( USE_INSTANCING_COLOR )
-                            //         vColor = vec3( 5.0 );
-                            //     #endif
-                            //     #ifdef USE_COLOR
-                            //         vColor *= color;
-                            //     #endif
-                            //     #ifdef USE_INSTANCING_COLOR
-                            //         vColor.xyz *= instanceColor.xyz;
-                            //     #endif
-                            //     `
-                            //     )
-                            // console.log('[Shader ]', shader)
-                        };
-
-                    }
+                    fresnelBias: {value: -0.1},
+                    fresnelScale: {value: 0.5},
+                    fresnelPower: {value: 2.0},
+                    reflectionColor: {value: new THREE.Color(0xfcffff)},
                     
-                    else if (child.name == 'slab_mesh' || child.name == 'space_mesh') {
-                        // child.receiveShadow = true;
-                        // console.log('[Viewer: mesh] ', child)
-                        // child.material.transparent = true;
-                        // child.material.opacity = 0.1;
-                        // child.material.color = new THREE.Color(0xa6a6a6)
 
-                        child.castShadow = true;
-                    }
-                    // else if (child.name == 'slab_mesh' || child.name == 'space_mesh') {
-                    //     // child.receiveShadow = true;
-                    //     // console.log('[Viewer: mesh] ', child)
-                    //     child.material.transparent = true;
-                    //     child.material.opacity = 0.3;
-                    //     child.material.color = new THREE.Color(0xff0000)
+                    stateMode: {value: -1}
 
-                    //     child.castShadow = true;
-                    // }
-                });
-            },
-            ( xhr ) => { 
-                this.glbLoadingProgress = xhr.loaded / xhr.total * 100;
-                // console.log( ( xhr.loaded / xhr.total * 100 ) + '% loaded' );       
-            },
-            ( error ) => {
-                console.log( 'An error happened', error );
+                };
+                
+                let material = new THREE.ShaderMaterial({
+                        uniforms,
+                        vertexShader: vShader,
+                        fragmentShader: fShader
+                    })
+
+                this.scene.add( new Mesh( v.buffer, material))
+                console.log('[GeometryLoader] ', v);
             }
-        );
-
-        let self = this;
+        } )
         
         
         //*RENDERING
